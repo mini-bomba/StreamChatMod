@@ -48,6 +48,7 @@ public class StreamChatMod
     @EventHandler
     public void stop(FMLModDisabledEvent event) {
         stopTwitch();
+        config.saveIfChanged();
     }
 
     public void startTwitch() {

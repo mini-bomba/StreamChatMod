@@ -20,6 +20,11 @@ public class StreamConfig {
         twitchEnabled = config.get("twitch", "enabled", false);
         twitchChannels = config.get("twitch", "channels", new String[0]);
         twitchDefaultChannel = config.get("twitch", "default_channel", "");
+        saveIfChanged();
+    }
+
+    public void saveIfChanged() {
         if (config.hasChanged()) config.save();
     }
+
 }
