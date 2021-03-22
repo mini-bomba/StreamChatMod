@@ -1,0 +1,9 @@
+[{
+  "modid": "streamchatmod",
+  "name": "Stream Chat",
+  "description": "A Chat client for some streaming websites in minecraft beacuse yes.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://github.com/mini-bomba/",
+  "authorList": ["mini_bomba"]
+}]
