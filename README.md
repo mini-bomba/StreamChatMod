@@ -18,3 +18,7 @@ After loading a world (either single- or multiplayer), any messages sent in any 
 your player's local chat.
 
 A command to send messages from minecraft to the stream chat is planned.
+
+## Getting the token
+
+Token can be aquired [here](https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost&scope=chat:read+chat:edit)
