@@ -12,6 +12,11 @@ buildscript {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
+
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '4.0.4'
+}
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 /*
@@ -54,6 +59,19 @@ processResources
     }
 }
 
+shadowJar {
+    archiveName = jar.archiveName
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    exclude('dummyThing')
+    exclude('META-INF/maven/')
+    exclude('META-INF/nar/')
+    exclude('module-info.class')
+    exclude('META-INF/versions/')
+}
+
 project.sourceCompatibility = '1.8'
 project.targetCompatibility = '1.8'
 
+tasks.reobfJar.dependsOn(tasks.shadowJar)
