@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StreamChat mod Twitch login</title>
+</head>
+<body style="font-size: 10vw;">
+    <script defer>
+        var match = location.href.match(/access_token=([\w\d]+)&/)
+        var token = match == undefined ? undefined : match[1]
+        if (token == undefined) document.body.innerHTML += "❌"
+        else {
+            var req = new XMLHttpRequest();
+            req.open('GET', `http://localhost:39571/setToken?${token}`, false);
+            req.send(null);
+            document.body.innerText = "✅"
+        }
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
+import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import net.minecraft.client.Minecraft;
@@ -12,6 +13,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.ModMetadata;
@@ -19,6 +21,8 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLModDisabledEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -31,9 +35,19 @@ public class StreamChatMod
     public static final String MODID = "streamchatmod";
     public static final String MODNAME = "StreamChat";
     public static final String VERSION = "1.0";
+    private static final Logger LOGGER = LogManager.getLogger();
     public StreamConfig config;
     @Nullable
     public TwitchClient twitch = null;
+    @Nullable
+    public HttpServer httpServer = null;
+    public int httpShutdownTimer = -1;
+
+    private final StreamEvents events;
+
+    public StreamChatMod() {
+        events = new StreamEvents(this);
+    }
     
     @EventHandler
     public void postInit(FMLPostInitializationEvent event)
@@ -46,6 +60,8 @@ public class StreamChatMod
         ClientCommandHandler commandHandler = ClientCommandHandler.instance;
         commandHandler.registerCommand(new TwitchChatCommand(this));
         commandHandler.registerCommand(new TwitchCommand(this));
+
+        MinecraftForge.EVENT_BUS.register(events);
     }
 
     @EventHandler

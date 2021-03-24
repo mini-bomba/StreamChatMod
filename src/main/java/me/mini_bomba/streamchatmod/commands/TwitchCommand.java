@@ -2,6 +2,7 @@ package me.mini_bomba.streamchatmod.commands;
 
 import com.github.twitch4j.chat.TwitchChat;
 import com.mojang.realmsclient.gui.ChatFormatting;
+import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import net.minecraft.command.CommandBase;
@@ -9,6 +10,7 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 
 import java.awt.*;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,15 +51,16 @@ public class TwitchCommand extends CommandBase {
                         ChatFormatting.GRAY + "/twitch help"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Shows this message",
                         ChatFormatting.GRAY + "/twitch enable"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Enables the Twitch chat",
                         ChatFormatting.GRAY + "/twitch disable"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Disables the Twitch chat",
+                        ChatFormatting.GRAY + "/twitch restart"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Restarts the Twitch chat",
                         ChatFormatting.GRAY + "/twitch channels"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Manages joined Twitch chats",
-                        ChatFormatting.GRAY + "/twitch token"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Configures the token for Twitch",
-                        ChatFormatting.GRAY + "/twitch gentoken"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Opens a link to generate the Twitch token"
+                        ChatFormatting.GRAY + "/twitch token"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
+                        ChatFormatting.GRAY + "/twitch settoken <token>"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it."
                 });
                 break;
             case "enable":
             case "on":
-                if (mod.twitch != null) throw new CommandException("Twitch chat is already enabled!");
                 if (!mod.config.isTwitchTokenSet()) throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
+                if (mod.twitch != null || mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is already enabled!");
                 mod.config.twitchEnabled.set(true);
                 mod.config.saveIfChanged();
                 mod.startTwitch();
@@ -65,11 +68,20 @@ public class TwitchCommand extends CommandBase {
                 break;
             case "disable":
             case "off":
-                if (mod.twitch == null) throw new CommandException("Twitch chat is already disabled!");
+                if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is already disabled!");
                 mod.config.twitchEnabled.set(false);
                 mod.config.saveIfChanged();
                 mod.stopTwitch();
                 StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Disabled the Twitch Chat!");
+                break;
+            case "restart":
+            case "reload":
+            case "r":
+                if (!mod.config.isTwitchTokenSet()) throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
+                if (!mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is not enabled!");
+                mod.stopTwitch();
+                mod.startTwitch();
+                StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Restarted the Twitch Chat!");
                 break;
             case "channel":
             case "channels":
@@ -139,7 +151,7 @@ public class TwitchCommand extends CommandBase {
                         });
                 }
                 break;
-            case "token":
+            case "settoken":
                 if (args.length < 2) throw new CommandException("Missing required parameter: token. You can generate it by running /twitch gentoken");
                 mod.config.setTwitchToken(args[1]);
                 mod.config.saveIfChanged();
@@ -148,18 +160,32 @@ public class TwitchCommand extends CommandBase {
             case "gentoken":
             case "generatetoken":
             case "gettoken":
+            case "token":
+                try {
+                    if (mod.httpServer == null) {
+                        mod.httpServer = HttpServer.create(new InetSocketAddress(39571), 0);
+                        mod.httpServer.createContext("/", new StreamUtils.TwitchOAuth2HandlerMain());
+                        mod.httpServer.createContext("/setToken", new StreamUtils.TwitchOAuth2HandlerSecondary(mod));
+                        mod.httpServer.setExecutor(null);
+                        mod.httpServer.start();
+                        mod.httpShutdownTimer = 120*40;
+                    }
+                } catch (Exception e) {
+                    StreamUtils.addMessage(sender, ChatFormatting.RED+"Something went wrong while attempting to start an HTTP server for automatic token setting. Please manually set the token using "+ChatFormatting.GRAY+"/twitch settoken "+ChatFormatting.RED+"after generating.");
+                }
                 boolean opened = false;
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     try {
-                        Desktop.getDesktop().browse(new URI("https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost&scope=chat:read+chat:edit"));
+                        Desktop.getDesktop().browse(new URI("https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit"));
                         opened = true;
                     } catch (Exception ignored) {}
                 }
                 if (!opened) StreamUtils.addMessages(sender, new String[]{
                             ChatFormatting.GREEN+"Please open this link in your browser:",
-                            ChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost&scope=chat:read+chat:edit"
+                            ChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit"
                 });
                 else StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Opening link in your browser...");
+                StreamUtils.addMessage(sender, ChatFormatting.AQUA+"The token will be automatically saved if generated within 120 seconds.");
                 break;
             default:
                 throw new CommandException("Unknown subcommand: use /twitch help to see available subcommands.");
