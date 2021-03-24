@@ -7,19 +7,19 @@ import java.io.File;
 
 public class StreamConfig {
     private final Configuration config;
-    protected final Property showChannelName;
+    public final Property forceShowChannelName;
     protected final Property twitchToken;
-    protected final Property twitchEnabled;
-    protected final Property twitchChannels;
-    protected final Property twitchDefaultChannel;
+    public final Property twitchEnabled;
+    public final Property twitchChannels;
+    public final Property twitchSelectedChannel;
 
     public StreamConfig(File configFile) {
         config = new Configuration(configFile);
-        showChannelName = config.get("common", "showChannelName", false);
+        forceShowChannelName = config.get("common", "forceShowChannelName", false);
         twitchToken = config.get("tokens", "twitch", "");
         twitchEnabled = config.get("twitch", "enabled", false);
         twitchChannels = config.get("twitch", "channels", new String[0]);
-        twitchDefaultChannel = config.get("twitch", "default_channel", "");
+        twitchSelectedChannel = config.get("twitch", "selectedChannel", "");
         saveIfChanged();
     }
 
