@@ -27,4 +27,12 @@ public class StreamConfig {
         if (config.hasChanged()) config.save();
     }
 
+    public boolean isTwitchTokenSet() {
+        return !twitchToken.getString().equals("");
+    }
+
+    public void setTwitchToken(String token) {
+        twitchToken.set(token);
+    }
+
 }

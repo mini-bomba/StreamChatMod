@@ -6,6 +6,7 @@ import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
+import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.EnumChatFormatting;
@@ -18,6 +19,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLModDisabledEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +32,7 @@ public class StreamChatMod
     public static final String MODNAME = "StreamChat";
     public static final String VERSION = "1.0";
     public StreamConfig config;
+    @Nullable
     public TwitchClient twitch = null;
     
     @EventHandler
@@ -42,6 +45,7 @@ public class StreamChatMod
     public void init(FMLInitializationEvent event) {
         ClientCommandHandler commandHandler = ClientCommandHandler.instance;
         commandHandler.registerCommand(new TwitchChatCommand(this));
+        commandHandler.registerCommand(new TwitchCommand(this));
     }
 
     @EventHandler
@@ -62,8 +66,9 @@ public class StreamChatMod
     }
 
     public void startTwitch() {
-        if (!config.twitchEnabled.getBoolean()) return;
+        if (twitch != null || !config.twitchEnabled.getBoolean()) return;
         String token = config.twitchToken.getString();
+        if (token.equals("")) return;
         OAuth2Credential credential = new OAuth2Credential("twitch", token);
         twitch = TwitchClientBuilder.builder()
                 .withDefaultAuthToken(credential)
@@ -83,7 +88,7 @@ public class StreamChatMod
     }
 
     private void onTwitchMessage(ChannelMessageEvent event) {
-        boolean showChannel = config.forceShowChannelName.getBoolean() || twitch.getChat().getChannels().size() > 1;
+        boolean showChannel = config.forceShowChannelName.getBoolean() ||(twitch != null && twitch.getChat().getChannels().size() > 1);
         sendLocalMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+EnumChatFormatting.WHITE+" <"+event.getUser().getName()+"> "+event.getMessage());
     }
 
@@ -105,8 +110,7 @@ public class StreamChatMod
         for (String channel : chat.getChannels()) {
             chat.leaveChannel(channel);
         }
-        chat.disconnect();
         twitch.close();
-        twitch = null;
+        this.twitch = null;
     }
 }
