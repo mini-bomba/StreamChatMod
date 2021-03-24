@@ -6,19 +6,22 @@ A simple chat client for Twitch (and maybe Youtube later) put into Minecraft 1.8
 
 ## Configuration
 
-Since this is still a WiP project, configs can only be edited manually.
-To make the mod work, an application token must be generated on Twitch and pasted into the configs.
-Channel name must also be added. Listening on multiple stream chats at once is supported.
+First generate a Twitch token by running `/twitch gentoken`. 
+A link will be opened in your browser, follow instruction there.
+Once finished, you'll be redirected to localhost. Then copy the token from the url and paste it into the `/twitch token <token here>` command and run it.
 
-**Ingame method of configuration coming soon™**
+Next use the command `/twitch enable` to enable the Twitch chat and run `/twitch chat join <channel name>` for every channe chat you want to see in-game.
+
+If you want to send messages from the in-game chat to your stream chat, run `/twitch chat select <channel name>` to select the channel to send messages to.
+Then you can use `/twitchchat <your message>` or `/tc <your message>` to send a message.
 
 ## Usage
 
 After loading a world (either single- or multiplayer), any messages sent in any of the configured stream chats will be relayed to 
 your player's local chat.
 
-A command to send messages from minecraft to the stream chat is planned.
+If you selected a channel in the configuration section, you can use `/tc <message>` to send any message from in-game to your selected stream chat.
 
 ## Getting the token
 
-Token can be aquired [here](https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost&scope=chat:read+chat:edit)
+Twitch token can be aquired [here](https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost&scope=chat:read+chat:edit)
