@@ -27,16 +27,52 @@ plugins {
 */
 version = "1.0"
 group= "me.mini_bomba.streamchatmod" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "StreamChatMod"
 
 minecraft {
-    version = "1.8.9-11.15.1.2318-1.8.9"
+    version = "${project.minecraftVersion}-${project.forgeVersion}"
     runDir = "run"
-    mappings = "stable_22"
+    mappings = project.mappings
 }
 
 dependencies {
     implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.2.1'
+}
+
+jar {
+    // Set the archive name here instead of in shadowJar because ForgeGradle needs it when re-obfuscating the jar.
+    baseName = project.modName
+    classifier = "for-MC-${project.minecraftVersion}"
+
+    manifest.attributes(
+            'Manifest-Version': '2.0',
+            'Main-Class': 'SkyblockAddonsInstallerFrame',
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Implementation-Vendor' : 'BiscuitDevelopment',
+            'Specification-Title': project.name,
+            'Specification-Vendor': 'BiscuitDevelopment',
+            'Specification-Version': project.version,
+            'FMLCorePlugin': "${project.group}.${project.modId}.tweaker.${project.modName}LoadingPlugin",
+            'ForceLoadAsMod': true,
+            'FMLCorePluginContainsFMLMod': true,
+            'ModSide': 'CLIENT',
+            'FMLAT': "${project.modId}_at.cfg"
+    )
+
+    // Disable the default jar task and use shadowJar instead to shade the libraries into the jar.
+    enabled = false
+}
+
+shadowJar {
+    archiveName = jar.archiveName
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    exclude('dummyThing')
+    exclude('META-INF/maven/')
+    exclude('META-INF/nar/')
+    exclude('module-info.class')
+    exclude('META-INF/versions/')
 }
 
 processResources
@@ -57,18 +93,6 @@ processResources
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
-}
-
-shadowJar {
-    archiveName = jar.archiveName
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    exclude('dummyThing')
-    exclude('META-INF/maven/')
-    exclude('META-INF/nar/')
-    exclude('module-info.class')
-    exclude('META-INF/versions/')
 }
 
 project.sourceCompatibility = '1.8'

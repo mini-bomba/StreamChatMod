@@ -34,7 +34,7 @@ public class StreamChatMod
 {
     public static final String MODID = "streamchatmod";
     public static final String MODNAME = "StreamChat";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
     private static final Logger LOGGER = LogManager.getLogger();
     public StreamConfig config;
     @Nullable
