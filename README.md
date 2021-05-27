@@ -34,6 +34,9 @@ If you selected a channel in the configuration section, you can use `/tc <messag
 
 All Twitch related configuration commands can be viewed by running `/twitch help`.
 
+## Note to self:
+Run `setupDecompWorkspace` Gradle task before configuring Gradle project
+
 [![forthebadge](https://forthebadge.com/images/badges/made-with-java.svg)](https://forthebadge.com)
 
 [![forthebadge](https://forthebadge.com/images/badges/works-on-my-machine.svg)](https://forthebadge.com)
