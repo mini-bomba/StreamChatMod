@@ -12,6 +12,8 @@ import net.minecraft.command.ICommandSender;
 import java.awt.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,6 +58,9 @@ public class TwitchCommand extends CommandBase {
                         EnumChatFormatting.GRAY + "/twitch channels"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages joined Twitch chats",
                         EnumChatFormatting.GRAY + "/twitch sounds"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages enabled sounds",
                         EnumChatFormatting.GRAY + "/twitch events"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages enabled events",
+                        EnumChatFormatting.GRAY + "/twitch ban <user> [reason]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Bans the user in the currently selected channel",
+                        EnumChatFormatting.GRAY + "/twitch unban <user>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Unbans the user in the currently selected channel",
+                        EnumChatFormatting.GRAY + "/twitch timeout <user> <time> [reason]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Timeouts the user in the currently selected channel",
                         EnumChatFormatting.GRAY + "/twitch token"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
                         EnumChatFormatting.GRAY + "/twitch settoken <token>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it."
                 });
@@ -231,6 +236,42 @@ public class TwitchCommand extends CommandBase {
                         });
                 }
                 break;
+            case "ban":
+                channel = mod.config.twitchSelectedChannel.getString();
+                if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
+                if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
+                if (args.length < 2) throw new CommandException("Missing required parameter: user to ban");
+                mod.twitch.getChat().ban(channel, args[1], String.join(" ", Arrays.asList(args).subList(2, args.length)));
+                StreamUtils.addMessage(EnumChatFormatting.GREEN + "Banned " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + args[1] + EnumChatFormatting.GREEN + " from "  + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s chat." + (args.length >= 3 ? " Reason: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(2, args.length)) : ""));
+                break;
+            case "unban":
+                channel = mod.config.twitchSelectedChannel.getString();
+                if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
+                if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
+                if (args.length < 2) throw new CommandException("Missing required parameter: user to unban");
+                mod.twitch.getChat().unban(channel, args[1]);
+                StreamUtils.addMessage(EnumChatFormatting.GREEN + "Unbanned " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + args[1] + EnumChatFormatting.GREEN + " from "  + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s chat.");
+                break;
+            case "time":
+            case "timeout":
+                channel = mod.config.twitchSelectedChannel.getString();
+                if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
+                if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
+                if (args.length < 2) throw new CommandException("Missing required parameters: user to unban & time to timeout for");
+                if (args.length < 3) throw new CommandException("Missing required parameter: time to timeout for");
+                Duration dur;
+                try {
+                    dur = Duration.parse(args[2]);
+                } catch (DateTimeParseException e) {
+                    try {
+                        dur = Duration.ofSeconds(Integer.parseInt(args[2]));
+                    } catch (NumberFormatException ee) {
+                        throw new CommandException("Could not parse " + args[2] + " to a Duration. Use a whole number of seconds or the ISO 8601 format.");
+                    }
+                }
+                mod.twitch.getChat().timeout(channel, args[1], dur, String.join(" ", Arrays.asList(args).subList(3, args.length)));
+                StreamUtils.addMessage(EnumChatFormatting.GREEN + "Timed out " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + args[1] + EnumChatFormatting.GREEN + " from "  + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s chat for " + dur.getSeconds() + " seconds." + (args.length >= 4 ? " Reason: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(3, args.length)) : ""));
+                break;
             case "settoken":
                 if (args.length < 2) throw new CommandException("Missing required parameter: token. You can generate it by running /twitch gentoken");
                 mod.config.setTwitchToken(args[1]);
@@ -256,13 +297,13 @@ public class TwitchCommand extends CommandBase {
                 boolean opened = false;
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     try {
-                        Desktop.getDesktop().browse(new URI("https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit"));
+                        Desktop.getDesktop().browse(new URI("https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate"));
                         opened = true;
                     } catch (Exception ignored) {}
                 }
                 if (!opened) StreamUtils.addMessages(sender, new String[]{
                             EnumChatFormatting.GREEN+"Please open this link in your browser:",
-                            EnumChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit"
+                            EnumChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate"
                 });
                 else StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Opening link in your browser...");
                 StreamUtils.addMessage(sender, EnumChatFormatting.AQUA+"The token will be automatically saved if generated within 120 seconds.");
