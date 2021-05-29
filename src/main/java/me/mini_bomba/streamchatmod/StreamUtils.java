@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.IChatComponent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +22,18 @@ public class StreamUtils {
 
     public static void addMessage(EntityPlayerSP player, String message) {
         player.addChatMessage(new ChatComponentText(message));
+    }
+
+    public static void addMessage(EntityPlayerSP player, IChatComponent component) {
+        player.addChatMessage(component);
+    }
+
+    public static void addMessage(IChatComponent component) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null) {
+            EntityPlayerSP player = mc.thePlayer;
+            if (player != null) addMessage(player, component);
+        }
     }
 
     public static void addMessage(String message) {

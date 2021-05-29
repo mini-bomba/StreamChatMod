@@ -11,6 +11,9 @@ import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -110,25 +113,16 @@ public class StreamChatMod
 
     private void onTwitchMessage(ChannelMessageEvent event) {
         boolean showChannel = config.forceShowChannelName.getBoolean() ||(twitch != null && twitch.getChat().getChannels().size() > 1);
-        sendLocalMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+EnumChatFormatting.WHITE+" <"+event.getUser().getName()+"> "+event.getMessage());
+        IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+EnumChatFormatting.WHITE+" <"+event.getUser().getName()+"> "+event.getMessage());
+        ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch delete " + event.getChannel().getName() + " " + event.getMessageEvent().getMessageId().orElse("")));
+        component.setChatStyle(style);
+        StreamUtils.addMessage(component);
         if (this.config.playSoundOnMessage.getBoolean()) StreamUtils.playSound("note.pling", 0.1f, 1.25f);
     }
 
     private void onTwitchFollow(FollowEvent event) {
-        sendLocalMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
+        StreamUtils.addMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
         if (this.config.playSoundOnFollow.getBoolean()) eventSoundTimer = 0;
-    }
-
-    private void sendLocalMessage(IChatComponent chat) {
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) return;
-        player.addChatMessage(chat);
-    }
-
-    private void sendLocalMessage(String msg) {
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) return;
-        StreamUtils.addMessage(player, msg);
     }
 
     public void stopTwitch() {

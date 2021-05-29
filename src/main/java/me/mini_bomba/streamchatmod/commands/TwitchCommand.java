@@ -61,6 +61,8 @@ public class TwitchCommand extends CommandBase {
                         EnumChatFormatting.GRAY + "/twitch ban <user> [reason]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Bans the user in the currently selected channel",
                         EnumChatFormatting.GRAY + "/twitch unban <user>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Unbans the user in the currently selected channel",
                         EnumChatFormatting.GRAY + "/twitch timeout <user> <time> [reason]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Timeouts the user in the currently selected channel",
+                        EnumChatFormatting.GRAY + "/twitch clearchat"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Clears the currently selected channel's chat",
+                        EnumChatFormatting.GRAY + "/twitch delete <channel> <message id>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Deletes the selected message. Click a twitch message to automatically generate this command",
                         EnumChatFormatting.GRAY + "/twitch token"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
                         EnumChatFormatting.GRAY + "/twitch settoken <token>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it."
                 });
@@ -271,6 +273,20 @@ public class TwitchCommand extends CommandBase {
                 }
                 mod.twitch.getChat().timeout(channel, args[1], dur, String.join(" ", Arrays.asList(args).subList(3, args.length)));
                 StreamUtils.addMessage(EnumChatFormatting.GREEN + "Timed out " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + args[1] + EnumChatFormatting.GREEN + " from "  + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s chat for " + dur.getSeconds() + " seconds." + (args.length >= 4 ? " Reason: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(3, args.length)) : ""));
+                break;
+            case "clearchat":
+                channel = mod.config.twitchSelectedChannel.getString();
+                if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
+                if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
+                mod.twitch.getChat().clearChat(channel);
+                StreamUtils.addMessage("" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s Twitch chat cleared. Use F3+D to clear your in-game chat.");
+                break;
+            case "delete":
+                if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
+                if (args.length < 2) throw new CommandException("Missing required parameters: channel & id of the message to delete");
+                if (args.length < 3) throw new CommandException("Missing required parameter: id of the message to delete");
+                mod.twitch.getChat().delete(args[1], args[2]);
+                StreamUtils.addMessage(EnumChatFormatting.GREEN + "Message deleted.");
                 break;
             case "settoken":
                 if (args.length < 2) throw new CommandException("Missing required parameter: token. You can generate it by running /twitch gentoken");
