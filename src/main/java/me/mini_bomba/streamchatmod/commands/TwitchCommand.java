@@ -112,6 +112,7 @@ public class TwitchCommand extends CommandBase {
                             }
                         }
                         break;
+                    case "follow":
                     case "follower":
                     case "f":
                         if (args.length == 2)
