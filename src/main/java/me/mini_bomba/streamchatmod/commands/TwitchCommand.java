@@ -1,7 +1,7 @@
 package me.mini_bomba.streamchatmod.commands;
 
 import com.github.twitch4j.chat.TwitchChat;
-import com.mojang.realmsclient.gui.ChatFormatting;
+import net.minecraft.util.EnumChatFormatting;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
@@ -47,15 +47,15 @@ public class TwitchCommand extends CommandBase {
             case "?":
             case "h":
                 StreamUtils.addMessages(sender, new String[]{
-                        ChatFormatting.GREEN + "Usage of /twitch:",
-                        ChatFormatting.GRAY + "/twitch help"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Shows this message",
-                        ChatFormatting.GRAY + "/twitch enable"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Enables the Twitch chat",
-                        ChatFormatting.GRAY + "/twitch disable"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Disables the Twitch chat",
-                        ChatFormatting.GRAY + "/twitch restart"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Restarts the Twitch chat",
-                        ChatFormatting.GRAY + "/twitch channels"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Manages joined Twitch chats",
-                        ChatFormatting.GRAY + "/twitch sounds"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Manages enabled sounds",
-                        ChatFormatting.GRAY + "/twitch token"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
-                        ChatFormatting.GRAY + "/twitch settoken <token>"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it."
+                        EnumChatFormatting.GREEN + "Usage of /twitch:",
+                        EnumChatFormatting.GRAY + "/twitch help"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Shows this message",
+                        EnumChatFormatting.GRAY + "/twitch enable"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Enables the Twitch chat",
+                        EnumChatFormatting.GRAY + "/twitch disable"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Disables the Twitch chat",
+                        EnumChatFormatting.GRAY + "/twitch restart"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Restarts the Twitch chat",
+                        EnumChatFormatting.GRAY + "/twitch channels"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages joined Twitch chats",
+                        EnumChatFormatting.GRAY + "/twitch sounds"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages enabled sounds",
+                        EnumChatFormatting.GRAY + "/twitch token"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
+                        EnumChatFormatting.GRAY + "/twitch settoken <token>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it."
                 });
                 break;
             case "enable":
@@ -65,7 +65,7 @@ public class TwitchCommand extends CommandBase {
                 mod.config.twitchEnabled.set(true);
                 mod.config.saveIfChanged();
                 mod.startTwitch();
-                StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Enabled the Twitch Chat!");
+                StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Enabled the Twitch Chat!");
                 break;
             case "disable":
             case "off":
@@ -73,7 +73,7 @@ public class TwitchCommand extends CommandBase {
                 mod.config.twitchEnabled.set(false);
                 mod.config.saveIfChanged();
                 mod.stopTwitch();
-                StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Disabled the Twitch Chat!");
+                StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Disabled the Twitch Chat!");
                 break;
             case "restart":
             case "reload":
@@ -82,7 +82,7 @@ public class TwitchCommand extends CommandBase {
                 if (!mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is not enabled!");
                 mod.stopTwitch();
                 mod.startTwitch();
-                StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Restarted the Twitch Chat!");
+                StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Restarted the Twitch Chat!");
                 break;
             case "sounds":
             case "sound":
@@ -91,21 +91,21 @@ public class TwitchCommand extends CommandBase {
                     case "msg":
                     case "message":
                         if (args.length == 2)
-                            StreamUtils.addMessage(ChatFormatting.AQUA + "Sound effect on new stream chat message is: " + (mod.config.playSoundOnMessage.getBoolean() ? ChatFormatting.GREEN + "Enabled" : ChatFormatting.RED + "Disabled"));
+                            StreamUtils.addMessage(EnumChatFormatting.AQUA + "Sound effect on new stream chat message is: " + (mod.config.playSoundOnMessage.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"));
                         else {
                             Boolean newState = StreamUtils.readStringAsBoolean(args[2]);
                             if (newState == null)
                                 throw new CommandException("Invalid boolean value" + args[2]);
                             else {
                                 mod.config.playSoundOnMessage.set(newState);
-                                StreamUtils.addMessage(ChatFormatting.GREEN + "Sound effect on new stream chat message has been " + (newState ? "enabled" : "disabled") + "!");
+                                StreamUtils.addMessage(EnumChatFormatting.GREEN + "Sound effect on new stream chat message has been " + (newState ? "enabled" : "disabled") + "!");
                             }
                         }
                         break;
                     default:
                         StreamUtils.addMessages(sender, new String[]{
-                                ChatFormatting.GREEN + "Usage of /twitch sounds:",
-                                ChatFormatting.GRAY + "/twitch sounds message [enable/disable]"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Enables/disables sound effect on new stream chat message."
+                                EnumChatFormatting.GREEN + "Usage of /twitch sounds:",
+                                EnumChatFormatting.GRAY + "/twitch sounds message [enable/disable]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Enables/disables sound effect on new stream chat message."
                         });
                 }
                 break;
@@ -130,7 +130,7 @@ public class TwitchCommand extends CommandBase {
                         channelList.add(channel);
                         mod.config.twitchChannels.set(channelList.toArray(new String[0]));
                         mod.config.saveIfChanged();
-                        StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Joined "+channel+"'s chat!");
+                        StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Joined "+channel+"'s chat!");
                         break;
                     case "leave":
                     case "l":
@@ -146,16 +146,16 @@ public class TwitchCommand extends CommandBase {
                         channelList.remove(channel);
                         mod.config.twitchChannels.set(channelList.toArray(new String[0]));
                         mod.config.saveIfChanged();
-                        StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Left "+channel+"'s chat!");
+                        StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Left "+channel+"'s chat!");
                         break;
                     case "list":
                     case "show":
                     case "ls":
                         if (chat == null) throw new CommandException("Please enable Twitch chat first!");
                         String[] channels = chat.getChannels().toArray(new String[0]).clone();
-                        StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Currently joined stream chats ("+channels.length+"):");
+                        StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Currently joined stream chats ("+channels.length+"):");
                         for (int i = 0; i < channels.length; i++) {
-                            channels[i] = ChatFormatting.AQUA+"• "+channels[i];
+                            channels[i] = EnumChatFormatting.AQUA+"• "+channels[i];
                         }
                         StreamUtils.addMessages(sender, channels);
                         break;
@@ -164,16 +164,16 @@ public class TwitchCommand extends CommandBase {
                         if (chat == null) throw new CommandException("Please enable Twitch chat first!");
                         mod.config.twitchSelectedChannel.set(channel);
                         mod.config.saveIfChanged();
-                        if (channel.equals("")) StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Unselected the stream chat channel!");
-                        else StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Selected "+channel+"'s stream chat!");
+                        if (channel.equals("")) StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Unselected the stream chat channel!");
+                        else StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Selected "+channel+"'s stream chat!");
                         break;
                     default:
                         StreamUtils.addMessages(sender, new String[]{
-                                ChatFormatting.GREEN + "Usage of /twitch channels:",
-                                ChatFormatting.GRAY + "/twitch channels join <channel name>"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Joins the specified Twitch channel.",
-                                ChatFormatting.GRAY + "/twitch channels leave <channel name>"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Leaves the specified Twitch channel.",
-                                ChatFormatting.GRAY + "/twitch channels list"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Lists the joined Twitch channels.",
-                                ChatFormatting.GRAY + "/twitch channels select [channel name]"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Selects the specified channel to send messages to.",
+                                EnumChatFormatting.GREEN + "Usage of /twitch channels:",
+                                EnumChatFormatting.GRAY + "/twitch channels join <channel name>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Joins the specified Twitch channel.",
+                                EnumChatFormatting.GRAY + "/twitch channels leave <channel name>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Leaves the specified Twitch channel.",
+                                EnumChatFormatting.GRAY + "/twitch channels list"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Lists the joined Twitch channels.",
+                                EnumChatFormatting.GRAY + "/twitch channels select [channel name]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Selects the specified channel to send messages to.",
                         });
                 }
                 break;
@@ -181,7 +181,7 @@ public class TwitchCommand extends CommandBase {
                 if (args.length < 2) throw new CommandException("Missing required parameter: token. You can generate it by running /twitch gentoken");
                 mod.config.setTwitchToken(args[1]);
                 mod.config.saveIfChanged();
-                StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Twitch token was successfully updated!");
+                StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Twitch token was successfully updated!");
                 break;
             case "gentoken":
             case "generatetoken":
@@ -197,7 +197,7 @@ public class TwitchCommand extends CommandBase {
                         mod.httpShutdownTimer = 120*40;
                     }
                 } catch (Exception e) {
-                    StreamUtils.addMessage(sender, ChatFormatting.RED+"Something went wrong while attempting to start an HTTP server for automatic token setting. Please manually set the token using "+ChatFormatting.GRAY+"/twitch settoken "+ChatFormatting.RED+"after generating.");
+                    StreamUtils.addMessage(sender, EnumChatFormatting.RED+"Something went wrong while attempting to start an HTTP server for automatic token setting. Please manually set the token using "+EnumChatFormatting.GRAY+"/twitch settoken "+EnumChatFormatting.RED+"after generating.");
                 }
                 boolean opened = false;
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
@@ -207,11 +207,11 @@ public class TwitchCommand extends CommandBase {
                     } catch (Exception ignored) {}
                 }
                 if (!opened) StreamUtils.addMessages(sender, new String[]{
-                            ChatFormatting.GREEN+"Please open this link in your browser:",
-                            ChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit"
+                            EnumChatFormatting.GREEN+"Please open this link in your browser:",
+                            EnumChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit"
                 });
-                else StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Opening link in your browser...");
-                StreamUtils.addMessage(sender, ChatFormatting.AQUA+"The token will be automatically saved if generated within 120 seconds.");
+                else StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Opening link in your browser...");
+                StreamUtils.addMessage(sender, EnumChatFormatting.AQUA+"The token will be automatically saved if generated within 120 seconds.");
                 break;
             default:
                 throw new CommandException("Unknown subcommand: use /twitch help to see available subcommands.");
