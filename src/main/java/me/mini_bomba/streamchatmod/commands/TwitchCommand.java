@@ -98,6 +98,7 @@ public class TwitchCommand extends CommandBase {
                                 throw new CommandException("Invalid boolean value" + args[2]);
                             else {
                                 mod.config.playSoundOnMessage.set(newState);
+                                mod.config.saveIfChanged();
                                 StreamUtils.addMessage(EnumChatFormatting.GREEN + "Sound effect on new stream chat message has been " + (newState ? "enabled" : "disabled") + "!");
                             }
                         }
