@@ -106,6 +106,7 @@ public class StreamChatMod
     private void onTwitchMessage(ChannelMessageEvent event) {
         boolean showChannel = config.forceShowChannelName.getBoolean() ||(twitch != null && twitch.getChat().getChannels().size() > 1);
         sendLocalMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+EnumChatFormatting.WHITE+" <"+event.getUser().getName()+"> "+event.getMessage());
+        if (this.config.playSoundOnMessage.getBoolean()) Minecraft.getMinecraft().thePlayer.playSound("note.pling", 0.1f, 1.25f);
     }
 
     private void sendLocalMessage(IChatComponent chat) {

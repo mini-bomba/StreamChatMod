@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import jline.internal.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.ICommandSender;
@@ -43,6 +44,27 @@ public class StreamUtils {
         if (mc != null) {
             EntityPlayerSP player = mc.thePlayer;
             if (player != null) addMessages(player, message);
+        }
+    }
+
+    public static Boolean readStringAsBoolean(String str) {
+        switch(str.toLowerCase()) {
+            case "yes":
+            case "true":
+            case "1":
+            case "y":
+            case "enable":
+            case "enabled":
+                return true;
+            case "false":
+            case "no":
+            case "0":
+            case "n":
+            case "disable":
+            case "disabled":
+                return false;
+            default:
+                return null;
         }
     }
 

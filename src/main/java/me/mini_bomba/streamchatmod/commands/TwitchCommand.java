@@ -53,6 +53,7 @@ public class TwitchCommand extends CommandBase {
                         ChatFormatting.GRAY + "/twitch disable"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Disables the Twitch chat",
                         ChatFormatting.GRAY + "/twitch restart"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Restarts the Twitch chat",
                         ChatFormatting.GRAY + "/twitch channels"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Manages joined Twitch chats",
+                        ChatFormatting.GRAY + "/twitch sounds"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Manages enabled sounds",
                         ChatFormatting.GRAY + "/twitch token"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
                         ChatFormatting.GRAY + "/twitch settoken <token>"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it."
                 });
@@ -82,6 +83,31 @@ public class TwitchCommand extends CommandBase {
                 mod.stopTwitch();
                 mod.startTwitch();
                 StreamUtils.addMessage(sender, ChatFormatting.GREEN+"Restarted the Twitch Chat!");
+                break;
+            case "sounds":
+            case "sound":
+            case "s":
+                switch (args.length >= 2 ? args[1].toLowerCase() : "") {
+                    case "msg":
+                    case "message":
+                        if (args.length == 2)
+                            StreamUtils.addMessage(ChatFormatting.AQUA + "Sound effect on new stream chat message is: " + (mod.config.playSoundOnMessage.getBoolean() ? ChatFormatting.GREEN + "Enabled" : ChatFormatting.RED + "Disabled"));
+                        else {
+                            Boolean newState = StreamUtils.readStringAsBoolean(args[2]);
+                            if (newState == null)
+                                throw new CommandException("Invalid boolean value" + args[2]);
+                            else {
+                                mod.config.playSoundOnMessage.set(newState);
+                                StreamUtils.addMessage(ChatFormatting.GREEN + "Sound effect on new stream chat message has been " + (newState ? "enabled" : "disabled") + "!");
+                            }
+                        }
+                        break;
+                    default:
+                        StreamUtils.addMessages(sender, new String[]{
+                                ChatFormatting.GREEN + "Usage of /twitch sounds:",
+                                ChatFormatting.GRAY + "/twitch sounds message [enable/disable]"+ChatFormatting.WHITE+" - "+ChatFormatting.AQUA+"Enables/disables sound effect on new stream chat message."
+                        });
+                }
                 break;
             case "channel":
             case "channels":

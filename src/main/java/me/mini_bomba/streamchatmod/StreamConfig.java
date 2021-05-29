@@ -12,6 +12,7 @@ public class StreamConfig {
     public final Property twitchEnabled;
     public final Property twitchChannels;
     public final Property twitchSelectedChannel;
+    public final Property playSoundOnMessage;
 
     public StreamConfig(File configFile) {
         config = new Configuration(configFile);
@@ -20,6 +21,7 @@ public class StreamConfig {
         twitchEnabled = config.get("twitch", "enabled", false);
         twitchChannels = config.get("twitch", "channels", new String[0]);
         twitchSelectedChannel = config.get("twitch", "selectedChannel", "");
+        playSoundOnMessage = config.get("sounds", "onMessage", true);
         saveIfChanged();
     }
 
