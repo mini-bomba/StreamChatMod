@@ -5,6 +5,7 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
+import com.github.twitch4j.chat.events.channel.FollowEvent;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
@@ -42,6 +43,7 @@ public class StreamChatMod
     @Nullable
     public HttpServer httpServer = null;
     public int httpShutdownTimer = -1;
+    public int eventSoundTimer = -1;
 
     private final StreamEvents events;
 
@@ -90,8 +92,10 @@ public class StreamChatMod
                 .withDefaultAuthToken(credential)
                 .withEnableChat(true)
                 .withChatAccount(credential)
+                .withEnableHelix(true)
                 .build();
         twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
+        twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);
         TwitchChat chat = twitch.getChat();
         chat.connect();
         List<String> channels = Arrays.asList(config.twitchChannels.getStringList());
@@ -101,12 +105,18 @@ public class StreamChatMod
         for (String channel : channels) {
             chat.joinChannel(channel);
         }
+        if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channels);
     }
 
     private void onTwitchMessage(ChannelMessageEvent event) {
         boolean showChannel = config.forceShowChannelName.getBoolean() ||(twitch != null && twitch.getChat().getChannels().size() > 1);
         sendLocalMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+EnumChatFormatting.WHITE+" <"+event.getUser().getName()+"> "+event.getMessage());
-        if (this.config.playSoundOnMessage.getBoolean()) Minecraft.getMinecraft().thePlayer.playSound("note.pling", 0.1f, 1.25f);
+        if (this.config.playSoundOnMessage.getBoolean()) StreamUtils.playSound("note.pling", 0.1f, 1.25f);
+    }
+
+    private void onTwitchFollow(FollowEvent event) {
+        sendLocalMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
+        if (this.config.playSoundOnFollow.getBoolean()) eventSoundTimer = 0;
     }
 
     private void sendLocalMessage(IChatComponent chat) {

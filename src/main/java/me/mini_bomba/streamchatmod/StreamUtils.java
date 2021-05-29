@@ -47,6 +47,10 @@ public class StreamUtils {
         }
     }
 
+    public static void playSound(String sound, float volume, float pitch) {
+        Minecraft.getMinecraft().thePlayer.playSound(sound, volume, pitch);
+    }
+
     public static Boolean readStringAsBoolean(String str) {
         switch(str.toLowerCase()) {
             case "yes":

@@ -13,6 +13,8 @@ public class StreamConfig {
     public final Property twitchChannels;
     public final Property twitchSelectedChannel;
     public final Property playSoundOnMessage;
+    public final Property playSoundOnFollow;
+    public final Property followEventEnabled;
 
     public StreamConfig(File configFile) {
         config = new Configuration(configFile);
@@ -22,6 +24,8 @@ public class StreamConfig {
         twitchChannels = config.get("twitch", "channels", new String[0]);
         twitchSelectedChannel = config.get("twitch", "selectedChannel", "");
         playSoundOnMessage = config.get("sounds", "onMessage", true);
+        playSoundOnFollow = config.get("sounds", "onFollow", true);
+        followEventEnabled = config.get("twitchEvents", "followers", true);
         saveIfChanged();
     }
 
