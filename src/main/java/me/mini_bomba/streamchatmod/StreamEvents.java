@@ -30,11 +30,11 @@ public class StreamEvents {
         if (mod.eventSoundTimer > -1) {
             int timer = mod.eventSoundTimer;
             if (timer == 0) {
-                StreamUtils.playSound("note.harp", 0.25f, 1.0f);
+                StreamUtils.playSound("note.harp", (float) mod.config.eventSoundVolume.getDouble(), 1.0f);
             } else if (timer == 5) {
-                StreamUtils.playSound("note.harp", 0.25f, 1.25f);
+                StreamUtils.playSound("note.harp", (float) mod.config.eventSoundVolume.getDouble(), 1.25f);
             } else if (timer == 10) {
-                StreamUtils.playSound("note.harp", 0.25f, 1.5f);
+                StreamUtils.playSound("note.harp", (float) mod.config.eventSoundVolume.getDouble(), 1.5f);
             }
             mod.eventSoundTimer++;
             if (mod.eventSoundTimer >= 11) mod.eventSoundTimer = -1;

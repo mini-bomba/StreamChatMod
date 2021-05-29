@@ -117,7 +117,7 @@ public class StreamChatMod
         ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch delete " + event.getChannel().getName() + " " + event.getMessageEvent().getMessageId().orElse("")));
         component.setChatStyle(style);
         StreamUtils.addMessage(component);
-        if (this.config.playSoundOnMessage.getBoolean()) StreamUtils.playSound("note.pling", 0.1f, 1.25f);
+        if (this.config.playSoundOnMessage.getBoolean()) StreamUtils.playSound("note.pling", (float) config.messageSoundVolume.getDouble(), 1.25f);
     }
 
     private void onTwitchFollow(FollowEvent event) {

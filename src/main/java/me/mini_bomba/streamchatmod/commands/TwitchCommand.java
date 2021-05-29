@@ -128,11 +128,55 @@ public class TwitchCommand extends CommandBase {
                             }
                         }
                         break;
+                    case "messagevolume":
+                    case "msgvolume":
+                    case "mvolume":
+                    case "messagev":
+                    case "msgv":
+                    case "mv":
+                        if (args.length == 2)
+                            StreamUtils.addMessage(EnumChatFormatting.AQUA + "Volume for message sound effects: " + EnumChatFormatting.GREEN + mod.config.messageSoundVolume.getDouble() * 100 + "%");
+                        else {
+                            double newState;
+                            try {
+                                newState = Double.parseDouble(args[2]);
+                            } catch (NumberFormatException e) {
+                                throw new CommandException("Invalid double value: " + args[2]);
+                            }
+                            if (newState > 1) newState /= 100;
+                            mod.config.messageSoundVolume.set(newState);
+                            mod.config.saveIfChanged();
+                            StreamUtils.addMessage(EnumChatFormatting.GREEN + "Volume for message sound effects has been set to " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + newState * 100 + "%");
+                        }
+                        break;
+                    case "eventvolume":
+                    case "eventsvolume":
+                    case "evolume":
+                    case "eventv":
+                    case "eventsv":
+                    case "ev":
+                        if (args.length == 2)
+                            StreamUtils.addMessage(EnumChatFormatting.AQUA + "Volume for event sound effects: " + EnumChatFormatting.GREEN + mod.config.eventSoundVolume.getDouble() * 100 + "%");
+                        else {
+                            double newState;
+                            try {
+                                newState = Double.parseDouble(args[2]);
+                            } catch (NumberFormatException e) {
+                                throw new CommandException("Invalid double value: " + args[2]);
+                            }
+                            if (newState > 1) newState /= 100;
+                            mod.config.eventSoundVolume.set(newState);
+                            mod.config.saveIfChanged();
+                            StreamUtils.addMessage(EnumChatFormatting.GREEN + "Volume for event sound effects has been set to " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + newState * 100 + "%");
+                        }
+                        break;
                     default:
                         StreamUtils.addMessages(sender, new String[]{
                                 EnumChatFormatting.GREEN + "Usage of /twitch sounds:",
                                 EnumChatFormatting.GRAY + "/twitch sounds message [enable/disable]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Enables/disables sound effect on new twitch chat message.",
-                                EnumChatFormatting.GRAY + "/twitch sounds follow [enable/disable]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Enables/disables sound effect on new twitch follower."
+                                EnumChatFormatting.GRAY + "/twitch sounds follow [enable/disable]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Enables/disables sound effect on new twitch follower.",
+                                EnumChatFormatting.GRAY + "/twitch sounds messagevolume [new volume]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Controls the volume of sounds effects for new messages.",
+                                EnumChatFormatting.GRAY + "/twitch sounds eventvolume [new volume]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Controls the volume of sounds effects for events like new followers."
                         });
                 }
                 break;
