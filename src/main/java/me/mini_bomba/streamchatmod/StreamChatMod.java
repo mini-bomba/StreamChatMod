@@ -9,8 +9,6 @@ import com.github.twitch4j.chat.events.channel.FollowEvent;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
@@ -47,6 +45,7 @@ public class StreamChatMod
     public HttpServer httpServer = null;
     public int httpShutdownTimer = -1;
     public int eventSoundTimer = -1;
+    public int loginMessageTimer = -1;
 
     private final StreamEvents events;
 
@@ -123,6 +122,24 @@ public class StreamChatMod
     private void onTwitchFollow(FollowEvent event) {
         StreamUtils.addMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
         if (this.config.playSoundOnFollow.getBoolean()) eventSoundTimer = 0;
+    }
+
+    public void printTwitchStatus() {
+        printTwitchStatus(false);
+    }
+
+    public void printTwitchStatus(boolean includePrefix) {
+        String prefix = includePrefix ?  EnumChatFormatting.DARK_PURPLE+"[TWITCH] " : "";
+        if (config.twitchEnabled.getBoolean() && twitch != null) {
+            String channel = config.twitchSelectedChannel.getString();
+            StreamUtils.addMessages(new String[] {
+                    prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.GREEN + "Enabled",
+                    prefix + EnumChatFormatting.GRAY + "Channels joined: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + twitch.getChat().getChannels().size(),
+                    prefix + EnumChatFormatting.GRAY + "Selected channel: " +  (channel.length() > 0 ? "" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel : EnumChatFormatting.RED + "None")
+            });
+        } else {
+            StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.RED + "Disabled");
+        }
     }
 
     public void stopTwitch() {

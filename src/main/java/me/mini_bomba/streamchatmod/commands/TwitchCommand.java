@@ -52,6 +52,7 @@ public class TwitchCommand extends CommandBase {
                 StreamUtils.addMessages(sender, new String[]{
                         EnumChatFormatting.GREEN + "Usage of /twitch:",
                         EnumChatFormatting.GRAY + "/twitch help"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Shows this message",
+                        EnumChatFormatting.GRAY + "/twitch status"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Shows the status of the mod",
                         EnumChatFormatting.GRAY + "/twitch enable"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Enables the Twitch chat",
                         EnumChatFormatting.GRAY + "/twitch disable"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Disables the Twitch chat",
                         EnumChatFormatting.GRAY + "/twitch restart"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Restarts the Twitch chat",
@@ -66,6 +67,9 @@ public class TwitchCommand extends CommandBase {
                         EnumChatFormatting.GRAY + "/twitch token"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
                         EnumChatFormatting.GRAY + "/twitch settoken <token>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it."
                 });
+                break;
+            case "status":
+                mod.printTwitchStatus();
                 break;
             case "enable":
             case "on":
