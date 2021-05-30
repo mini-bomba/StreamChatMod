@@ -11,6 +11,9 @@ minecraft {
     version = "${project.minecraftVersion}-${project.forgeVersion}"
     runDir = "run"
     mappings = project.mappings
+
+    replace("@VERSION@": project.version)
+    replaceIn("${project.modName}.java")
 }
 
 dependencies {
@@ -23,12 +26,12 @@ jar {
 
     manifest.attributes(
             'Manifest-Version': '2.0',
-            'Main-Class': 'SkyblockAddonsInstallerFrame',
+            'Main-Class': 'ThisDoesntExistAnyway',
             'Implementation-Title': project.name,
             'Implementation-Version': project.version,
-            'Implementation-Vendor' : 'BiscuitDevelopment',
+            'Implementation-Vendor' : 'mini-bomba',
             'Specification-Title': project.name,
-            'Specification-Vendor': 'BiscuitDevelopment',
+            'Specification-Vendor': 'mini-bomba',
             'Specification-Version': project.version,
             'FMLCorePlugin': "${project.group}.${project.modId}.tweaker.${project.modName}LoadingPlugin",
             'ForceLoadAsMod': true,
