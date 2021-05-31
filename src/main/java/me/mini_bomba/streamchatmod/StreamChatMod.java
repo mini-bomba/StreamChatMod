@@ -7,6 +7,7 @@ import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.FollowEvent;
 import com.sun.net.httpserver.HttpServer;
+import me.mini_bomba.streamchatmod.asm.hooks.GuiScreenHook;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import net.minecraft.event.ClickEvent;
@@ -77,6 +78,7 @@ public class StreamChatMod
         metadata.description = "A Chat client for some streaming websites in minecraft beacuse yes.";
         metadata.version = VERSION;
         config = new StreamConfig(event.getSuggestedConfigurationFile());
+        GuiScreenHook.setMod(this);
     }
 
     @EventHandler
@@ -135,7 +137,8 @@ public class StreamChatMod
             StreamUtils.addMessages(new String[] {
                     prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.GREEN + "Enabled",
                     prefix + EnumChatFormatting.GRAY + "Channels joined: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + twitch.getChat().getChannels().size(),
-                    prefix + EnumChatFormatting.GRAY + "Selected channel: " +  (channel.length() > 0 ? "" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel : EnumChatFormatting.RED + "None")
+                    prefix + EnumChatFormatting.GRAY + "Selected channel: " +  (channel.length() > 0 ? "" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel : EnumChatFormatting.RED + "None"),
+                    prefix + EnumChatFormatting.GRAY + "Minecraft chat mode: " + (config.twitchMessageRedirectEnabled.getBoolean() ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server") + EnumChatFormatting.GRAY + " (/twitch mode)"
             });
         } else {
             StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.RED + "Disabled");

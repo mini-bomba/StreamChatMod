@@ -59,6 +59,7 @@ public class TwitchCommand extends CommandBase {
                         EnumChatFormatting.GRAY + "/twitch channels"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages joined Twitch chats",
                         EnumChatFormatting.GRAY + "/twitch sounds"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages enabled sounds",
                         EnumChatFormatting.GRAY + "/twitch events"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages enabled events",
+                        EnumChatFormatting.GRAY + "/twitch mode [new mode]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages the destination of messages sent through Minecraft chat",
                         EnumChatFormatting.GRAY + "/twitch ban <user> [reason]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Bans the user in the currently selected channel",
                         EnumChatFormatting.GRAY + "/twitch unban <user>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Unbans the user in the currently selected channel",
                         EnumChatFormatting.GRAY + "/twitch timeout <user> <time> [reason]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Timeouts the user in the currently selected channel",
@@ -96,6 +97,37 @@ public class TwitchCommand extends CommandBase {
                 mod.stopTwitch();
                 mod.startTwitch();
                 StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Restarted the Twitch Chat!");
+                break;
+            case "mode":
+            case "chatmode":
+            case "redirect":
+                if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
+                if (args.length == 1) {
+                    boolean redirectEnabled = mod.config.twitchMessageRedirectEnabled.getBoolean();
+                    StreamUtils.addMessages(new String[] {
+                            EnumChatFormatting.AQUA + "Current Minecraft chat mode: " + (redirectEnabled ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server"),
+                            EnumChatFormatting.GRAY + "Use " + EnumChatFormatting.DARK_AQUA + "/twitch mode " + (redirectEnabled ? "minecraft" : "twitch") + EnumChatFormatting.GRAY + " to send new Minecraft messages to the " + (redirectEnabled ? "Minecraft server" : "currently selected Twitch channel")
+                    });
+                } else {
+                    Boolean newState = StreamUtils.readStringAsBoolean(args[1]);
+                    if (newState == null) {
+                        switch (args[1].toLowerCase()) {
+                            case "twitch":
+                            case "t":
+                                newState = true;
+                                break;
+                            case "minecraft":
+                            case "mc":
+                            case "m":
+                                newState = false;
+                                break;
+                            default:
+                                throw new CommandException("Invalid mode: " + args[1]);
+                        }
+                    }
+                    mod.config.twitchMessageRedirectEnabled.set(newState);
+                    StreamUtils.addMessage(EnumChatFormatting.AQUA + "Minecraft chat mode has been set to " + (newState ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server"));
+                }
                 break;
             case "sounds":
             case "sound":
