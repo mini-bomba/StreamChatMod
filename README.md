@@ -32,7 +32,9 @@ your player's local chat.
 
 If you selected a channel in the configuration section, you can use `/tc <message>` to send any message from in-game to your selected stream chat.
 
-You can delete a message by clicking on it in-game and sending the suggested command. Note that the message will stay visible in-game; use F3+D to clear your in-game chat.
+You can make the mod intercept every message Minecraft message you send & redirect it to the selected stream chat by using `/twitch chatmode`.
+
+You can delete a message (if you have permissions to do so) by clicking on it in-game and sending the suggested command. Note that the message will stay visible in-game; use F3+D to clear your in-game chat.
 
 All Twitch related configuration commands can be viewed by running `/twitch help`.
 
