@@ -6,7 +6,7 @@ plugins {
 }
 
 version = project.version
-group= "me.mini_bomba.streamchatmod" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group= "me.mini_bomba" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 
 minecraft {
     version = "${project.minecraftVersion}-${project.forgeVersion}"
@@ -48,7 +48,7 @@ jar {
 shadowJar {
     archiveFileName = jar.archiveFileName
 
-    relocate 'org.apache', 'org.StreamChatMod.apache'
+    relocate 'org.apache.commons', 'org.StreamChatMod.apache.commons'
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
