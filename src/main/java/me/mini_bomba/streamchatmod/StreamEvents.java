@@ -43,6 +43,15 @@ public class StreamEvents {
             mod.eventSoundTimer++;
             if (mod.eventSoundTimer >= 11) mod.eventSoundTimer = -1;
         }
+        if (mod.messageSoundCooldown > 0)
+            mod.messageSoundCooldown--;
+        if (mod.messageSoundTrigger) {
+            mod.messageSoundTrigger = false;
+            if (mod.messageSoundCooldown == 0) {
+                mod.messageSoundCooldown = 10;
+                StreamUtils.playSound("note.pling", (float) mod.config.messageSoundVolume.getDouble(), 1.25f);
+            }
+        }
     }
 
     @SubscribeEvent

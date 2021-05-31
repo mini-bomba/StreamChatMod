@@ -3,7 +3,6 @@ package me.mini_bomba.streamchatmod;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import jline.internal.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.ICommandSender;
@@ -61,7 +60,11 @@ public class StreamUtils {
     }
 
     public static void playSound(String sound, float volume, float pitch) {
-        Minecraft.getMinecraft().thePlayer.playSound(sound, volume, pitch);
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null) {
+            EntityPlayerSP player = mc.thePlayer;
+            if (player != null) player.playSound(sound, volume, pitch);
+        }
     }
 
     public static Boolean readStringAsBoolean(String str) {
