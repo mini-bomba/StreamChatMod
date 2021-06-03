@@ -8,12 +8,18 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+import java.util.Properties;
 
 public class StreamUtils {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static void addMessage(ICommandSender player, String message) {
         player.addChatMessage(new ChatComponentText(message));
@@ -85,6 +91,20 @@ public class StreamUtils {
                 return false;
             default:
                 return null;
+        }
+    }
+
+    @Nullable
+    public static String getLatestVersion() {
+        try {
+            URL url = new URL("https://raw.githubusercontent.com/mini-bomba/StreamChatMod/master/gradle.properties");
+            Properties properties = new Properties();
+            properties.load(url.openStream());
+            return properties.getProperty("version");
+        } catch (Exception e) {
+            LOGGER.warn("Could not check for updates!");
+            e.printStackTrace();
+            return null;
         }
     }
 

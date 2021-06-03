@@ -11,6 +11,7 @@ import me.mini_bomba.streamchatmod.asm.hooks.GuiScreenHook;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import net.minecraft.event.ClickEvent;
+import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
@@ -41,6 +42,8 @@ public class StreamChatMod
     private static final Logger LOGGER = LogManager.getLogger();
     public StreamConfig config;
     @Nullable
+    public String latestVersion = null;
+    @Nullable
     public TwitchClient twitch = null;
     @Nullable
     public HttpServer httpServer = null;
@@ -59,6 +62,12 @@ public class StreamChatMod
     @EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
+        LOGGER.info("Checking for updates...");
+        latestVersion = StreamUtils.getLatestVersion();
+        if (latestVersion != null && !latestVersion.equals(VERSION))
+            LOGGER.warn("New version available: " + latestVersion + "!");
+        else
+            LOGGER.info("Mod is up to date!");
 		startTwitch();
     }
 
@@ -134,6 +143,13 @@ public class StreamChatMod
 
     public void printTwitchStatus(boolean includePrefix) {
         String prefix = includePrefix ?  EnumChatFormatting.DARK_PURPLE+"[TWITCH] " : "";
+        IChatComponent component = new ChatComponentText(prefix + EnumChatFormatting.GRAY + "Mod version: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + VERSION + EnumChatFormatting.GRAY + " (" + (latestVersion == null ? EnumChatFormatting.RED + "Could not check latest version" : (latestVersion.equals(VERSION) ? EnumChatFormatting.GREEN + "Latest version" : EnumChatFormatting.GOLD + "Update available: " + latestVersion) ) + EnumChatFormatting.GRAY + ")");
+        if (latestVersion != null && !latestVersion.equals(VERSION)) {
+            ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/mini-bomba/StreamChatMod/releases"));
+            style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GREEN + "Click here to see mod releases on GitHub!")));
+            component.setChatStyle(style);
+        }
+        StreamUtils.addMessage(component);
         if (config.twitchEnabled.getBoolean() && twitch != null) {
             String channel = config.twitchSelectedChannel.getString();
             StreamUtils.addMessages(new String[] {
