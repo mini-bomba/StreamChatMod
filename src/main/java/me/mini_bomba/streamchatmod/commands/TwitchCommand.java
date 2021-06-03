@@ -126,6 +126,7 @@ public class TwitchCommand extends CommandBase {
                         }
                     }
                     mod.config.twitchMessageRedirectEnabled.set(newState);
+                    mod.config.saveIfChanged();
                     StreamUtils.addMessage(EnumChatFormatting.AQUA + "Minecraft chat mode has been set to " + (newState ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server"));
                 }
                 break;
