@@ -74,6 +74,7 @@ public class TwitchCommand extends CommandBase {
                 break;
             case "enable":
             case "on":
+            case "start":
                 if (!mod.config.isTwitchTokenSet()) throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
                 if (mod.twitch != null) throw new CommandException("Twitch chat is already enabled!");
                 mod.config.twitchEnabled.set(true);
@@ -85,6 +86,7 @@ public class TwitchCommand extends CommandBase {
                 break;
             case "disable":
             case "off":
+            case "stop":
                 if (mod.twitch == null && !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is already disabled!");
                 mod.config.twitchEnabled.set(false);
                 mod.config.saveIfChanged();
