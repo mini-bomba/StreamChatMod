@@ -75,15 +75,17 @@ public class TwitchCommand extends CommandBase {
             case "enable":
             case "on":
                 if (!mod.config.isTwitchTokenSet()) throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
-                if (mod.twitch != null || mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is already enabled!");
+                if (mod.twitch != null) throw new CommandException("Twitch chat is already enabled!");
                 mod.config.twitchEnabled.set(true);
                 mod.config.saveIfChanged();
-                mod.startTwitch();
-                StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Enabled the Twitch Chat!");
+                if (mod.startTwitch())
+                    StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Enabled the Twitch Chat!");
+                else
+                    StreamUtils.addMessage(sender, EnumChatFormatting.RED+"Could not start the Twitch client, the token may be invalid!");
                 break;
             case "disable":
             case "off":
-                if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is already disabled!");
+                if (mod.twitch == null && !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is already disabled!");
                 mod.config.twitchEnabled.set(false);
                 mod.config.saveIfChanged();
                 mod.stopTwitch();
@@ -95,8 +97,10 @@ public class TwitchCommand extends CommandBase {
                 if (!mod.config.isTwitchTokenSet()) throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
                 if (!mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is not enabled!");
                 mod.stopTwitch();
-                mod.startTwitch();
-                StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Restarted the Twitch Chat!");
+                if (mod.startTwitch())
+                    StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Restarted the Twitch Chat!");
+                else
+                    StreamUtils.addMessage(sender, EnumChatFormatting.RED+"Could not restart the Twitch client, the token may be invalid!");
                 break;
             case "mode":
             case "chatmode":

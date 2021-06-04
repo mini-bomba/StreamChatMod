@@ -98,29 +98,37 @@ public class StreamChatMod
         config.saveIfChanged();
     }
 
-    public void startTwitch() {
-        if (twitch != null || !config.twitchEnabled.getBoolean()) return;
+    public boolean startTwitch() {
+        if (twitch != null || !config.twitchEnabled.getBoolean()) return false;
         String token = config.twitchToken.getString();
-        if (token.equals("")) return;
-        OAuth2Credential credential = new OAuth2Credential("twitch", token);
-        twitch = TwitchClientBuilder.builder()
-                .withDefaultAuthToken(credential)
-                .withEnableChat(true)
-                .withChatAccount(credential)
-                .withEnableHelix(true)
-                .build();
-        twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
-        twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);
-        TwitchChat chat = twitch.getChat();
-        chat.connect();
-        List<String> channels = Arrays.asList(config.twitchChannels.getStringList());
-        for (String channel : chat.getChannels()) {
-            if (!channels.contains(channel)) chat.leaveChannel(channel);
+        if (token.equals("")) return false;
+        try {
+            OAuth2Credential credential = new OAuth2Credential("twitch", token);
+            twitch = TwitchClientBuilder.builder()
+                    .withDefaultAuthToken(credential)
+                    .withEnableChat(true)
+                    .withChatAccount(credential)
+                    .withEnableHelix(true)
+                    .build();
+            twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
+            twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);
+            TwitchChat chat = twitch.getChat();
+            chat.connect();
+            List<String> channels = Arrays.asList(config.twitchChannels.getStringList());
+            for (String channel : chat.getChannels()) {
+                if (!channels.contains(channel)) chat.leaveChannel(channel);
+            }
+            for (String channel : channels) {
+                chat.joinChannel(channel);
+            }
+            if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channels);
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to start Twitch client");
+            e.printStackTrace();
+            twitch = null;
+            return false;
         }
-        for (String channel : channels) {
-            chat.joinChannel(channel);
-        }
-        if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channels);
     }
 
     private void onTwitchMessage(ChannelMessageEvent event) {
@@ -159,7 +167,7 @@ public class StreamChatMod
                     prefix + EnumChatFormatting.GRAY + "Minecraft chat mode: " + (config.twitchMessageRedirectEnabled.getBoolean() ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server") + EnumChatFormatting.GRAY + " (/twitch mode)"
             });
         } else {
-            StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.RED + "Disabled");
+            StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.RED + "Disabled" + (config.twitchEnabled.getBoolean() && config.twitchToken.getString().length() > 0 ? ", the token may be invalid!" : ""));
         }
     }
 

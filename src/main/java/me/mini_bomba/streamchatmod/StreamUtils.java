@@ -145,8 +145,10 @@ public class StreamUtils {
                 mod.config.setTwitchToken(token);
                 mod.config.saveIfChanged();
                 mod.stopTwitch();
-                mod.startTwitch();
-                addMessage(ChatFormatting.GREEN+"The Twitch token has been successfully set!");
+                if (mod.startTwitch())
+                    addMessage(ChatFormatting.GREEN+"The Twitch token has been successfully set!");
+                else
+                    addMessage(ChatFormatting.RED+"Could not restart the Twitch client, the token may be invalid!");
             }
             exchange.sendResponseHeaders(token == null ? 400 : 200, 0);
             exchange.close();
