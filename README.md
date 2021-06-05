@@ -19,6 +19,7 @@ within around 120 seconds, the token will automatically be saved (as indicated b
 If you got a connection refused page instead, you can still manually set the token by copying it from the url (the `access_token` query param)
 and use the command `/twitch settoken <token>`.
 If the prompt window did not appear, you can use [this link](https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit).
+If you leak your token, you can quickly invalidate it by running `/twitch revoketoken`
 
 After configuring the token, use the command `/twitch enable` to enable the Twitch chat and run `/twitch chat join <channel name>` for every channe chat you want to see in-game.
 
