@@ -10,6 +10,8 @@ import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.asm.hooks.GuiScreenHook;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
+import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
+import net.minecraft.client.Minecraft;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
@@ -50,7 +52,6 @@ public class StreamChatMod
     public int httpShutdownTimer = -1;
     public int eventSoundTimer = -1;
     public int loginMessageTimer = -1;
-    public int messageSoundCooldown = 0;
     public boolean messageSoundTrigger = false;
 
     private final StreamEvents events;
@@ -132,12 +133,7 @@ public class StreamChatMod
     }
 
     private void onTwitchMessage(ChannelMessageEvent event) {
-        boolean showChannel = config.forceShowChannelName.getBoolean() ||(twitch != null && twitch.getChat().getChannels().size() > 1);
-        IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+EnumChatFormatting.WHITE+" <"+event.getUser().getName()+"> "+event.getMessage());
-        ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch delete " + event.getChannel().getName() + " " + event.getMessageEvent().getMessageId().orElse("")));
-        component.setChatStyle(style);
-        StreamUtils.addMessage(component);
-        if (this.config.playSoundOnMessage.getBoolean()) triggerMessageSound();
+        Minecraft.getMinecraft().addScheduledTask(new TwitchMessageHandler(this, event));
     }
 
     private void onTwitchFollow(FollowEvent event) {
@@ -169,10 +165,6 @@ public class StreamChatMod
         } else {
             StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.RED + "Disabled" + (config.twitchEnabled.getBoolean() && config.twitchToken.getString().length() > 0 ? ", the token may be invalid!" : ""));
         }
-    }
-
-    public void triggerMessageSound() {
-        if (messageSoundCooldown == 0) messageSoundTrigger = true;
     }
 
     public void stopTwitch() {
