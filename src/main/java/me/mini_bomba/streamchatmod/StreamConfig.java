@@ -2,6 +2,12 @@ package me.mini_bomba.streamchatmod;
 
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
@@ -18,6 +24,8 @@ public class StreamConfig {
     public final Property followEventEnabled;
     public final Property messageSoundVolume;
     public final Property eventSoundVolume;
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public StreamConfig(File configFile) {
         config = new Configuration(configFile);
@@ -45,6 +53,23 @@ public class StreamConfig {
 
     public void setTwitchToken(String token) {
         twitchToken.set(token);
+    }
+
+    public boolean revokeTwitchToken() {
+        String token = twitchToken.getString();
+        if (token.length() == 0) return false;
+        HttpClient client = HttpClients.createDefault();
+        HttpPost request = new HttpPost("https://id.twitch.tv/oauth2/revoke?client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&token=" + token);
+        HttpResponse response;
+        try {
+            response = client.execute(request);
+        } catch (Exception e) {
+            LOGGER.error("Failed to send request to revoke twitch token!");
+            e.printStackTrace();
+            return false;
+        }
+        int code = response.getStatusLine().getStatusCode();
+        return code == 200;
     }
 
 }

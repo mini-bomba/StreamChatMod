@@ -1,14 +1,14 @@
 package me.mini_bomba.streamchatmod.commands;
 
 import com.github.twitch4j.chat.TwitchChat;
-import me.mini_bomba.streamchatmod.runnables.HTTPServerShutdownScheduler;
-import net.minecraft.util.EnumChatFormatting;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
+import me.mini_bomba.streamchatmod.runnables.HTTPServerShutdownScheduler;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.util.EnumChatFormatting;
 
 import java.awt.*;
 import java.net.InetSocketAddress;
@@ -67,7 +67,8 @@ public class TwitchCommand extends CommandBase {
                         EnumChatFormatting.GRAY + "/twitch clearchat"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Clears the currently selected channel's chat",
                         EnumChatFormatting.GRAY + "/twitch delete <channel> <message id>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Deletes the selected message. Click a twitch message to automatically generate this command",
                         EnumChatFormatting.GRAY + "/twitch token"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
-                        EnumChatFormatting.GRAY + "/twitch settoken <token>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it."
+                        EnumChatFormatting.GRAY + "/twitch settoken <token>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it.",
+                        EnumChatFormatting.GRAY + "/twitch revoketoken"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Revoke the currently set token & removes it from the config. You can run this if you leak your current token."
                 });
                 break;
             case "status":
@@ -415,6 +416,23 @@ public class TwitchCommand extends CommandBase {
                 });
                 else StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Opening link in your browser...");
                 StreamUtils.addMessage(sender, EnumChatFormatting.AQUA+"The token will be automatically saved if generated within 120 seconds.");
+                break;
+            case "revoketoken":
+            case "removetoken":
+            case "tokenleaked":
+            case "deltoken":
+            case "resettoken":
+                StreamUtils.addMessage(EnumChatFormatting.GRAY + "Revoking your current token...");
+                mod.stopTwitch();
+                mod.config.twitchEnabled.set(false);
+                boolean revoked = mod.config.revokeTwitchToken();
+                if (revoked) {
+                    mod.config.setTwitchToken("");
+                    StreamUtils.addMessage(EnumChatFormatting.GREEN + "The token has been revoked!");
+                } else {
+                    StreamUtils.addMessage(EnumChatFormatting.RED + "Could not revoke the token! It may be invalid, or the request could not have been sent!");
+                }
+                mod.config.saveIfChanged();
                 break;
             default:
                 throw new CommandException("Unknown subcommand: use /twitch help to see available subcommands.");
