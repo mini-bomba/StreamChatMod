@@ -276,6 +276,7 @@ public class TwitchCommand extends CommandBase {
                         if (channelList.contains(channel) && chat.isChannelJoined(channel)) throw new CommandException("Channel "+channel+" is already joined!");
                         chat.joinChannel(channel);
                         if (!chat.isChannelJoined(channel)) throw new CommandException("Something went wrong: Could not join the channel.");
+                        if (mod.config.followEventEnabled.getBoolean()) mod.twitch.getClientHelper().enableFollowEventListener(channel);
                         channelList.add(channel);
                         mod.config.twitchChannels.set(channelList.toArray(new String[0]));
                         mod.config.saveIfChanged();
@@ -292,6 +293,7 @@ public class TwitchCommand extends CommandBase {
                         if (!channelList.contains(channel) && !chat.isChannelJoined(channel)) throw new CommandException("Channel "+channel+" is not joined!");
                         chat.leaveChannel(channel);
                         if (chat.isChannelJoined(channel)) throw new CommandException("Something went wrong: Could not leave the channel.");
+                        if (mod.config.followEventEnabled.getBoolean()) mod.twitch.getClientHelper().disableFollowEventListener(channel);
                         channelList.remove(channel);
                         mod.config.twitchChannels.set(channelList.toArray(new String[0]));
                         mod.config.saveIfChanged();

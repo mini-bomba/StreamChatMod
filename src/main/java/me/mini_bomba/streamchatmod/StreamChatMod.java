@@ -172,6 +172,7 @@ public class StreamChatMod
         for (String channel : chat.getChannels()) {
             chat.leaveChannel(channel);
         }
+        twitch.getClientHelper().disableFollowEventListener(Arrays.asList(config.twitchChannels.getStringList()));
         twitch.close();
         this.twitch = null;
     }
