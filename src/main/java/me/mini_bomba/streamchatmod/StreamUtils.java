@@ -81,6 +81,7 @@ public class StreamUtils {
             case "y":
             case "enable":
             case "enabled":
+            case "on":
                 return true;
             case "false":
             case "no":
@@ -88,6 +89,7 @@ public class StreamUtils {
             case "n":
             case "disable":
             case "disabled":
+            case "off":
                 return false;
             default:
                 return null;
