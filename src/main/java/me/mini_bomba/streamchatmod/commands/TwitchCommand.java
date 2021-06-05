@@ -79,32 +79,30 @@ public class TwitchCommand extends CommandBase {
             case "start":
                 if (!mod.config.isTwitchTokenSet()) throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
                 if (mod.twitch != null) throw new CommandException("Twitch chat is already enabled!");
+                if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
                 mod.config.twitchEnabled.set(true);
                 mod.config.saveIfChanged();
-                if (mod.startTwitch())
-                    StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Enabled the Twitch Chat!");
-                else
-                    StreamUtils.addMessage(sender, EnumChatFormatting.RED+"Could not start the Twitch client, the token may be invalid!");
+                mod.asyncStartTwitch();
+                StreamUtils.addMessage(EnumChatFormatting.GRAY + "Starting Twitch Chat...");
                 break;
             case "disable":
             case "off":
             case "stop":
                 if (mod.twitch == null && !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is already disabled!");
+                if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
                 mod.config.twitchEnabled.set(false);
                 mod.config.saveIfChanged();
-                mod.stopTwitch();
-                StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Disabled the Twitch Chat!");
+                mod.asyncStopTwitch();
+                StreamUtils.addMessage(EnumChatFormatting.GRAY + "Stopping Twitch Chat...");
                 break;
             case "restart":
             case "reload":
             case "r":
                 if (!mod.config.isTwitchTokenSet()) throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
                 if (!mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is not enabled!");
-                mod.stopTwitch();
-                if (mod.startTwitch())
-                    StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Restarted the Twitch Chat!");
-                else
-                    StreamUtils.addMessage(sender, EnumChatFormatting.RED+"Could not restart the Twitch client, the token may be invalid!");
+                if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+                mod.asyncRestartTwitch();
+                StreamUtils.addMessage(EnumChatFormatting.GRAY + "Restarting Twitch Chat...");
                 break;
             case "mode":
             case "chatmode":
@@ -276,13 +274,9 @@ public class TwitchCommand extends CommandBase {
                         if (chat == null) throw new CommandException("Please enable Twitch chat first!");
                         if (channel.equals("")) throw new CommandException("Missing parameter: channel to join");
                         if (channelList.contains(channel) && chat.isChannelJoined(channel)) throw new CommandException("Channel "+channel+" is already joined!");
-                        chat.joinChannel(channel);
-                        if (!chat.isChannelJoined(channel)) throw new CommandException("Something went wrong: Could not join the channel.");
-                        if (mod.config.followEventEnabled.getBoolean()) mod.twitch.getClientHelper().enableFollowEventListener(channel);
-                        channelList.add(channel);
-                        mod.config.twitchChannels.set(channelList.toArray(new String[0]));
-                        mod.config.saveIfChanged();
-                        StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Joined "+channel+"'s chat!");
+                        if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+                        mod.asyncJoinTwitchChannel(channel);
+                        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Joining channel...");
                         break;
                     case "leave":
                     case "l":
@@ -293,13 +287,9 @@ public class TwitchCommand extends CommandBase {
                         if (chat == null) throw new CommandException("Please enable Twitch chat first!");
                         if (channel.equals("")) throw new CommandException("Missing parameter: channel to leave");
                         if (!channelList.contains(channel) && !chat.isChannelJoined(channel)) throw new CommandException("Channel "+channel+" is not joined!");
-                        chat.leaveChannel(channel);
-                        if (chat.isChannelJoined(channel)) throw new CommandException("Something went wrong: Could not leave the channel.");
-                        if (mod.config.followEventEnabled.getBoolean()) mod.twitch.getClientHelper().disableFollowEventListener(channel);
-                        channelList.remove(channel);
-                        mod.config.twitchChannels.set(channelList.toArray(new String[0]));
-                        mod.config.saveIfChanged();
-                        StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Left "+channel+"'s chat!");
+                        if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+                        mod.asyncLeaveTwitchChannel(channel);
+                        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Leaving channel...");
                         break;
                     case "list":
                     case "show":
@@ -423,16 +413,7 @@ public class TwitchCommand extends CommandBase {
             case "deltoken":
             case "resettoken":
                 StreamUtils.addMessage(EnumChatFormatting.GRAY + "Revoking your current token...");
-                mod.stopTwitch();
-                mod.config.twitchEnabled.set(false);
-                boolean revoked = mod.config.revokeTwitchToken();
-                if (revoked) {
-                    mod.config.setTwitchToken("");
-                    StreamUtils.addMessage(EnumChatFormatting.GREEN + "The token has been revoked!");
-                } else {
-                    StreamUtils.addMessage(EnumChatFormatting.RED + "Could not revoke the token! It may be invalid, or the request could not have been sent!");
-                }
-                mod.config.saveIfChanged();
+                mod.asyncRevokeTwitchToken();
                 break;
             default:
                 throw new CommandException("Unknown subcommand: use /twitch help to see available subcommands.");

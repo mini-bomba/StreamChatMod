@@ -10,6 +10,7 @@ import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.asm.hooks.GuiScreenHook;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
+import me.mini_bomba.streamchatmod.runnables.TwitchAsyncClientAction;
 import me.mini_bomba.streamchatmod.runnables.TwitchFollowSoundScheduler;
 import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
 import net.minecraft.client.Minecraft;
@@ -32,9 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Mod(modid = StreamChatMod.MODID, version = StreamChatMod.VERSION, clientSideOnly = true)
 public class StreamChatMod
@@ -52,6 +51,9 @@ public class StreamChatMod
     public HttpServer httpServer = null;
     public Thread httpShutdownScheduler = null;
     public int loginMessageTimer = -1;
+
+    // Thread reference for running async Twitch client action, such as starting or stopping.
+    public Thread twitchAsyncAction;
 
     private final StreamEvents events;
 
@@ -96,6 +98,87 @@ public class StreamChatMod
     public void stop(FMLModDisabledEvent event) {
         stopTwitch();
         config.saveIfChanged();
+    }
+
+    private void asyncTwitchAction(Runnable action) throws ConcurrentModificationException {
+        if (twitchAsyncAction != null) throw new ConcurrentModificationException("An async action is already running!");
+        twitchAsyncAction = new Thread(new TwitchAsyncClientAction(this, action));
+        twitchAsyncAction.start();
+    }
+
+    public void asyncStartTwitch() throws ConcurrentModificationException {
+        asyncTwitchAction(() -> {
+            if (startTwitch())
+                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Enabled the Twitch Chat!");
+            else
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Could not start the Twitch client, the token may be invalid!");
+        });
+    }
+
+    public void asyncStopTwitch() throws ConcurrentModificationException {
+        asyncTwitchAction(() -> {
+            stopTwitch();
+            StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Disabled the Twitch Chat!");
+        });
+    }
+
+    public void asyncRestartTwitch() throws ConcurrentModificationException {
+        asyncTwitchAction(() -> {
+            stopTwitch();
+            if (startTwitch())
+                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Restarted the Twitch Chat!");
+            else
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Could not restart the Twitch client, the token may be invalid!");
+        });
+    }
+
+    public void asyncRevokeTwitchToken() throws ConcurrentModificationException {
+        asyncTwitchAction(() -> {
+            stopTwitch();
+            config.twitchEnabled.set(false);
+            boolean revoked = config.revokeTwitchToken();
+            if (revoked) {
+                config.setTwitchToken("");
+                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "The token has been revoked!");
+            } else {
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Could not revoke the token! It may be invalid, or the request could not have been sent!");
+            }
+            config.saveIfChanged();
+        });
+    }
+
+    public void asyncJoinTwitchChannel(String channel) throws ConcurrentModificationException {
+        asyncTwitchAction(() -> {
+            if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            TwitchChat chat = twitch.getChat();
+            if (chat == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            chat.joinChannel(channel);
+            if (!chat.isChannelJoined(channel)) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Something went wrong: Could not join the channel."); return; }
+            if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channel);
+            String[] channelArray = config.twitchChannels.getStringList();
+            ArrayList<String> channelList = new ArrayList<>(Arrays.asList(channelArray));
+            channelList.add(channel);
+            config.twitchChannels.set(channelList.toArray(new String[0]));
+            config.saveIfChanged();
+            StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Joined "+channel+"'s chat!");
+        });
+    }
+
+    public void asyncLeaveTwitchChannel(String channel) throws ConcurrentModificationException {
+        asyncTwitchAction(() -> {
+            if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            TwitchChat chat = twitch.getChat();
+            if (chat == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            chat.leaveChannel(channel);
+            if (chat.isChannelJoined(channel)) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Something went wrong: Could not leave the channel."); return; }
+            if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().disableFollowEventListener(channel);
+            String[] channelArray = config.twitchChannels.getStringList();
+            ArrayList<String> channelList = new ArrayList<>(Arrays.asList(channelArray));
+            channelList.remove(channel);
+            config.twitchChannels.set(channelList.toArray(new String[0]));
+            config.saveIfChanged();
+            StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Left "+channel+"'s chat!");
+        });
     }
 
     public boolean startTwitch() {

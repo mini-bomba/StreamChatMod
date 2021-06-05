@@ -1,12 +1,12 @@
 package me.mini_bomba.streamchatmod;
 
-import com.mojang.realmsclient.gui.ChatFormatting;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,6 +63,14 @@ public class StreamUtils {
             EntityPlayerSP player = mc.thePlayer;
             if (player != null) addMessages(player, message);
         }
+    }
+
+    public static void queueAddMessage(String message) {
+        Minecraft.getMinecraft().addScheduledTask(() -> addMessage(message));
+    }
+
+    public static void queueAddMessages(String[] messages) {
+        Minecraft.getMinecraft().addScheduledTask(() -> addMessages(messages));
     }
 
     public static void playSound(String sound, float volume, float pitch) {
@@ -143,12 +151,14 @@ public class StreamUtils {
             String token = exchange.getRequestURI().getQuery();
             if (token != null) {
                 mod.config.setTwitchToken(token);
+                mod.config.twitchEnabled.set(true);
                 mod.config.saveIfChanged();
-                mod.stopTwitch();
-                if (mod.startTwitch())
-                    addMessage(ChatFormatting.GREEN+"The Twitch token has been successfully set!");
-                else
-                    addMessage(ChatFormatting.RED+"Could not restart the Twitch client, the token may be invalid!");
+                if (mod.twitchAsyncAction == null) {
+                    addMessage(EnumChatFormatting.GRAY + "Token set, restarting twitch chat...");
+                    mod.asyncRestartTwitch();
+                } else {
+                    addMessage(EnumChatFormatting.RED + "There was an async action running, could not restart Twitch client. Run /twitch restart to finish setup.");
+                }
             }
             exchange.sendResponseHeaders(token == null ? 400 : 200, 0);
             exchange.close();
