@@ -1,6 +1,7 @@
 package me.mini_bomba.streamchatmod.commands;
 
 import com.github.twitch4j.chat.TwitchChat;
+import me.mini_bomba.streamchatmod.runnables.HTTPServerShutdownScheduler;
 import net.minecraft.util.EnumChatFormatting;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.StreamChatMod;
@@ -395,7 +396,8 @@ public class TwitchCommand extends CommandBase {
                         mod.httpServer.createContext("/setToken", new StreamUtils.TwitchOAuth2HandlerSecondary(mod));
                         mod.httpServer.setExecutor(null);
                         mod.httpServer.start();
-                        mod.httpShutdownTimer = 120*40;
+                        mod.httpShutdownScheduler = new Thread(new HTTPServerShutdownScheduler(mod));
+                        mod.httpShutdownScheduler.start();
                     }
                 } catch (Exception e) {
                     StreamUtils.addMessage(sender, EnumChatFormatting.RED+"Something went wrong while attempting to start an HTTP server for automatic token setting. Please manually set the token using "+EnumChatFormatting.GRAY+"/twitch settoken "+EnumChatFormatting.RED+"after generating.");

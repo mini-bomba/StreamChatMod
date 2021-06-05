@@ -42,15 +42,6 @@ public class StreamEvents {
             mod.printTwitchStatus(true);
         }
         if (mod.loginMessageTimer >= 0) mod.loginMessageTimer--;
-        if (mod.httpServer != null && mod.httpShutdownTimer > -1) {
-            if (mod.httpShutdownTimer == 0) {
-                mod.httpServer.stop(0);
-                mod.httpServer = null;
-                LOGGER.warn("HTTP server shut down due to inactivity.");
-                StreamUtils.addMessage(EnumChatFormatting.RED+"Timeout waiting for Twitch token generation. Token can still be manually set using /twitch settoken <token>");
-            }
-            --mod.httpShutdownTimer;
-        }
     }
 
     @SubscribeEvent

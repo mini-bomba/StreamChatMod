@@ -128,7 +128,6 @@ public class StreamUtils {
             OutputStream os = exchange.getResponseBody();
             os.write(readFile);
             exchange.close();
-//            exchange.getHttpContext().getServer().stop(5);
         }
     }
 
@@ -141,7 +140,6 @@ public class StreamUtils {
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            mod.httpShutdownTimer = -1;
             String token = exchange.getRequestURI().getQuery();
             if (token != null) {
                 mod.config.setTwitchToken(token);
@@ -157,6 +155,8 @@ public class StreamUtils {
             if (token == null) return;
             exchange.getHttpContext().getServer().stop(5);
             mod.httpServer = null;
+            if (mod.httpShutdownScheduler != null) mod.httpShutdownScheduler.interrupt();
+            mod.httpShutdownScheduler = null;
         }
     }
 

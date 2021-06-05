@@ -50,7 +50,7 @@ public class StreamChatMod
     public TwitchClient twitch = null;
     @Nullable
     public HttpServer httpServer = null;
-    public int httpShutdownTimer = -1;
+    public Thread httpShutdownScheduler = null;
     public int loginMessageTimer = -1;
 
     private final StreamEvents events;
