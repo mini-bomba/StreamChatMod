@@ -41,6 +41,7 @@ public class GuiScreenTransformer implements IStreamTransformer {
                 }
             }
         } catch (Exception e) {
+            LOGGER.error("An unexpected exception was encoutered while transforming GuiScreen");
             e.printStackTrace();
         }
     }

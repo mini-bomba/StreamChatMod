@@ -5,39 +5,53 @@ import org.objectweb.asm.tree.FieldInsnNode;
 
 public enum TransformerField {
     // GuiScreen
-    GuiScreen_mc("mc", "j", "Lave;", "Lnet/minecraft/client/Minecraft;"),
+    GuiScreen_mc("mc", "field_146297_k", "j", "Lave;", "Lnet/minecraft/client/Minecraft;"),
+
+    // GuiChat
+    GuiChat_inputField("inputField", "field_146415_a", "a", "Lavw;", "Lnet/minecraft/client/gui/GuiTextField;"),
 
     // Minecraft
-    Minecraft_thePlayer("thePlayer", "h", "Lbew;", "Lnet/minecraft/client/entity/EntityPlayerSP;");
+    Minecraft_thePlayer("thePlayer", "field_71439_g", "h", "Lbew;", "Lnet/minecraft/client/entity/EntityPlayerSP;");
 
 
-    private String name;
+    private String transformerName;
+    private String reflectorName;
     private String type;
 
-    TransformerField(String deobfName, String notchName, String srgType) {
-        this(deobfName, notchName, srgType, srgType);
+    TransformerField(String deobfName, String srgName, String notchName, String srgType) {
+        this(deobfName, srgName, notchName, srgType, srgType);
     }
 
-    TransformerField(String deobfName, String notchName, String notchType, String srgType) {
+    TransformerField(String deobfName, String srgName, String notchName, String notchType, String srgType) {
 
         if (StreamChatModTransformer.isDeobfuscated()) {
-            name = deobfName;
+            transformerName = deobfName;
+            reflectorName = deobfName;
             type = srgType;
         } else {
-            name = notchName;
+            transformerName = notchName;
+            reflectorName = srgName;
             type = notchType;
         }
     }
 
+    public String getTransformerName() {
+        return transformerName;
+    }
+
+    public String getReflectorName() {
+        return reflectorName;
+    }
+
     public FieldInsnNode getField(TransformerClass currentClass) {
-        return new FieldInsnNode(Opcodes.GETFIELD, currentClass.getNameRaw(), name, type);
+        return new FieldInsnNode(Opcodes.GETFIELD, currentClass.getNameRaw(), transformerName, type);
     }
 
     public FieldInsnNode putField(TransformerClass currentClass) {
-        return new FieldInsnNode(Opcodes.PUTFIELD, currentClass.getNameRaw(), name, type);
+        return new FieldInsnNode(Opcodes.PUTFIELD, currentClass.getNameRaw(), transformerName, type);
     }
 
     public boolean matches(FieldInsnNode fieldInsnNode) {
-        return this.name.equals(fieldInsnNode.name) && this.type.equals(fieldInsnNode.desc);
+        return this.transformerName.equals(fieldInsnNode.name) && this.type.equals(fieldInsnNode.desc);
     }
 }
