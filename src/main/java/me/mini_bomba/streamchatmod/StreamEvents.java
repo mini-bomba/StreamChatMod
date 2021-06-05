@@ -51,18 +51,6 @@ public class StreamEvents {
             }
             --mod.httpShutdownTimer;
         }
-        if (mod.eventSoundTimer > -1) {
-            int timer = mod.eventSoundTimer;
-            if (timer == 0) {
-                StreamUtils.playSound("note.harp", (float) mod.config.eventSoundVolume.getDouble(), 1.0f);
-            } else if (timer == 5) {
-                StreamUtils.playSound("note.harp", (float) mod.config.eventSoundVolume.getDouble(), 1.25f);
-            } else if (timer == 10) {
-                StreamUtils.playSound("note.harp", (float) mod.config.eventSoundVolume.getDouble(), 1.5f);
-            }
-            mod.eventSoundTimer++;
-            if (mod.eventSoundTimer >= 11) mod.eventSoundTimer = -1;
-        }
     }
 
     @SubscribeEvent

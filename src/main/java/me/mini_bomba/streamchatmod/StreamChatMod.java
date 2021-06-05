@@ -10,6 +10,7 @@ import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.asm.hooks.GuiScreenHook;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
+import me.mini_bomba.streamchatmod.runnables.TwitchFollowSoundScheduler;
 import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.event.ClickEvent;
@@ -50,9 +51,7 @@ public class StreamChatMod
     @Nullable
     public HttpServer httpServer = null;
     public int httpShutdownTimer = -1;
-    public int eventSoundTimer = -1;
     public int loginMessageTimer = -1;
-    public boolean messageSoundTrigger = false;
 
     private final StreamEvents events;
 
@@ -137,8 +136,8 @@ public class StreamChatMod
     }
 
     private void onTwitchFollow(FollowEvent event) {
-        StreamUtils.addMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
-        if (this.config.playSoundOnFollow.getBoolean()) eventSoundTimer = 0;
+        Minecraft.getMinecraft().addScheduledTask(() -> StreamUtils.addMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!"));
+        if (this.config.playSoundOnFollow.getBoolean()) new Thread(new TwitchFollowSoundScheduler(this)).start();
     }
 
     public void printTwitchStatus() {
