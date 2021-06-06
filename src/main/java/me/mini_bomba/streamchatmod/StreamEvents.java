@@ -54,17 +54,31 @@ public class StreamEvents {
         if (!(event.gui instanceof GuiChat) || mod.twitch == null || !mod.config.twitchMessageRedirectEnabled.getBoolean()
                 || mod.config.twitchSelectedChannel.getString().length() == 0) return;
         GuiChat gui = (GuiChat) event.gui;
+        String text = "";
         try {
-            if (GuiChat_inputField != null && ((GuiTextField) GuiChat_inputField.get(gui)).getText().startsWith("/")) return;
+            if (GuiChat_inputField != null) text = ((GuiTextField) GuiChat_inputField.get(gui)).getText();
         } catch (Exception ignored) {}
-        GuiScreen.drawRect(1, gui.height - 15, gui.width - 1, gui.height - 14, PURPLE);
-        GuiScreen.drawRect(1, gui.height - 2, gui.width - 1, gui.height - 1, PURPLE);
-        GuiScreen.drawRect(1, gui.height - 15, 2, gui.height - 1, PURPLE);
-        GuiScreen.drawRect(gui.width - 2, gui.height - 15, gui.width - 1, gui.height - 1, PURPLE);
-        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
-        String warning = EnumChatFormatting.LIGHT_PURPLE + "Twitch chat mode enabled - Messages forwarded to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat " + EnumChatFormatting.GRAY + "(/twitch mode)";
-        GuiScreen.drawRect(1, gui.height - 26, 3+fontRenderer.getStringWidth(warning), gui.height - 15, BACKGROUND);
-        fontRenderer.drawStringWithShadow(warning, 2, gui.height - 25, PURPLE);
+        if (text.length() == 0) {
+            drawChatOutline(gui, PURPLE);
+            String warning = EnumChatFormatting.LIGHT_PURPLE + "Twitch chat mode enabled - Messages forwarded to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat " + EnumChatFormatting.GRAY + "(/twitch mode)";
+            drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, PURPLE);
+        } else if (text.startsWith("/tc") || text.startsWith("/twitchchat")) {
+            drawChatOutline(gui, PURPLE);
+            String warning = EnumChatFormatting.LIGHT_PURPLE + "Sending message to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat";
+            drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, PURPLE);
+        }
+    }
 
+    private void drawChatOutline(GuiChat gui, int color) {
+        GuiScreen.drawRect(1, gui.height - 15, gui.width - 1, gui.height - 14, color);
+        GuiScreen.drawRect(1, gui.height - 2, gui.width - 1, gui.height - 1, color);
+        GuiScreen.drawRect(1, gui.height - 15, 2, gui.height - 1, color);
+        GuiScreen.drawRect(gui.width - 2, gui.height - 15, gui.width - 1, gui.height - 1, color);
+    }
+
+    private void drawTextWithBackground(int x, int y, String text, int backgroundColor, int textColor) {
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
+        GuiScreen.drawRect(x, y, x+fontRenderer.getStringWidth(text)+2, y+11, backgroundColor);
+        fontRenderer.drawStringWithShadow(text, x+1, y+1, textColor);
     }
 }
