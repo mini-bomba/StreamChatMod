@@ -58,7 +58,7 @@ public class StreamEvents {
         try {
             if (GuiChat_inputField != null) text = ((GuiTextField) GuiChat_inputField.get(gui)).getText();
         } catch (Exception ignored) {}
-        if (text.length() == 0) {
+        if (!text.startsWith("/")) {
             drawChatOutline(gui, PURPLE);
             String warning = EnumChatFormatting.LIGHT_PURPLE + "Twitch chat mode enabled - Messages forwarded to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat " + EnumChatFormatting.GRAY + "(/twitch mode)";
             drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, PURPLE);
