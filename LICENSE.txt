@@ -30,5 +30,5 @@ This project includes files in the src/main/java/me/mini_bomba/streamchatmod/twe
 versions of the files from https://github.com/BiscuitDevelopment/SkyblockAddons (from tweaker & asm directories),
 which are available under the MIT license. The full license is available at depLicenses/SkyblockAddons.txt
 
-This project bundles twitch4j 1.4.0, which is available under the MIT license. The full license is available at
+This project bundles twitch4j 1.5.0, which is available under the MIT license. The full license is available at
 depLicenses/twitch4j.txt
