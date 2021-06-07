@@ -48,6 +48,8 @@ public class StreamChatMod
     @Nullable
     public TwitchClient twitch = null;
     @Nullable
+    public TwitchClient twitchSender = null;
+    @Nullable
     public HttpServer httpServer = null;
     public Thread httpShutdownScheduler = null;
     public int loginMessageTimer = -1;
@@ -186,6 +188,7 @@ public class StreamChatMod
         String token = config.twitchToken.getString();
         if (token.equals("")) return false;
         try {
+            // Build the main TwitchClient
             OAuth2Credential credential = new OAuth2Credential("twitch", token);
             twitch = TwitchClientBuilder.builder()
                     .withDefaultAuthToken(credential)
@@ -205,6 +208,15 @@ public class StreamChatMod
                 chat.joinChannel(channel);
             }
             if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channels);
+            // Build the TwitchClient for sending messages (so they can be seen in-game)
+            twitchSender = TwitchClientBuilder.builder()
+                    .withDefaultAuthToken(credential)
+                    .withEnableChat(true)
+                    .withChatAccount(credential)
+                    .build();
+            TwitchChat senderChat = twitchSender.getChat();
+            for (String channel : senderChat.getChannels())
+                senderChat.leaveChannel(channel);
             return true;
         } catch (Exception e) {
             LOGGER.error("Failed to start Twitch client");
@@ -250,13 +262,20 @@ public class StreamChatMod
     }
 
     public void stopTwitch() {
-        if (twitch == null) return;
-        TwitchChat chat = twitch.getChat();
-        for (String channel : chat.getChannels()) {
-            chat.leaveChannel(channel);
+        if (twitch != null) {
+            TwitchClient twitchClient = this.twitch;
+            this.twitch = null;
+            TwitchChat chat = twitchClient.getChat();
+            for (String channel : chat.getChannels()) {
+                chat.leaveChannel(channel);
+            }
+            twitchClient.getClientHelper().disableFollowEventListener(Arrays.asList(config.twitchChannels.getStringList()));
+            twitchClient.close();
         }
-        twitch.getClientHelper().disableFollowEventListener(Arrays.asList(config.twitchChannels.getStringList()));
-        twitch.close();
-        this.twitch = null;
+        if (twitchSender != null) {
+            TwitchClient twitchClient = this.twitchSender;
+            this.twitchSender = null;
+            twitchClient.close();
+        }
     }
 }

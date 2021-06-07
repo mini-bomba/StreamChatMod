@@ -28,11 +28,11 @@ public class TwitchChatCommand extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
-        if (mod.twitch == null) throw new CommandException("Twitch chat is disabled or improperly configured!");
+        if (mod.twitch == null || mod.twitchSender == null) throw new CommandException("Twitch chat is disabled or improperly configured!");
         String channel = mod.config.twitchSelectedChannel.getString();
         if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
         if (args.length == 0) throw new CommandException("Usage: /twitchchat <message>");
-        boolean success = mod.twitch.getChat().sendMessage(channel, String.join(" ", args));
+        boolean success = mod.twitchSender.getChat().sendMessage(channel, String.join(" ", args));
         if (!success) throw new CommandException("Something went wrong. (Check token permissions maybe?)");
     }
 
