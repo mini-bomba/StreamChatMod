@@ -15,6 +15,8 @@ import java.util.Set;
 public class TwitchMessageHandler implements Runnable {
     private final ChannelMessageEvent event;
     private final StreamChatMod mod;
+    private static final char formatChar = '\u00a7';
+    private static final String validFormats = "0123456789abcdefklmnorABCDEFKLMNOR";
 
     public TwitchMessageHandler(StreamChatMod mod, ChannelMessageEvent event) {
         this.mod = mod;
@@ -30,7 +32,19 @@ public class TwitchMessageHandler implements Runnable {
                       ( perms.contains(CommandPermission.MODERATOR) ? EnumChatFormatting.GREEN + " MOD " :
                       ( perms.contains(CommandPermission.VIP) ? EnumChatFormatting.DARK_PURPLE + " VIP " :
                       ( perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + " SUB " : " "))));
-        IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+ prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY+" >> "+EnumChatFormatting.WHITE+event.getMessage());
+        String message = event.getMessage();
+        message = message.replace(formatChar, '&');
+        if (mod.config.allowFormatting.getBoolean()) {
+            char[] msg = message.toCharArray();
+            for (int i = 0; i < msg.length; i++) {
+                if (msg[i] == '&') {
+                    if (validFormats.contains(String.valueOf(msg[i+1])))
+                        msg[i] = formatChar;
+                }
+            }
+            message = String.valueOf(msg);
+        }
+        IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+ prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY+" >> "+message);
         ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch delete " + event.getChannel().getName() + " " + event.getMessageEvent().getMessageId().orElse("")));
         component.setChatStyle(style);
         StreamUtils.addMessage(component);

@@ -14,6 +14,7 @@ import java.io.File;
 public class StreamConfig {
     private final Configuration config;
     public final Property forceShowChannelName;
+    public final Property allowFormatting;
     protected final Property twitchToken;
     public final Property twitchEnabled;
     public final Property twitchChannels;
@@ -30,6 +31,7 @@ public class StreamConfig {
     public StreamConfig(File configFile) {
         config = new Configuration(configFile);
         forceShowChannelName = config.get("common", "forceShowChannelName", false);
+        allowFormatting = config.get("common", "allowFormatting", false);
         twitchToken = config.get("tokens", "twitch", "");
         twitchEnabled = config.get("twitch", "enabled", false);
         twitchChannels = config.get("twitch", "channels", new String[0]);

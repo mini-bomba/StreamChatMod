@@ -60,6 +60,7 @@ public class TwitchCommand extends CommandBase {
                         EnumChatFormatting.GRAY + "/twitch channels"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages joined Twitch chats",
                         EnumChatFormatting.GRAY + "/twitch sounds"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages enabled sounds",
                         EnumChatFormatting.GRAY + "/twitch events"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages enabled events",
+                        EnumChatFormatting.GRAY + "/twitch formatting [enable/disable]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Allows viewers to use chat formatting codes (ex. &7) to send formatted messages",
                         EnumChatFormatting.GRAY + "/twitch mode [new mode]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manages the destination of messages sent through Minecraft chat",
                         EnumChatFormatting.GRAY + "/twitch ban <user> [reason]"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Bans the user in the currently selected channel",
                         EnumChatFormatting.GRAY + "/twitch unban <user>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Unbans the user in the currently selected channel",
@@ -134,6 +135,27 @@ public class TwitchCommand extends CommandBase {
                     mod.config.twitchMessageRedirectEnabled.set(newState);
                     mod.config.saveIfChanged();
                     StreamUtils.addMessage(EnumChatFormatting.AQUA + "Minecraft chat mode has been set to " + (newState ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server"));
+                }
+                break;
+            case "formatting":
+            case "allowformatting":
+            case "chatformatting":
+            case "format":
+            case "allowformat":
+            case "chatformat":
+            case "cf":
+                if (args.length == 1) {
+                    boolean formattingAllowed = mod.config.allowFormatting.getBoolean();
+                    StreamUtils.addMessages(new String[]{
+                            EnumChatFormatting.AQUA + "Chat formatting codes are currently " + (formattingAllowed ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled"),
+                            EnumChatFormatting.GRAY + "Use " + EnumChatFormatting.DARK_AQUA + "/twitch formatting " + (formattingAllowed ? "disable" : "enable") + EnumChatFormatting.GRAY + " to " + (formattingAllowed ? "disallow" : "allow") + " viewers to send formatted messages!"
+                    });
+                } else {
+                    Boolean newState = StreamUtils.readStringAsBoolean(args[1]);
+                    if (newState == null) throw new CommandException("Invalid boolean value: " + args[1]);
+                    mod.config.allowFormatting.set(newState);
+                    mod.config.saveIfChanged();
+                    StreamUtils.addMessage(EnumChatFormatting.GREEN + "Viewers are " + (newState ? "now" : "no longer") + " allowed to use formatting codes in their messages!");
                 }
                 break;
             case "sounds":
