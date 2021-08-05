@@ -64,6 +64,7 @@ public class TwitchMessageHandler implements Runnable {
             IChatComponent comp = new ChatComponentText(url);
             ChatStyle style = new ChatStyle()
                 .setColor(EnumChatFormatting.BLUE)
+                .setUnderlined(true)
                 .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
             comp.setChatStyle(style);
             component.appendSibling(comp);
