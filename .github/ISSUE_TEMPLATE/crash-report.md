@@ -29,5 +29,8 @@ If applicable, add logs and/or screenshots to help explain your problem.
  - Mod version: 
  - Other installed mods: 
 
+note: if you are using additional mods, please make sure this crash can still be replicated without them.
+if this crash can only be replicated with additional mods, please use the "Incompatibility report" template instead.
+
 **Additional context**
 Add any other context about the problem here.

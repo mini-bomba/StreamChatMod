@@ -1,8 +1,8 @@
 ---
-name: Bug report
-about: Create a report to help us fix the bug
-title: "[BUG] found a bug, plz fix"
-labels: bug
+name: Incompatibility report
+about: Report a bug or crash that can be replicated only with specific mods
+title: ''
+labels: bug, incompatible mod
 assignees: ''
 
 ---
@@ -31,9 +31,6 @@ If applicable, add logs and/or screenshots to help explain your problem.
  - Forge version: 
  - Mod version: 
  - Other installed mods: 
-
-note: if you are using additional mods, please make sure this bug can still be replicated without them.
-if this bug can only be replicated with additional mods, please use the "Incompatibility report" template instead.
 
 **Additional context**
 Add any other context about the problem here.
