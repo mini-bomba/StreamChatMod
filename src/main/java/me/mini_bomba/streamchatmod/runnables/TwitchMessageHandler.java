@@ -9,18 +9,39 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TwitchMessageHandler implements Runnable {
     private final ChannelMessageEvent event;
     private final StreamChatMod mod;
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final char formatChar = '\u00a7';
     private static final String validFormats = "0123456789abcdefklmnorABCDEFKLMNOR";
+    public static final Pattern urlPattern = Pattern.compile("https?://[^.\\s/]+(?:\\.[^.\\s/]+)+\\S*");
 
     public TwitchMessageHandler(StreamChatMod mod, ChannelMessageEvent event) {
         this.mod = mod;
         this.event = event;
+    }
+
+    private String processColorCodes(String message) {
+        message = message.replace(formatChar, '&');
+        if (mod.config.allowFormatting.getBoolean()) {
+            char[] msg = message.toCharArray();
+            for (int i = 0; i < msg.length; i++) {
+                if (msg[i] == '&') {
+                    if (validFormats.contains(String.valueOf(msg[i+1])))
+                        msg[i] = formatChar;
+                }
+            }
+            message = String.valueOf(msg);
+        }
+        return message;
     }
 
     @Override
@@ -33,18 +54,23 @@ public class TwitchMessageHandler implements Runnable {
                       ( perms.contains(CommandPermission.VIP) ? EnumChatFormatting.DARK_PURPLE + " VIP " :
                       ( perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + " SUB " : " "))));
         String message = event.getMessage();
-        message = message.replace(formatChar, '&');
-        if (mod.config.allowFormatting.getBoolean()) {
-            char[] msg = message.toCharArray();
-            for (int i = 0; i < msg.length; i++) {
-                if (msg[i] == '&') {
-                    if (validFormats.contains(String.valueOf(msg[i+1])))
-                        msg[i] = formatChar;
-                }
-            }
-            message = String.valueOf(msg);
+        Matcher matcher = urlPattern.matcher(message);
+        IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+ prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY+" >> ");
+        int lastEnd = 0;
+        while (matcher.find()) {
+            if (matcher.start() > lastEnd+1)
+                component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd, matcher.start()))));
+            String url = matcher.group();
+            IChatComponent comp = new ChatComponentText(url);
+            ChatStyle style = new ChatStyle()
+                .setColor(EnumChatFormatting.BLUE)
+                .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+            comp.setChatStyle(style);
+            component.appendSibling(comp);
+            lastEnd = matcher.end();
         }
-        IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+ prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY+" >> "+message);
+        if (message.length() > lastEnd+1)
+            component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd))));
         ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch delete " + event.getChannel().getName() + " " + event.getMessageEvent().getMessageId().orElse("")));
         component.setChatStyle(style);
         StreamUtils.addMessage(component);
