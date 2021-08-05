@@ -43,7 +43,7 @@ jobs:
           name: Mod-Files
           path: build/libs/
       - name: Publish prerelease if build passed
-        if: success() && github.ref == "refs/heads/master"
+        if: success() && github.ref == 'refs/heads/master'
         uses: "softprops/action-gh-release@v1"
         with:
           tag_name: "latest"
