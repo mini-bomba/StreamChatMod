@@ -42,16 +42,22 @@ jobs:
         with:
           name: Mod-Files
           path: build/libs/
+      - name: Get filenames to publish
+        if: success()
+        run: |
+          echo "BUILD_FILES<<EOF" >> $GITHUB_ENV
+          echo build/libs/StreamChatMod-git_*.jar >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Publish prerelease if build passed
         if: success() && github.ref == 'refs/heads/master'
-        uses: "softprops/action-gh-release@v1"
+        uses: "johnwbyrd/update-release@v1"
         with:
-          tag_name: ${{ github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: latest
           prerelease: true
-          files: |
-            build/libs/StreamChatMod-v*.jar
-            build/libs/StreamChatMod-git_*.jar
-          name: "Latest Commit (that compiles)"
+          files: ${{ env.BUILD_FILES }}
+          release: "Latest Commit (that compiles)"
+          message: "Latest Commit (that compiles)"
           body: |
             This automatic prerelease is built from commit ${{ env.GIT_HASH }} and was triggered by @${{ github.actor }}
             [Github Actions workflow run that built this prerelease](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
