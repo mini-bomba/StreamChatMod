@@ -8,12 +8,22 @@ plugins {
 version = project.version
 group= "me.mini_bomba" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 
+// Get HEAD's git hash
+def gitHash = new ByteArrayOutputStream()
+exec {
+    commandLine 'git', 'rev-parse', '--short=8', 'HEAD'
+    standardOutput = gitHash
+}
+gitHash = gitHash.toString().trim()
+
 minecraft {
     version = "${project.minecraftVersion}-${project.forgeVersion}"
     runDir = "run"
     mappings = project.mappings
 
     replace("@VERSION@": project.version)
+    replace("@GIT_HASH@": gitHash)
+    replace("@PRERELEASE@": !project.hasProperty("release") || project.release != "true")
     replaceIn("${project.modName}.java")
 }
 
@@ -23,7 +33,13 @@ dependencies {
 }
 
 jar {
-    archiveFileName = "${project.modName}-${project.version}-for-MC-${project.minecraftVersion}.jar"
+    // If the prerelease property is set to true, use git hash instead of project version in output file names
+    if (project.hasProperty("release") && project.release == "true") {
+        archiveFileName = "${project.modName}-v${project.version}-for-${project.minecraftVersion}.jar"
+    } else {
+        archiveFileName = "${project.modName}-git_${gitHash}-for-${project.minecraftVersion}.jar"
+    }
+
 
     manifest.attributes(
             'Manifest-Version': '2.0',

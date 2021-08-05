@@ -1,5 +1,6 @@
 package me.mini_bomba.streamchatmod;
 
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import net.minecraft.client.Minecraft;
@@ -14,9 +15,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StreamUtils {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -111,6 +116,37 @@ public class StreamUtils {
             Properties properties = new Properties();
             properties.load(url.openStream());
             return properties.getProperty("version");
+        } catch (Exception e) {
+            LOGGER.warn("Could not check for updates!");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static class GitCommit {
+        public final String hash;
+        public final String shortHash;
+        public final String message;
+        public final String shortMessage;
+        private static final Pattern shortMessagePattern = Pattern.compile("^.*");
+
+        public GitCommit(String hash, String message) {
+            this.hash = hash;
+            shortHash = hash.substring(0, 8);
+            this.message = message;
+            Matcher matcher = shortMessagePattern.matcher(message);
+            matcher.find();
+            shortMessage = matcher.group();
+        }
+    }
+
+    @Nullable
+    public static GitCommit getLatestCommit() {
+        try {
+            URL url = new URL("https://api.github.com/repos/mini-bomba/StreamChatMod/commits/master");
+            Gson gson = new Gson();
+            Map data = gson.fromJson(new InputStreamReader(url.openStream()), Map.class);
+            return new GitCommit((String) data.get("sha"), (String) ((Map) data.get("commit")).get("message"));
         } catch (Exception e) {
             LOGGER.warn("Could not check for updates!");
             e.printStackTrace();
