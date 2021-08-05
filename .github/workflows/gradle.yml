@@ -15,6 +15,12 @@ jobs:
       - name: Checkout
         if: always()
         uses: actions/checkout@v2
+      - name: Put commit hash/name in env variables
+        run: |
+          echo "GIT_HASH=$(git rev-parse --short=8 HEAD)" >> $GITHUB_ENV
+          echo "GIT_MESSAGE<<EOF" >> $GITHUB_ENV
+          git log -1 --pretty=%B >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:
@@ -36,3 +42,19 @@ jobs:
         with:
           name: Mod-Files
           path: build/libs/
+      - name: Publish prerelease if build passed
+        if: success() && github.ref == "refs/heads/master"
+        uses: "softprops/action-gh-release@v1"
+        with:
+          tag_name: "latest"
+          prerelease: true
+          files: |
+            build/libs/StreamChatMod-v*.jar
+            build/libs/StreamChatMod-git_*.jar
+          name: "Latest Commit (that compiles)"
+          body: |
+            This automatic prerelease is built from commit ${{ env.GIT_HASH }} and was triggered by @${{ github.actor }}
+            [Github Actions workflow run that built this prerelease](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            Commit message:
+            ${{ env.GIT_MESSAGE }}
