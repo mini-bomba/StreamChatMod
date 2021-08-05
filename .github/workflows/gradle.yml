@@ -46,8 +46,7 @@ jobs:
         if: success() && github.ref == 'refs/heads/master'
         uses: "softprops/action-gh-release@v1"
         with:
-          tag_name: "latest"
-          target_commitish: ${{ github.ref }}
+          tag_name: ${{ github.ref }}
           prerelease: true
           files: |
             build/libs/StreamChatMod-v*.jar
