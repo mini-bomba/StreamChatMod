@@ -143,7 +143,7 @@ public class StreamUtils {
     @Nullable
     public static GitCommit getLatestCommit() {
         try {
-            URL url = new URL("https://api.github.com/repos/mini-bomba/StreamChatMod/commits/master");
+            URL url = new URL("https://api.github.com/repos/mini-bomba/StreamChatMod/commits/latest");
             Gson gson = new Gson();
             Map data = gson.fromJson(new InputStreamReader(url.openStream()), Map.class);
             return new GitCommit((String) data.get("sha"), (String) ((Map) data.get("commit")).get("message"));
