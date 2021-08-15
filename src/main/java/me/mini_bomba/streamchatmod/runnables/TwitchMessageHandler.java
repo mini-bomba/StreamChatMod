@@ -51,7 +51,7 @@ public class TwitchMessageHandler implements Runnable {
         String prefix = perms.contains(CommandPermission.BROADCASTER) ? EnumChatFormatting.RED + " STREAMER " :
                       ( perms.contains(CommandPermission.TWITCHSTAFF) ? EnumChatFormatting.BLACK + " STAFF " :
                       ( perms.contains(CommandPermission.MODERATOR) ? EnumChatFormatting.GREEN + " MOD " :
-                      ( perms.contains(CommandPermission.VIP) ? EnumChatFormatting.DARK_PURPLE + " VIP " :
+                      ( perms.contains(CommandPermission.VIP) ? EnumChatFormatting.LIGHT_PURPLE + " VIP " :
                       ( perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + " SUB " : " "))));
         boolean allowFormatting = mod.config.allowFormatting.getBoolean() && (prefix.length() > 1 || !mod.config.subOnlyFormatting.getBoolean());
         String message = event.getMessage();
