@@ -11,8 +11,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
+import static me.mini_bomba.streamchatmod.StreamChatMod.PRERELEASE;
+
 public class StreamConfig {
     private final Configuration config;
+    public final Property updateCheckerEnabled;
     public final Property forceShowChannelName;
     public final Property allowFormatting;
     public final Property subOnlyFormatting;
@@ -31,6 +34,7 @@ public class StreamConfig {
 
     public StreamConfig(File configFile) {
         config = new Configuration(configFile);
+        updateCheckerEnabled = config.get("common", "updateCheckerEnabled", PRERELEASE);
         forceShowChannelName = config.get("common", "forceShowChannelName", false);
         allowFormatting = config.get("common", "allowFormatting", false);
         subOnlyFormatting = config.get("common", "subOnlyFormatting", false);

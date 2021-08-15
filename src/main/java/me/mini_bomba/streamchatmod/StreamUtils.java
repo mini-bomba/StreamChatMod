@@ -38,6 +38,10 @@ public class StreamUtils {
         player.addChatMessage(component);
     }
 
+    public static void addMessage(ICommandSender player, IChatComponent component) {
+        player.addChatMessage(component);
+    }
+
     public static void addMessage(IChatComponent component) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc != null) {
@@ -70,12 +74,32 @@ public class StreamUtils {
         }
     }
 
+    public static void addMessages(ICommandSender player, IChatComponent[] components) {
+        for (IChatComponent component : components) addMessage(player, component);
+    }
+
+    public static void addMessages(EntityPlayerSP player, IChatComponent[] components) {
+        for (IChatComponent component : components) addMessage(player, component);
+    }
+
+    public static void addMessages(IChatComponent[] components) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc != null) {
+            EntityPlayerSP player = mc.thePlayer;
+            if (player != null) addMessages(player, components);
+        }
+    }
+
     public static void queueAddMessage(String message) {
         Minecraft.getMinecraft().addScheduledTask(() -> addMessage(message));
     }
 
     public static void queueAddMessages(String[] messages) {
         Minecraft.getMinecraft().addScheduledTask(() -> addMessages(messages));
+    }
+
+    public static void queueAddMessages(IChatComponent[] components) {
+        Minecraft.getMinecraft().addScheduledTask(() -> addMessages(components));
     }
 
     public static void playSound(String sound, float volume, float pitch) {

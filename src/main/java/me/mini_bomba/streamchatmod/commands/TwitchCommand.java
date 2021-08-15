@@ -69,7 +69,8 @@ public class TwitchCommand extends CommandBase {
                         EnumChatFormatting.GRAY + "/twitch delete <channel> <message id>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Deletes the selected message. Click a twitch message to automatically generate this command",
                         EnumChatFormatting.GRAY + "/twitch token"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Opens a page to generate the token for Twitch & automatically updates it",
                         EnumChatFormatting.GRAY + "/twitch settoken <token>"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Manually set the token for Twitch if /twitch token fails to automatically set it.",
-                        EnumChatFormatting.GRAY + "/twitch revoketoken"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Revoke the currently set token & removes it from the config. You can run this if you leak your current token."
+                        EnumChatFormatting.GRAY + "/twitch revoketoken"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Revoke the currently set token & removes it from the config. You can run this if you leak your current token.",
+                        EnumChatFormatting.GRAY + "/twitch updatecheker"+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+"Toggle the automatic update checker. It runs every 15m and notifies you of updates in chat.",
                 });
                 break;
             case "status":
@@ -457,6 +458,29 @@ public class TwitchCommand extends CommandBase {
             case "resettoken":
                 StreamUtils.addMessage(EnumChatFormatting.GRAY + "Revoking your current token...");
                 mod.asyncRevokeTwitchToken();
+                break;
+            case "autoupdate":
+            case "autoupdater":
+            case "updatechecker":
+            case "updater":
+                if (args.length == 1)
+                    StreamUtils.addMessage(EnumChatFormatting.AQUA + "Auto update checker is: " + (mod.config.updateCheckerEnabled.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"));
+                else {
+                    Boolean newState = StreamUtils.readStringAsBoolean(args[1]);
+                    if (newState == null)
+                        throw new CommandException("Invalid boolean value" + args[1]);
+                    boolean oldState = mod.config.updateCheckerEnabled.getBoolean();
+                    mod.config.updateCheckerEnabled.set(newState);
+                    mod.config.saveIfChanged();
+                    if (oldState != newState) {
+                        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Auto update checker has been " + (newState ? "enabled" : "disabled") + "!");
+                        if (newState)
+                            mod.startUpdateChecker();
+                        else
+                            mod.stopUpdateChecker();
+                    } else
+                        StreamUtils.addMessage(EnumChatFormatting.RED + "Auto update checker already was " + (newState ? "enabled" : "disabled") + "!");
+                }
                 break;
             default:
                 throw new CommandException("Unknown subcommand: use /twitch help to see available subcommands.");

@@ -13,6 +13,7 @@ import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import me.mini_bomba.streamchatmod.runnables.TwitchAsyncClientAction;
 import me.mini_bomba.streamchatmod.runnables.TwitchFollowSoundScheduler;
 import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
+import me.mini_bomba.streamchatmod.runnables.UpdateChecker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
@@ -62,6 +63,8 @@ public class StreamChatMod
     // Thread reference for running async Twitch client action, such as starting or stopping.
     public Thread twitchAsyncAction;
 
+    public Thread updateCheckerThread;
+
     private final StreamEvents events;
 
     public StreamChatMod() {
@@ -81,6 +84,7 @@ public class StreamChatMod
         else
             LOGGER.info("Mod is up to date!");
 		startTwitch();
+		if (config.updateCheckerEnabled.getBoolean()) startUpdateChecker();
     }
 
     @EventHandler
@@ -113,8 +117,24 @@ public class StreamChatMod
 
     @EventHandler
     public void stop(FMLModDisabledEvent event) {
+        stopUpdateChecker();
         stopTwitch();
         config.saveIfChanged();
+    }
+
+    public void startUpdateChecker() {
+        if (updateCheckerThread == null) {
+            updateCheckerThread = new Thread(new UpdateChecker(this));
+            updateCheckerThread.start();
+        }
+    }
+
+    public void stopUpdateChecker() {
+        if (updateCheckerThread != null)
+            if (updateCheckerThread.isAlive())
+                updateCheckerThread.interrupt();
+            else
+                updateCheckerThread = null;
     }
 
     private void asyncTwitchAction(Runnable action) throws ConcurrentModificationException {
