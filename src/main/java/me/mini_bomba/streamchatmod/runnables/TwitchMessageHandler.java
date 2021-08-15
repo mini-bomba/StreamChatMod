@@ -58,7 +58,7 @@ public class TwitchMessageHandler implements Runnable {
         IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+ prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY+" >> ");
         int lastEnd = 0;
         while (matcher.find()) {
-            if (matcher.start() > lastEnd+1)
+            if (matcher.start() > lastEnd)
                 component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd, matcher.start()))));
             String url = matcher.group();
             IChatComponent comp = new ChatComponentText(url);
@@ -70,7 +70,7 @@ public class TwitchMessageHandler implements Runnable {
             component.appendSibling(comp);
             lastEnd = matcher.end();
         }
-        if (message.length() > lastEnd+1)
+        if (message.length() > lastEnd)
             component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd))));
         ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch delete " + event.getChannel().getName() + " " + event.getMessageEvent().getMessageId().orElse("")));
         component.setChatStyle(style);
