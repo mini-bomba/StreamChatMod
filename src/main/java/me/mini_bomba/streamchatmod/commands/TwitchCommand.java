@@ -146,16 +146,37 @@ public class TwitchCommand extends CommandBase {
             case "cf":
                 if (args.length == 1) {
                     boolean formattingAllowed = mod.config.allowFormatting.getBoolean();
+                    boolean subOnlyFormatting = mod.config.subOnlyFormatting.getBoolean();
                     StreamUtils.addMessages(new String[]{
-                            EnumChatFormatting.AQUA + "Chat formatting codes are currently " + (formattingAllowed ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled"),
-                            EnumChatFormatting.GRAY + "Use " + EnumChatFormatting.DARK_AQUA + "/twitch formatting " + (formattingAllowed ? "disable" : "enable") + EnumChatFormatting.GRAY + " to " + (formattingAllowed ? "disallow" : "allow") + " viewers to send formatted messages!"
+                            EnumChatFormatting.AQUA + "Chat formatting codes are currently " + (formattingAllowed ? (subOnlyFormatting ? EnumChatFormatting.GOLD + "for subscribers+ only" : EnumChatFormatting.GREEN + "enabled") : EnumChatFormatting.RED + "disabled"),
+                            EnumChatFormatting.GRAY + "Use " + EnumChatFormatting.DARK_AQUA + "/twitch formatting " + (formattingAllowed ? "disable" : "enable") + EnumChatFormatting.GRAY + " to " + (formattingAllowed ? "disallow" : "allow") + " viewers to send formatted messages" + (formattingAllowed ? ", or use " + EnumChatFormatting.DARK_AQUA + "/twitch formatting "+ (subOnlyFormatting ? "enable" : "subonly") + EnumChatFormatting.GRAY + " to allow " + (subOnlyFormatting ? "everyone" : "only subs/vips/mods") + " to use formatting" : "") + "!"
                     });
                 } else {
                     Boolean newState = StreamUtils.readStringAsBoolean(args[1]);
-                    if (newState == null) throw new CommandException("Invalid boolean value: " + args[1]);
+                    boolean newSubOnly;
+                    if (newState == null) switch (args[1].toLowerCase()) {
+                        case "subonly":
+                        case "sub":
+                        case "viponly":
+                        case "vip":
+                        case "modonly":
+                        case "mod":
+                            newSubOnly = true;
+                            newState = true;
+                            break;
+                        case "everyone":
+                        case "all":
+                        case "anyone":
+                            newSubOnly = false;
+                            newState = true;
+                            break;
+                        default:
+                            throw new CommandException("Invalid boolean value: " + args[1]);
+                    } else newSubOnly = false;
                     mod.config.allowFormatting.set(newState);
+                    mod.config.subOnlyFormatting.set(newSubOnly);
                     mod.config.saveIfChanged();
-                    StreamUtils.addMessage(EnumChatFormatting.GREEN + "Viewers are " + (newState ? "now" : "no longer") + " allowed to use formatting codes in their messages!");
+                    StreamUtils.addMessage(EnumChatFormatting.GREEN + (newSubOnly ? "Subscribers, VIPs & moderators" : "Viewers") + " are " + (newState ? "now" : "no longer") + " allowed to use formatting codes in their messages!");
                 }
                 break;
             case "sounds":

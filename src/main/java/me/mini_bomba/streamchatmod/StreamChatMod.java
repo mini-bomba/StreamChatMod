@@ -273,7 +273,7 @@ public class StreamChatMod
                     prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.GREEN + "Enabled",
                     prefix + EnumChatFormatting.GRAY + "Channels joined: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + twitch.getChat().getChannels().size(),
                     prefix + EnumChatFormatting.GRAY + "Selected channel: " +  (channel.length() > 0 ? "" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel : EnumChatFormatting.RED + "None"),
-                    prefix + EnumChatFormatting.GRAY + "Formatted messages: " + (config.allowFormatting.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"),
+                    prefix + EnumChatFormatting.GRAY + "Formatted messages: " + (config.allowFormatting.getBoolean() ? (config.subOnlyFormatting.getBoolean() ? EnumChatFormatting.GOLD + "Subscriber+ only" : EnumChatFormatting.GREEN + "Enabled") : EnumChatFormatting.RED + "Disabled"),
                     prefix + EnumChatFormatting.GRAY + "Minecraft chat mode: " + (config.twitchMessageRedirectEnabled.getBoolean() ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server") + EnumChatFormatting.GRAY + " (/twitch mode)"
             });
         } else {

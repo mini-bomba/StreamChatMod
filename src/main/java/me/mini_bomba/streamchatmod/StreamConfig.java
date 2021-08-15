@@ -15,6 +15,7 @@ public class StreamConfig {
     private final Configuration config;
     public final Property forceShowChannelName;
     public final Property allowFormatting;
+    public final Property subOnlyFormatting;
     protected final Property twitchToken;
     public final Property twitchEnabled;
     public final Property twitchChannels;
@@ -32,6 +33,7 @@ public class StreamConfig {
         config = new Configuration(configFile);
         forceShowChannelName = config.get("common", "forceShowChannelName", false);
         allowFormatting = config.get("common", "allowFormatting", false);
+        subOnlyFormatting = config.get("common", "subOnlyFormatting", false);
         twitchToken = config.get("tokens", "twitch", "");
         twitchEnabled = config.get("twitch", "enabled", false);
         twitchChannels = config.get("twitch", "channels", new String[0]);

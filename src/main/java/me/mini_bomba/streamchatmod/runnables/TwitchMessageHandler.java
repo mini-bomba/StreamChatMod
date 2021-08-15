@@ -29,9 +29,9 @@ public class TwitchMessageHandler implements Runnable {
         this.event = event;
     }
 
-    private String processColorCodes(String message) {
+    private String processColorCodes(String message, boolean allowFormatting) {
         message = message.replace(formatChar, '&');
-        if (mod.config.allowFormatting.getBoolean()) {
+        if (allowFormatting) {
             char[] msg = message.toCharArray();
             for (int i = 0; i < msg.length; i++) {
                 if (msg[i] == '&') {
@@ -53,13 +53,14 @@ public class TwitchMessageHandler implements Runnable {
                       ( perms.contains(CommandPermission.MODERATOR) ? EnumChatFormatting.GREEN + " MOD " :
                       ( perms.contains(CommandPermission.VIP) ? EnumChatFormatting.DARK_PURPLE + " VIP " :
                       ( perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + " SUB " : " "))));
+        boolean allowFormatting = mod.config.allowFormatting.getBoolean() && (prefix.length() > 1 || !mod.config.subOnlyFormatting.getBoolean());
         String message = event.getMessage();
         Matcher matcher = urlPattern.matcher(message);
         IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+ prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY+" >> ");
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)
-                component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd, matcher.start()))));
+                component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd, matcher.start()), allowFormatting)));
             String url = matcher.group();
             IChatComponent comp = new ChatComponentText(url);
             ChatStyle style = new ChatStyle()
@@ -71,7 +72,7 @@ public class TwitchMessageHandler implements Runnable {
             lastEnd = matcher.end();
         }
         if (message.length() > lastEnd)
-            component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd))));
+            component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd), allowFormatting)));
         ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch delete " + event.getChannel().getName() + " " + event.getMessageEvent().getMessageId().orElse("")));
         component.setChatStyle(style);
         StreamUtils.addMessage(component);
