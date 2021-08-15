@@ -4,9 +4,11 @@ A simple chat client for Twitch put into Minecraft 1.8.9's chat box!
 
 ## Installation
 
-The mod can be downloaded from a release or the artifacts of a Github Actions job.
+The mod can be downloaded from the [release list](https://github.com/mini-bomba/StreamChatMod/releases).
+You can either download a stable full release, or the "Latest Commit (that compiles)" prelease which is automatically compiled on new commit.
 After downloading, this mod can be installed simply by putting the .jar file in the mods folder of your minecraft installation.
 It is located in `%APPDATA%\.minecraft` on Windows and `~/.minecraft` on Linux.
+Or if you use [MultiMC](https://multimc.org), you can just drag & drop the file into the mods window
 
 ## Configuration
 
@@ -33,9 +35,6 @@ your player's local chat.
 
 If you selected a channel in the configuration section, you can use `/tc <message>` to send any message from in-game to your selected stream chat.
 
-You can make the mod intercept every message Minecraft message you send & redirect it to the selected stream chat by using `/twitch chatmode`.
-A purple outline will appear around the chat input box when in this mode.
-
 You can delete a message (if you have permissions to do so) by clicking on it in-game and sending the suggested command. Note that the message will stay visible in-game; use F3+D to clear your in-game chat.
 
 All Twitch related configuration commands can be viewed by running `/twitch help`.
@@ -50,6 +49,36 @@ Some moderation commands are available from in-game. They are listed below:
 * `/twitch unban <user>`: Unbans the given user in the currently selected Twitch Chat.
 
 **NOTE: The mod has no way to verify that an action has been done, and the confirmation messages are always sent, even if the action was not performed on the Twitch servers.**
+
+## Other features
+
+### Automatic update checker
+The mod automatically checks for updates on startup.
+
+You can also check for updates every 15 minutes, by running `/twitch updatechecker enable` (or `/twitch updatechecker disable` to disable).
+This is automatically enabled on prerelease builds.
+
+### Chat formatting
+By default, any formatting codes are "neutralized" (the `§` character is replaced with `&`).
+However, this can be changed: you may either allow everyone to use formatting codes, or only subscribers, VIPs and moderators.
+
+When enabled, the inverse of the "neutralization" happens: the `&` is replaced with `§`, allowing viewers to use Essentials(X)-like color codes.
+
+### New follow events
+When a new user follows, you will get a message about it & a sound will play. This may take longer than your event overlay in OBS, though.
+This can also be completly disabled if you get a lot of followers.
+
+### Send chat messages to the Twitch chat by default
+You can use `/twitch chatmode` to make any non-command messages be automatically sent to the selected Twitch channel.
+
+Note: This may not work nicely with all mods and some mods may make this feature not work. If you find a well-known mod, which does not work with this, please submit a bug report.
+
+ProTip: a purple outline will appear if you are in Twitch chat mode, so you always know where your messages are going.
+
+### Quick revoking of your token
+Accidentally showed the configuration file or authorization window on stream?
+
+Use `/twitch revoketoken` to quickly invalidate that token to minimize damage.
 
 ## Note to self:
 Run `setupDecompWorkspace` Gradle task before configuring Gradle project
