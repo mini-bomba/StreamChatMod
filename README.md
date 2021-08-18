@@ -47,6 +47,7 @@ Some moderation commands are available from in-game. They are listed below:
 * `/twitch timeout <user> <duration> [reason]`: Timeouts the given user in the currently selected Twitch Chat. There is no un-timeout command, time the user out for 1 second to do that.
 * `/twitch ban <user> [reason]`: Bans the given user in the currently selected Twitch Chat.
 * `/twitch unban <user>`: Unbans the given user in the currently selected Twitch Chat.
+* Tip 19: `Ban an annoying humanoid from your stream with /twitch ban <Nickname> <Reason> (ex: /twitch ban Rajdo Being an annoying humanoid.)`
 
 **NOTE: The mod has no way to verify that an action has been done, and the confirmation messages are always sent, even if the action was not performed on the Twitch servers.**
 
