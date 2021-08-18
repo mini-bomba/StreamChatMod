@@ -41,14 +41,13 @@ All Twitch related configuration commands can be viewed by running `/twitch help
 
 ## Moderation from Minecraft
 
-### **Tip #19: Ban an annoying humanoid from your stream with /twitch ban <Nickname> <Reason> (ex: /twitch ban Rajdo Being an annoying humanoid.)**
-
 Some moderation commands are available from in-game. They are listed below:
 * `/twitch delete <channel> <message id>`: Delete the specified message. It is supposed to be entered by clicking on a message in-game, since there is no easy way to get the ID of a message.
 * `/twitch clearchat`: Clears the currently selected Twitch Chat. Does not clear the in-game chat; use F3+D to do that.
 * `/twitch timeout <user> <duration> [reason]`: Timeouts the given user in the currently selected Twitch Chat. There is no un-timeout command, time the user out for 1 second to do that.
 * `/twitch ban <user> [reason]`: Bans the given user in the currently selected Twitch Chat.
 * `/twitch unban <user>`: Unbans the given user in the currently selected Twitch Chat.
+* Tip 19: `Ban an annoying humanoid from your stream with /twitch ban <Nickname> <Reason> (ex: /twitch ban Rajdo Being an annoying humanoid.)`
 
 **NOTE: The mod has no way to verify that an action has been done, and the confirmation messages are always sent, even if the action was not performed on the Twitch servers.**
 
