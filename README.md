@@ -41,6 +41,8 @@ All Twitch related configuration commands can be viewed by running `/twitch help
 
 ## Moderation from Minecraft
 
+### **Tip #19: Ban an annoying humanoid from your stream with /twitch ban <Nickname> <Reason> (ex: /twitch ban Rajdo Being an annoying humanoid.)**
+
 Some moderation commands are available from in-game. They are listed below:
 * `/twitch delete <channel> <message id>`: Delete the specified message. It is supposed to be entered by clicking on a message in-game, since there is no easy way to get the ID of a message.
 * `/twitch clearchat`: Clears the currently selected Twitch Chat. Does not clear the in-game chat; use F3+D to do that.
