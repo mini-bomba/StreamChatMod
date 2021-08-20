@@ -48,7 +48,7 @@ public class UpdateChecker implements Runnable {
                                 .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GREEN + "Click here to see mod releases on GitHub!")));
                 component1.setChatStyle(style);
                 if (component2 != null) component2.setChatStyle(style);
-                style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "twitch updatechecker disable"))
+                style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/twitch updatechecker disable"))
                                 .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GRAY + "Use " + EnumChatFormatting.DARK_GRAY + "/twitch updatechecker disable" + EnumChatFormatting.GRAY + " to disable, or " + EnumChatFormatting.DARK_GRAY + "/twitch updatechecker enable" + EnumChatFormatting.GRAY + " to enable")));
                 component3.setChatStyle(style);
                 if (component2 != null)
