@@ -53,21 +53,17 @@ public class TwitchEventsFollowSubcommand extends TwitchSubcommand {
         if (args.length == 0)
             StreamUtils.addMessage(EnumChatFormatting.AQUA + "Displaying of new channel followers is: " + (mod.config.followEventEnabled.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"));
         else {
+            if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
             Boolean newState = StreamUtils.readStringAsBoolean(args[0]);
             if (newState == null)
                 throw new CommandException("Invalid boolean value" + args[0]);
-            else {
-                boolean oldState = mod.config.followEventEnabled.getBoolean();
-                mod.config.followEventEnabled.set(newState);
-                mod.config.saveIfChanged();
-                StreamUtils.addMessage(EnumChatFormatting.GREEN + "Displaying of new channel followers has been " + (newState ? "enabled" : "disabled") + "!");
-                if (oldState != newState && mod.twitch != null) {
-                    List<String> channels = Arrays.asList(mod.config.twitchChannels.getStringList());
-                    if (newState)
-                        mod.twitch.getClientHelper().enableFollowEventListener(channels);
-                    else
-                        mod.twitch.getClientHelper().disableFollowEventListener(channels);
-                }
+            boolean oldState = mod.config.followEventEnabled.getBoolean();
+            mod.config.followEventEnabled.set(newState);
+            mod.config.saveIfChanged();
+            StreamUtils.addMessage(EnumChatFormatting.GREEN + "Displaying of new channel followers has been " + (newState ? "enabled" : "disabled") + "!");
+            if (oldState != newState && mod.twitch != null) {
+                StreamUtils.addMessage(EnumChatFormatting.GRAY+"Updating listeners...");
+                mod.asyncUpdateFollowEvents();
             }
         }
     }

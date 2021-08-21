@@ -218,6 +218,18 @@ public class StreamChatMod
         });
     }
 
+    public void asyncUpdateFollowEvents() throws ConcurrentModificationException {
+        asyncTwitchAction(() -> {
+            if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            List<String> channels = Arrays.asList(config.twitchChannels.getStringList());
+            if (config.followEventEnabled.getBoolean())
+                twitch.getClientHelper().enableFollowEventListener(channels);
+            else
+                twitch.getClientHelper().disableFollowEventListener(channels);
+            StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Follow event listeners updated!");
+        });
+    }
+
     public boolean startTwitch() {
         if (twitch != null || !config.twitchEnabled.getBoolean()) return false;
         String token = config.twitchToken.getString();
