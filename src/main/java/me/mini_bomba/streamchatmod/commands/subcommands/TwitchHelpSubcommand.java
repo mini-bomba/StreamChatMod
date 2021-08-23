@@ -68,7 +68,7 @@ public class TwitchHelpSubcommand extends TwitchSubcommand {
             String[] categories = new String[]{"general", "setup", "config", "moderation"};
             for (int i = 0; i < 4; i++) {
                 ChatStyle style = new ChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click to show subcommands in the "+categories[i]+" category")))
-                        .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "twitch help "+categories[i]));
+                        .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/twitch help "+categories[i]));
                 components[i+1].setChatStyle(style);
             }
             StreamUtils.addMessages(components);
