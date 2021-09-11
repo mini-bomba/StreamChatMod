@@ -306,6 +306,10 @@ public class StreamChatMod
                     prefix + EnumChatFormatting.GRAY + "Formatted messages: " + (config.allowFormatting.getBoolean() ? (config.subOnlyFormatting.getBoolean() ? EnumChatFormatting.GOLD + "Subscriber+ only" : EnumChatFormatting.GREEN + "Enabled") : EnumChatFormatting.RED + "Disabled"),
                     prefix + EnumChatFormatting.GRAY + "Minecraft chat mode: " + (config.twitchMessageRedirectEnabled.getBoolean() ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server") + EnumChatFormatting.GRAY + " (/twitch mode)"
             });
+            if (config.twitchMessageRedirectEnabled.getBoolean()) {
+                String minecraftPrefix = config.minecraftChatPrefix.getString();
+                StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Minecraft chat prefix: " + (minecraftPrefix.length() == 0 ? EnumChatFormatting.RED + "Disabled!" : EnumChatFormatting.AQUA + minecraftPrefix));
+            }
         } else {
             StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.RED + "Disabled" + (config.twitchEnabled.getBoolean() && config.twitchToken.getString().length() > 0 ? ", the token may be invalid!" : ""));
         }

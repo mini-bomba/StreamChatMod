@@ -72,9 +72,15 @@ This can also be completly disabled if you get a lot of followers.
 ### Send chat messages to the Twitch chat by default
 You can use `/twitch chatmode` to make any non-command messages be automatically sent to the selected Twitch channel.
 
+You may also set a "Minecraft chat prefix" using `/twitch mcchatprefix`.
+Prepending this prefix to the message while the redirect mode is enabled will result in the message being sent to the Minecraft server instead (disabling redirection for that message only).
+The default prefix is `!!` (since `!` is a commonly used prefix for chatbots).
+The prefix is removed before the message is forwarded to the server.
+
 Note: This may not work nicely with all mods and some mods may make this feature not work. If you find a well-known mod, which does not work with this, please submit a bug report.
 
-ProTip: a purple outline will appear if you are in Twitch chat mode, so you always know where your messages are going.
+ProTip: a purple outline will appear if you are in Twitch chat mode, so you always know where your messages are going.<br>
+ProProTip: the outline will change to green when you enter the prefix while in Twitch chat mode to notify you that the message will be sent to the Minecraft server.
 
 ### Quick revoking of your token
 Accidentally showed the configuration file or authorization window on stream?

@@ -23,6 +23,7 @@ public class StreamEvents {
     private final StreamChatMod mod;
     private final Logger LOGGER = LogManager.getLogger();
     private static final int PURPLE = new Color(170, 0, 170).getRGB();
+    private static final int GREEN = new Color(0, 255, 0).getRGB();
     private static final int BACKGROUND = new Color(0, 0, 0, 127).getRGB();
     private Field GuiChat_inputField = null;
 
@@ -59,10 +60,15 @@ public class StreamEvents {
         try {
             if (GuiChat_inputField != null) text = ((GuiTextField) GuiChat_inputField.get(gui)).getText();
         } catch (Exception ignored) {}
-        if (!text.startsWith("/")) {
+        String modePrefix = mod.config.minecraftChatPrefix.getString();
+        if (!text.startsWith("/") && (modePrefix.length() == 0 || !text.startsWith(modePrefix))) {
             drawChatOutline(gui, PURPLE);
             String warning = EnumChatFormatting.LIGHT_PURPLE + "Twitch chat mode enabled - Messages forwarded to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat " + EnumChatFormatting.GRAY + "(/twitch mode)";
             drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, PURPLE);
+        } else if (modePrefix.length() != 0 && text.startsWith(modePrefix)) {
+            drawChatOutline(gui, GREEN);
+            String warning = EnumChatFormatting.GREEN + "Message starts with " + EnumChatFormatting.GRAY + modePrefix + EnumChatFormatting.GREEN + " - message will be sent to the server" + EnumChatFormatting.GRAY + " (/twitch mp)";
+            drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, GREEN);
         } else if (text.startsWith("/tc") || text.startsWith("/twitchchat")) {
             drawChatOutline(gui, PURPLE);
             String warning = EnumChatFormatting.LIGHT_PURPLE + "Sending message to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat";
@@ -74,6 +80,11 @@ public class StreamEvents {
     public void onLocalMinecraftMessage(LocalMessageEvent event) {
         if (event.message.startsWith("/")) return;
         if (!mod.config.twitchMessageRedirectEnabled.getBoolean()) return;
+        String modePrefix = mod.config.minecraftChatPrefix.getString();
+        if (modePrefix.length() != 0 && event.message.startsWith(modePrefix)) {
+            event.message = event.message.substring(modePrefix.length());
+            return;
+        }
         event.setCanceled(true);
         if (mod.twitch == null || mod.twitchSender == null || !mod.config.twitchEnabled.getBoolean() || mod.twitchSender.getChat() == null) {
             StreamUtils.addMessage(EnumChatFormatting.RED+"The message was not sent anywhere: Chat mode is set to 'Redirect to Twitch', but Twitch chat (or part of it) is disabled!");

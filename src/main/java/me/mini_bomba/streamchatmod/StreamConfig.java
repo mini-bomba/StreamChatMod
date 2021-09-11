@@ -19,6 +19,7 @@ public class StreamConfig {
     public final Property forceShowChannelName;
     public final Property allowFormatting;
     public final Property subOnlyFormatting;
+    public final Property minecraftChatPrefix;
     protected final Property twitchToken;
     public final Property twitchEnabled;
     public final Property twitchChannels;
@@ -38,6 +39,7 @@ public class StreamConfig {
         forceShowChannelName = config.get("common", "forceShowChannelName", false);
         allowFormatting = config.get("common", "allowFormatting", false);
         subOnlyFormatting = config.get("common", "subOnlyFormatting", false);
+        minecraftChatPrefix = config.get("common", "minecraftChatPrefix", "!!");
         twitchToken = config.get("tokens", "twitch", "");
         twitchEnabled = config.get("twitch", "enabled", false);
         twitchChannels = config.get("twitch", "channels", new String[0]);
