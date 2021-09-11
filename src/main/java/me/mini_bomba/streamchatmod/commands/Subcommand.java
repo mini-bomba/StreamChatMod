@@ -40,36 +40,36 @@ public abstract class Subcommand<T extends Subcommand<T>> implements ICommandNod
     }
 
     /**
-     * Return a string representing the subcommand usage
-     * Example: `ban <user> [reason]`
+     * Return a string representing the subcommand usage<br>
+     * Example: `ban <user> [reason]`<br>
      * This should be checked by help subcommands
      */
     @NotNull
     public abstract String getSubcommandUsage();
 
     /**
-     * Return a description of the command
+     * Return a description of the command<br>
      * This should be checked by help subcommands
      */
     @NotNull
     public abstract String getDescription();
 
     /**
-     * Return a SubcommandCategory Enum
+     * Return a SubcommandCategory Enum<br>
      * This should be checked by help subcommands to determine which category a subcommand belongs to
      */
     public abstract ISubcommandCategory getCategory();
 
     /**
-     * Process the subcommand invocation
+     * Process the subcommand invocation<br>
      * Parameters are passed from the parent (sub)command, but the first value in args is dropped
      */
     public abstract void processSubcommand(ICommandSender sender, String[] args) throws CommandException;
 
 
     /**
-     * Utility method to create a map of subcommand name/alias -> subcommand object
-     * List of subcommands is grabbed from the getSubcommands() method
+     * Utility method to create a map of subcommand name/alias -> subcommand object<br>
+     * List of subcommands is grabbed from the getSubcommands() method<br>
      * No duplicate subcommand names/aliases are allowed
      */
     protected static <T extends Subcommand<T>> Map<String, T> createNameMap(List<T> subcommands) {
