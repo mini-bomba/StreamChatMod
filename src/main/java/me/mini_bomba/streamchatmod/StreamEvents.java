@@ -1,5 +1,6 @@
 package me.mini_bomba.streamchatmod;
 
+import me.mini_bomba.streamchatmod.events.LocalMessageEvent;
 import me.mini_bomba.streamchatmod.tweaker.TransformerField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -67,6 +68,22 @@ public class StreamEvents {
             String warning = EnumChatFormatting.LIGHT_PURPLE + "Sending message to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat";
             drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, PURPLE);
         }
+    }
+
+    @SubscribeEvent
+    public void onLocalMinecraftMessage(LocalMessageEvent event) {
+        if (event.message.startsWith("/")) return;
+        if (!mod.config.twitchMessageRedirectEnabled.getBoolean()) return;
+        event.setCanceled(true);
+        if (mod.twitch == null || mod.twitchSender == null || !mod.config.twitchEnabled.getBoolean() || mod.twitchSender.getChat() == null) {
+            StreamUtils.addMessage(EnumChatFormatting.RED+"The message was not sent anywhere: Chat mode is set to 'Redirect to Twitch', but Twitch chat (or part of it) is disabled!");
+            return;
+        }
+        if (mod.config.twitchSelectedChannel.getString().length() == 0) {
+            StreamUtils.addMessage(EnumChatFormatting.RED+"The message was not sent anywhere: Chat mode is set to 'Redirect to Twitch', but no channel is selected!");
+            return;
+        }
+        mod.twitchSender.getChat().sendMessage(mod.config.twitchSelectedChannel.getString(), event.message);
     }
 
     private void drawChatOutline(GuiChat gui, int color) {

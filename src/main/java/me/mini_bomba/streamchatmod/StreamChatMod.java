@@ -7,7 +7,6 @@ import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.FollowEvent;
 import com.sun.net.httpserver.HttpServer;
-import me.mini_bomba.streamchatmod.asm.hooks.GuiScreenHook;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import me.mini_bomba.streamchatmod.runnables.TwitchAsyncClientAction;
@@ -112,7 +111,6 @@ public class StreamChatMod
             metadata.description += "\n\nYou are running SCM release version " + VERSION + " built from git commit " + GIT_HASH;
         }
         config = new StreamConfig(event.getSuggestedConfigurationFile());
-        GuiScreenHook.setMod(this);
     }
 
     @EventHandler

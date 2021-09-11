@@ -47,20 +47,29 @@ public class GuiScreenTransformer implements IStreamTransformer {
     }
 
     private static InsnList insertRedirectMessage() {
-        // Insert instructions:
-        // ALOAD 1
-        // INVOKESTATIC me/mini_bomba/asm/hooks/GuiScreenHook redirectMessage
-        // IFEQ <skipReturnLabel>
-        // RETURN
-        // <skipReturnLabel>
-        // Java Code inserted:
-        // if (me.mini_bomba.streamchatmod.asm.hooks.GuiScreenHook.redirectMessage(msg)) return;
+        /* Insert instructions:
+         * ALOAD 1
+         * INVOKESTATIC me/mini_bomba/asm/hooks/GuiScreenHook redirectMessage
+         * ASTORE 1
+         * ALOAD 1
+         * INVOKEVIRTUAL java/lang/String length
+         * IFNE <skipReturnLabel>
+         * RETURN
+         * <skipReturnLabel>
+         *
+         * Java Code inserted:
+         * msg = me.mini_bomba.streamchatmod.asm.hooks.GuiScreenHook.redirectMessage(msg)
+         * if (msg.length() == 0) return;
+         */
         InsnList list = new InsnList();
         LabelNode skipReturnLabel = new LabelNode();
 
         list.add(new VarInsnNode(Opcodes.ALOAD, 1));
-        list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "me/mini_bomba/streamchatmod/asm/hooks/GuiScreenHook", "redirectMessage", "(Ljava/lang/String;)Z", false));
-        list.add(new JumpInsnNode(Opcodes.IFEQ, skipReturnLabel));
+        list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "me/mini_bomba/streamchatmod/asm/hooks/GuiScreenHook", "redirectMessage", "(Ljava/lang/String;)Ljava/lang/String;", false));
+        list.add(new VarInsnNode(Opcodes.ASTORE, 1));
+        list.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "length", "()I", false));
+        list.add(new JumpInsnNode(Opcodes.IFNE, skipReturnLabel));
         list.add(new InsnNode(Opcodes.RETURN));
         list.add(skipReturnLabel);
 
