@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
@@ -11,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-public class TwitchClearChatSubcommand extends TwitchSubcommand {
+public class TwitchClearChatSubcommand extends TwitchSubcommandWithOutline {
 
     public TwitchClearChatSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
@@ -54,5 +55,16 @@ public class TwitchClearChatSubcommand extends TwitchSubcommand {
         if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
         mod.twitch.getChat().clearChat(channel);
         StreamUtils.addMessage("" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s Twitch chat cleared. Use F3+D to clear your in-game chat.");
+    }
+
+    @Override
+    public void drawChatOutline(GuiChat gui, String[] args) {
+        String channel = mod.config.twitchSelectedChannel.getString();
+        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean())
+            StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.RED+"Twitch chat is disabled!");
+        else if (channel.length() == 0)
+            StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.RED+"No Twitch channel selected!");
+        else
+            StreamUtils.drawChatWarning(gui, StreamUtils.PURPLE, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE+"Clearing "+EnumChatFormatting.AQUA+channel+EnumChatFormatting.LIGHT_PURPLE+"'s chat");
     }
 }

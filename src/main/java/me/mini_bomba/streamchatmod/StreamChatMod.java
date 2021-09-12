@@ -65,9 +65,11 @@ public class StreamChatMod
     public Thread updateCheckerThread;
 
     private final StreamEvents events;
+    protected final TwitchCommand twitchCommand;
 
     public StreamChatMod() {
         events = new StreamEvents(this);
+        twitchCommand = new TwitchCommand(this);
     }
     
     @EventHandler
@@ -90,7 +92,7 @@ public class StreamChatMod
     public void init(FMLInitializationEvent event) {
         ClientCommandHandler commandHandler = ClientCommandHandler.instance;
         commandHandler.registerCommand(new TwitchChatCommand(this));
-        commandHandler.registerCommand(new TwitchCommand(this));
+        commandHandler.registerCommand(twitchCommand);
 
         MinecraftForge.EVENT_BUS.register(events);
     }

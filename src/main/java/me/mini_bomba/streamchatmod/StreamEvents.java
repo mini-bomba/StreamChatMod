@@ -1,11 +1,9 @@
 package me.mini_bomba.streamchatmod;
 
+import me.mini_bomba.streamchatmod.commands.subcommands.TwitchSubcommandWithOutline;
 import me.mini_bomba.streamchatmod.events.LocalMessageEvent;
 import me.mini_bomba.streamchatmod.tweaker.TransformerField;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiChat;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -15,16 +13,13 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.awt.*;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 public class StreamEvents {
 
     private final StreamChatMod mod;
     private final Logger LOGGER = LogManager.getLogger();
-    private static final int PURPLE = new Color(170, 0, 170).getRGB();
-    private static final int GREEN = new Color(0, 255, 0).getRGB();
-    private static final int BACKGROUND = new Color(0, 0, 0, 127).getRGB();
     private Field GuiChat_inputField = null;
 
     public StreamEvents(StreamChatMod mod) {
@@ -53,26 +48,40 @@ public class StreamEvents {
 
     @SubscribeEvent
     public void onGuiChatRender(GuiScreenEvent.DrawScreenEvent.Post event) {
-        if (!(event.gui instanceof GuiChat) || mod.twitch == null || !mod.config.twitchMessageRedirectEnabled.getBoolean()
-                || mod.config.twitchSelectedChannel.getString().length() == 0) return;
+        if (!(event.gui instanceof GuiChat)) return;
         GuiChat gui = (GuiChat) event.gui;
         String text = "";
         try {
             if (GuiChat_inputField != null) text = ((GuiTextField) GuiChat_inputField.get(gui)).getText();
         } catch (Exception ignored) {}
         String modePrefix = mod.config.minecraftChatPrefix.getString();
-        if (!text.startsWith("/") && (modePrefix.length() == 0 || !text.startsWith(modePrefix))) {
-            drawChatOutline(gui, PURPLE);
-            String warning = EnumChatFormatting.LIGHT_PURPLE + "Twitch chat mode enabled - Messages forwarded to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat " + EnumChatFormatting.GRAY + "(/twitch mode)";
-            drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, PURPLE);
+        if (!text.startsWith("/") && (modePrefix.length() == 0 || !text.startsWith(modePrefix)) && mod.config.twitchMessageRedirectEnabled.getBoolean()) {
+            if (mod.twitch == null || mod.twitchSender == null || !mod.config.twitchEnabled.getBoolean())
+                StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.RED+"Twitch chat is disabled!");
+            else if (mod.config.twitchSelectedChannel.getString().length() == 0)
+                StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.RED+"No Twitch channel selected!");
+            else {
+                String warning = EnumChatFormatting.LIGHT_PURPLE + "Twitch chat mode enabled - Messages forwarded to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat " + EnumChatFormatting.GRAY + "(/twitch mode)";
+                StreamUtils.drawChatWarning(gui, StreamUtils.PURPLE, StreamUtils.BACKGROUND, warning);
+            }
         } else if (modePrefix.length() != 0 && text.startsWith(modePrefix)) {
-            drawChatOutline(gui, GREEN);
             String warning = EnumChatFormatting.GREEN + "Message starts with " + EnumChatFormatting.GRAY + modePrefix + EnumChatFormatting.GREEN + " - message will be sent to the server" + EnumChatFormatting.GRAY + " (/twitch mp)";
-            drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, GREEN);
+            StreamUtils.drawChatWarning(gui, StreamUtils.GREEN, StreamUtils.BACKGROUND, warning);
         } else if (text.startsWith("/tc") || text.startsWith("/twitchchat")) {
-            drawChatOutline(gui, PURPLE);
-            String warning = EnumChatFormatting.LIGHT_PURPLE + "Sending message to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat";
-            drawTextWithBackground(1, gui.height - 26, warning, BACKGROUND, PURPLE);
+            if (mod.twitch == null || mod.twitchSender == null || !mod.config.twitchEnabled.getBoolean())
+                StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.RED+"Twitch chat is disabled!");
+            else if (mod.config.twitchSelectedChannel.getString().length() == 0)
+                StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.RED+"No Twitch channel selected!");
+            else {
+                String warning = EnumChatFormatting.LIGHT_PURPLE + "Sending message to " + EnumChatFormatting.AQUA + mod.config.twitchSelectedChannel.getString() + EnumChatFormatting.LIGHT_PURPLE + "'s chat";
+                StreamUtils.drawChatWarning(gui, StreamUtils.PURPLE, StreamUtils.BACKGROUND, warning);
+            }
+        } else if (text.startsWith("/twitch")) {
+            String[] args = text.split(" ");
+            if (args.length > 1 && mod.twitchCommand.subcommandMapWithChatOutlines.containsKey(args[1].toLowerCase())) {
+                TwitchSubcommandWithOutline subcommand =  mod.twitchCommand.subcommandMapWithChatOutlines.get(args[1].toLowerCase());
+                subcommand.drawChatOutline(gui, Arrays.copyOfRange(args, 2, args.length));
+            }
         }
     }
 
@@ -95,18 +104,5 @@ public class StreamEvents {
             return;
         }
         mod.twitchSender.getChat().sendMessage(mod.config.twitchSelectedChannel.getString(), event.message);
-    }
-
-    private void drawChatOutline(GuiChat gui, int color) {
-        GuiScreen.drawRect(1, gui.height - 15, gui.width - 1, gui.height - 14, color);
-        GuiScreen.drawRect(1, gui.height - 2, gui.width - 1, gui.height - 1, color);
-        GuiScreen.drawRect(1, gui.height - 15, 2, gui.height - 1, color);
-        GuiScreen.drawRect(gui.width - 2, gui.height - 15, gui.width - 1, gui.height - 1, color);
-    }
-
-    private void drawTextWithBackground(int x, int y, String text, int backgroundColor, int textColor) {
-        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
-        GuiScreen.drawRect(x, y, x+fontRenderer.getStringWidth(text)+2, y+11, backgroundColor);
-        fontRenderer.drawStringWithShadow(text, x+1, y+1, textColor);
     }
 }

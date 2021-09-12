@@ -82,6 +82,19 @@ Note: This may not work nicely with all mods and some mods may make this feature
 ProTip: a purple outline will appear if you are in Twitch chat mode, so you always know where your messages are going.<br>
 ProProTip: the outline will change to green when you enter the prefix while in Twitch chat mode to notify you that the message will be sent to the Minecraft server.
 
+### Chat outline for selected SCM commands
+The outline visible with Twitch chat mode enabled will also appear when typing some StreamChatMod commands.
+This currently mostly applies to moderation commands & the `/twitchchat` command.
+
+The outline will be either purple or red, indicating whether you've made an obvious mistake or not.
+The text above the chat input bar will tell you what the command will do and what obvious mistake you've made.
+
+Examples:
+![Valid Ban Command](https://cdn.upload.systems/uploads/SkKnCNQl.png)
+![Valid Timeout Command](https://cdn.upload.systems/uploads/oj0qxwGu.png)
+![Invalid Timeout Duration](https://cdn.upload.systems/uploads/BIXbpaLC.png)
+![Missing Parameters](https://cdn.upload.systems/uploads/cSGZ0Ghp.png)
+
 ### Quick revoking of your token
 Accidentally showed the configuration file or authorization window on stream?
 

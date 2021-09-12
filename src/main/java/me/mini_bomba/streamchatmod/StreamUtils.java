@@ -5,6 +5,9 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
@@ -13,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,6 +29,10 @@ import java.util.regex.Pattern;
 
 public class StreamUtils {
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final int PURPLE = new Color(170, 0, 170).getRGB();
+    public static final int GREEN = new Color(0, 255, 0).getRGB();
+    public static final int RED = new Color(255, 0, 0).getRGB();
+    public static final int BACKGROUND = new Color(0, 0, 0, 127).getRGB();
 
     public static void addMessage(ICommandSender player, String message) {
         player.addChatMessage(new ChatComponentText(message));
@@ -149,6 +157,24 @@ public class StreamUtils {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static void drawChatWarning(GuiChat gui, int outlineColor, int backgroundColor, String warning) {
+        drawChatOutline(gui, outlineColor);
+        drawTextWithBackground(1, gui.height - 26, warning, outlineColor, backgroundColor);
+    }
+
+    public static void drawChatOutline(GuiChat gui, int color) {
+        GuiScreen.drawRect(1, gui.height - 15, gui.width - 1, gui.height - 14, color);
+        GuiScreen.drawRect(1, gui.height - 2, gui.width - 1, gui.height - 1, color);
+        GuiScreen.drawRect(1, gui.height - 15, 2, gui.height - 1, color);
+        GuiScreen.drawRect(gui.width - 2, gui.height - 15, gui.width - 1, gui.height - 1, color);
+    }
+
+    public static void drawTextWithBackground(int x, int y, String text, int textColor, int backgroundColor) {
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
+        GuiScreen.drawRect(x, y, x+fontRenderer.getStringWidth(text)+2, y+11, backgroundColor);
+        fontRenderer.drawStringWithShadow(text, x+1, y+1, textColor);
     }
 
     public static class GitCommit {

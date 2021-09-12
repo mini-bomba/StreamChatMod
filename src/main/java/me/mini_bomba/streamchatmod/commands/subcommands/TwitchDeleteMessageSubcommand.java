@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
@@ -11,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-public class TwitchDeleteMessageSubcommand extends TwitchSubcommand {
+public class TwitchDeleteMessageSubcommand extends TwitchSubcommandWithOutline {
 
     public TwitchDeleteMessageSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
@@ -54,5 +55,17 @@ public class TwitchDeleteMessageSubcommand extends TwitchSubcommand {
         if (args.length == 1) throw new CommandException("Missing required parameter: id of the message to delete");
         mod.twitch.getChat().delete(args[0], args[1]);
         StreamUtils.addMessage(EnumChatFormatting.GREEN + "Message deleted.");
+    }
+
+    @Override
+    public void drawChatOutline(GuiChat gui, String[] args) {
+        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean())
+            StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.RED+"Twitch chat is disabled!");
+        else if (args.length == 0)
+            StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE+"Deleting a message "+EnumChatFormatting.RED+"(missing channel name & message id parameters)");
+        else if (args.length == 1)
+            StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE+"Deleting a message from "+EnumChatFormatting.AQUA+args[0]+EnumChatFormatting.LIGHT_PURPLE+"'s chat "+EnumChatFormatting.RED+"(missing message id parameter)");
+        else
+            StreamUtils.drawChatWarning(gui, StreamUtils.PURPLE, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE+"Deleting message with id "+EnumChatFormatting.AQUA+args[1]+EnumChatFormatting.LIGHT_PURPLE+" from "+EnumChatFormatting.AQUA+args[0]+EnumChatFormatting.LIGHT_PURPLE+"'s chat");
     }
 }
