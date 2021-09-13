@@ -65,6 +65,15 @@ However, this can be changed: you may either allow everyone to use formatting co
 
 When enabled, the inverse of the "neutralization" happens: the `&` is replaced with `§`, allowing viewers to use Essentials(X)-like color codes.
 
+### Clip embedding
+Whenever someone sends a link to a Twitch clip, that link is automatically looked up,
+important data about it extracted and presented to you in your Minecraft chat.<br>
+The link will be replaced with the clip name and you'll be able to hover over it to
+view extra details about the clip or click it to view the clip in your browser.
+
+Example:
+![Clip Embedding demonstration](https://cdn.upload.systems/uploads/ZUz1hj1R.png)
+
 ### New follow events
 When a new user follows, you will get a message about it & a sound will play. This may take longer than your event overlay in OBS, though.
 This can also be completly disabled if you get a lot of followers.
