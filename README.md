@@ -5,7 +5,7 @@ A simple chat client for Twitch put into Minecraft 1.8.9's chat box!
 ## Installation
 
 The mod can be downloaded from the [release list](https://github.com/mini-bomba/StreamChatMod/releases).
-You can either download a stable full release, or the "Latest Commit (that compiles)" prelease which is automatically compiled on new commit.
+You can either download a stable full release, or the "Latest Commit (that compiles)" prerelease which is automatically compiled on new commit.
 After downloading, this mod can be installed simply by putting the .jar file in the mods folder of your minecraft installation.
 It is located in `%APPDATA%\.minecraft` on Windows and `~/.minecraft` on Linux.
 Or if you use [MultiMC](https://multimc.org), you can just drag & drop the file into the mods window
@@ -16,14 +16,14 @@ Or if you use [MultiMC](https://multimc.org), you can just drag & drop the file 
 
 First, generate & set the Twitch token. To do that, simply run `/twitch token`.
 A prompt for granting permission to your Twitch account will appear in your browser.
-After granting permission, you will be redirected to a locahost page. If permission was granted
+After granting permission, you will be redirected to a localhost page. If permission was granted
 within around 120 seconds, the token will automatically be saved (as indicated by the ✅ emoji in your browser and a confirmation message in your minecraft client).
 If you got a connection refused page instead, you can still manually set the token by copying it from the url (the `access_token` query param)
 and use the command `/twitch settoken <token>`.
 If the prompt window did not appear, you can use [this link](https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit).
 If you leak your token, you can quickly invalidate it by running `/twitch revoketoken`
 
-After configuring the token, use the command `/twitch enable` to enable the Twitch chat and run `/twitch chat join <channel name>` for every channe chat you want to see in-game.
+After configuring the token, use the command `/twitch enable` to enable the Twitch chat and run `/twitch chat join <channel name>` for every channel's chat you want to see in-game.
 
 If you want to send messages from the in-game chat to your stream chat, run `/twitch chat select <channel name>` to select the channel to send messages to.
 Then you can use `/twitchchat <your message>` or `/tc <your message>` to send a message.
@@ -76,7 +76,7 @@ Example:
 
 ### New follow events
 When a new user follows, you will get a message about it & a sound will play. This may take longer than your event overlay in OBS, though.
-This can also be completly disabled if you get a lot of followers.
+This can also be completely disabled if you get a lot of followers.
 
 ### Send chat messages to the Twitch chat by default
 You can use `/twitch chatmode` to make any non-command messages be automatically sent to the selected Twitch channel.
