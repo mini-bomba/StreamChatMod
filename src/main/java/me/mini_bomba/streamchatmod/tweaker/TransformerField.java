@@ -11,7 +11,11 @@ public enum TransformerField {
     GuiChat_inputField("inputField", "field_146415_a", "a", "Lavw;", "Lnet/minecraft/client/gui/GuiTextField;"),
 
     // Minecraft
-    Minecraft_thePlayer("thePlayer", "field_71439_g", "h", "Lbew;", "Lnet/minecraft/client/entity/EntityPlayerSP;");
+    Minecraft_thePlayer("thePlayer", "field_71439_g", "h", "Lbew;", "Lnet/minecraft/client/entity/EntityPlayerSP;"),
+
+    // ChatComponentText
+    ChatComponentText_text("text", "field_150267_b", "b", "Ljava/lang/String;")
+    ;
 
 
     private String transformerName;

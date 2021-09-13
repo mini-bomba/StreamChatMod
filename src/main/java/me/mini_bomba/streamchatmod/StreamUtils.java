@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import me.mini_bomba.streamchatmod.tweaker.TransformerField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -21,9 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +34,21 @@ public class StreamUtils {
     public static final int GREEN = new Color(0, 255, 0).getRGB();
     public static final int RED = new Color(255, 0, 0).getRGB();
     public static final int BACKGROUND = new Color(0, 0, 0, 127).getRGB();
+
+    // Reflection stuff for editing "private" & "final" fields on stuff
+    private static final Field textComponentTextField;
+
+    static {
+        Field field = null;
+        try {
+            field = ChatComponentText.class.getDeclaredField(TransformerField.ChatComponentText_text.getReflectorName());
+            field.setAccessible(true);
+        } catch (ReflectiveOperationException e) {
+            LOGGER.error("Failed to get DeclaredField 'text' of ChatComponentText & set it accessible");
+            e.printStackTrace();
+        }
+        textComponentTextField = field;
+    }
 
     public static void addMessage(ICommandSender player, String message) {
         player.addChatMessage(new ChatComponentText(message));
@@ -108,6 +124,25 @@ public class StreamUtils {
 
     public static void queueAddMessages(IChatComponent[] components) {
         Minecraft.getMinecraft().addScheduledTask(() -> addMessages(components));
+    }
+
+    public static void queueRefreshChat() {
+        Minecraft.getMinecraft().addScheduledTask(() -> Minecraft.getMinecraft().ingameGUI.getChatGUI().refreshChat());
+    }
+
+    public static boolean editTextComponent(ChatComponentText component, String newText) {
+        if (textComponentTextField == null) {
+            LOGGER.warn("Failed to edit text component - static field lookup & set-accessible has failed");
+            return false;
+        }
+        try {
+            textComponentTextField.set(component, newText);
+            return true;
+        } catch (ReflectiveOperationException e) {
+            LOGGER.error("Failed to edit text component (exception below)");
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static void playSound(String sound, float volume, float pitch) {

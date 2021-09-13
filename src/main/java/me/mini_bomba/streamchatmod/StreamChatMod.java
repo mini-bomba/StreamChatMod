@@ -6,6 +6,9 @@ import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.FollowEvent;
+import com.github.twitch4j.helix.domain.Clip;
+import com.github.twitch4j.helix.domain.Game;
+import com.github.twitch4j.helix.domain.User;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
@@ -13,6 +16,7 @@ import me.mini_bomba.streamchatmod.runnables.TwitchAsyncClientAction;
 import me.mini_bomba.streamchatmod.runnables.TwitchFollowSoundScheduler;
 import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
 import me.mini_bomba.streamchatmod.runnables.UpdateChecker;
+import me.mini_bomba.streamchatmod.utils.Cache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
@@ -66,6 +70,11 @@ public class StreamChatMod
 
     private final StreamEvents events;
     protected final TwitchCommand twitchCommand;
+
+    // Caches for Twitch clips, users, etc.
+    public final Cache<String, Game> categoryCache = new Cache<>(8);
+    public final Cache<String, Clip> clipCache = new Cache<>(16);
+    public final Cache<String, User> userCache = new Cache<>(32);
 
     public StreamChatMod() {
         events = new StreamEvents(this);
@@ -333,5 +342,44 @@ public class StreamChatMod
             this.twitchSender = null;
             twitchClient.close();
         }
+    }
+
+    public User getTwitchUserById(String userId) {
+        return userCache.getOptional(userId).orElseGet(() -> {
+            if (twitch == null) {
+                LOGGER.error("Twitch client was disabled during an user lookup!");
+                return Optional.empty();
+            }
+            List<User> users = twitch.getHelix().getUsers(null, Collections.singletonList(userId), null).execute().getUsers();
+            Optional<User> result = users.size() == 0 ? Optional.empty() : Optional.of(users.get(0));
+            userCache.put(userId, result.orElse(null));
+            return result;
+        }).orElse(null);
+    }
+
+    public Clip getTwitchClip(String clipId) {
+        return clipCache.getOptional(clipId).orElseGet(() -> {
+            if (twitch == null) {
+                LOGGER.error("Twitch client was disabled during a clip lookup!");
+                return Optional.empty();
+            }
+            List<Clip> clips = twitch.getHelix().getClips(null, null, null, clipId, null, null, 1, null, null).execute().getData();
+            Optional<Clip> result = clips.size() == 0 ? Optional.empty() : Optional.of(clips.get(0));
+            clipCache.put(clipId, result.orElse(null));
+            return result;
+        }).orElse(null);
+    }
+
+    public Game getTwitchCategory(String categoryId) {
+        return categoryCache.getOptional(categoryId).orElseGet(() -> {
+            if (twitch == null) {
+                LOGGER.error("Twitch client was disabled during a category lookup!");
+                return Optional.empty();
+            }
+            List<Game> categories = twitch.getHelix().getGames(null, Collections.singletonList(categoryId), null).execute().getGames();
+            Optional<Game> result = categories.size() == 0 ? Optional.empty() : Optional.of(categories.get(0));
+            categoryCache.put(categoryId, result.orElse(null));
+            return result;
+        }).orElse(null);
     }
 }
