@@ -37,7 +37,8 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
                 new TwitchTimeoutSubcommand(mod, this),
                 new TwitchClearChatSubcommand(mod, this),
                 new TwitchDeleteMessageSubcommand(mod, this),
-                new TwitchMarkerSubcommand(mod, this)
+                new TwitchMarkerSubcommand(mod, this),
+                new TwitchClipSubcommand(mod, this)
                 ));
         // Create param -> subcommand map
         subcommandMap = Subcommand.createNameMap(subcommands);

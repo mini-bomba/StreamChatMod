@@ -118,6 +118,10 @@ public class StreamUtils {
         Minecraft.getMinecraft().addScheduledTask(() -> addMessage(message));
     }
 
+    public static void queueAddMessage(IChatComponent message) {
+        Minecraft.getMinecraft().addScheduledTask(() -> addMessage(message));
+    }
+
     public static void queueAddMessages(String[] messages) {
         Minecraft.getMinecraft().addScheduledTask(() -> addMessages(messages));
     }

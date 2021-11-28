@@ -6,7 +6,6 @@ import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.FollowEvent;
-import com.github.twitch4j.helix.TwitchHelix;
 import com.github.twitch4j.helix.domain.*;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
@@ -76,6 +75,9 @@ public class StreamChatMod
     public final Cache<String, Clip> clipCache = new Cache<>(16);
     public final Cache<String, User> userCache = new Cache<>(32);
     public final Cache<String, User> userCacheByNames = new Cache<>(32);
+
+    // Cooldown for /twitch clip
+    private long lastClipCreated = 0;
 
     public StreamChatMod() {
         events = new StreamEvents(this);
@@ -274,17 +276,15 @@ public class StreamChatMod
 
     public void createMarker(String description) {
         if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
-        String broadcasterName = config.twitchSelectedChannel.getString();
-        User broadcaster = getTwitchUserByName(broadcasterName);
-        if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+broadcasterName);
+        User broadcaster = getSelectedChannelUser();
+        if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+config.twitchSelectedChannel.getString());
         else createMarker(description, broadcaster.getId());
     }
 
     public void createMarker() {
         if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
-        String broadcasterName = config.twitchSelectedChannel.getString();
-        User broadcaster = getTwitchUserByName(broadcasterName);
-        if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+broadcasterName);
+        User broadcaster = getSelectedChannelUser();
+        if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+config.twitchSelectedChannel.getString());
         else createMarker(broadcaster.getId());
     }
 
@@ -298,6 +298,68 @@ public class StreamChatMod
 
     public void asyncCreateMarker() throws ConcurrentModificationException {
         asyncTwitchAction(this::createMarker);
+    }
+
+    private void createClip(String broadcasterId, boolean hasDelay) {
+        if (lastClipCreated+(60000*2) > System.currentTimeMillis()) {
+            StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Please wait "+(lastClipCreated+(60000*2))/1000+" seconds before creating another clip.");
+            return;
+        }
+        long lastClipCreatedCopy = lastClipCreated;
+        lastClipCreated = System.currentTimeMillis();
+        if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+        try {
+            List<CreateClip> newClips = twitch.getHelix().createClip(null, broadcasterId, hasDelay).execute().getData();
+            if (newClips.size() == 0) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Twitch API did not return any newClips! "+EnumChatFormatting.GRAY+"(Maybe try resetting your token with /twitch token?)");
+                lastClipCreated = System.currentTimeMillis()-60*1000; // Set cooldown to 1 minute instead of 2 minutes
+                return;
+            }
+            CreateClip newClip = newClips.get(0);
+            List<Clip> clips = Collections.emptyList();
+            for (int i = 0; i <= 15; i++) {
+                clips = twitch.getHelix().getClips(null, null, null, newClip.getId(), null, null, null, null, null).execute().getData();
+                if (clips.size() > 0) break;
+                Thread.sleep(1000);
+            }
+            if (clips.size() == 0) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Clip creation timed out :(");
+                lastClipCreated = System.currentTimeMillis()-60*1000; // Set cooldown to 1 minute instead of 2 minutes
+            }
+            Clip clip = clips.get(0);
+            IChatComponent mainComponent = new ChatComponentText(EnumChatFormatting.GREEN+"Clip created: ");
+            IChatComponent clipComponent = new ChatComponentText(EnumChatFormatting.AQUA+clip.getUrl());
+            ChatStyle style = new ChatStyle();
+            style.setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, clip.getUrl()));
+            style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GREEN+"Click to open or copy clip URL")));
+            clipComponent.setChatStyle(style);
+            mainComponent.appendSibling(clipComponent);
+            StreamUtils.queueAddMessage(mainComponent);
+        } catch (Exception e) {
+            lastClipCreated = lastClipCreatedCopy;
+        }
+    }
+
+
+    public void asyncCreateClip(String broadcasterId, boolean hasDelay) {
+        asyncTwitchAction(() -> createClip(broadcasterId, hasDelay));
+    }
+
+    public void asyncCreateClip(String broadcasterId) {
+        asyncCreateClip(broadcasterId, false);
+    }
+
+    public void asyncCreateClip(boolean hasDelay) {
+        asyncTwitchAction(() -> {
+            if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            User broadcaster = getSelectedChannelUser();
+            if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+config.twitchSelectedChannel.getString());
+            else createClip(broadcaster.getId(), hasDelay);
+        });
+    }
+
+    public void asyncCreateClip() {
+        asyncCreateClip(false);
     }
 
     public boolean startTwitch() {
@@ -403,6 +465,10 @@ public class StreamChatMod
             this.twitchSender = null;
             twitchClient.close();
         }
+    }
+
+    public User getSelectedChannelUser() {
+        return getTwitchUserByName(config.twitchSelectedChannel.getString());
     }
 
     public User getTwitchUserById(String userId) {
