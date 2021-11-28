@@ -11,6 +11,7 @@ public enum TwitchSubcommandCategory implements ISubcommandCategory {
     SETUP("setup", "s"),
     CONFIG("configuration", "config", "conf", "c"),
     MODERATION("moderation", "mod", "m"),
+    STREAMING("streaming", "stream", "editor", "e", "broadcast", "b")
     ;
     private final String name;
     private final List<String> aliases;

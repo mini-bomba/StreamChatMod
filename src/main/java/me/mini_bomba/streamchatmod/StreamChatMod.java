@@ -6,9 +6,8 @@ import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.FollowEvent;
-import com.github.twitch4j.helix.domain.Clip;
-import com.github.twitch4j.helix.domain.Game;
-import com.github.twitch4j.helix.domain.User;
+import com.github.twitch4j.helix.TwitchHelix;
+import com.github.twitch4j.helix.domain.*;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
@@ -75,6 +74,7 @@ public class StreamChatMod
     public final Cache<String, Game> categoryCache = new Cache<>(8);
     public final Cache<String, Clip> clipCache = new Cache<>(16);
     public final Cache<String, User> userCache = new Cache<>(32);
+    public final Cache<String, User> userCacheByNames = new Cache<>(32);
 
     public StreamChatMod() {
         events = new StreamEvents(this);
@@ -239,6 +239,63 @@ public class StreamChatMod
         });
     }
 
+    public void createMarker(String description, String broadcasterId) {
+        if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+        User broadcaster = getTwitchUserById(broadcasterId);
+        StreamMarker marker;
+        try {
+            Highlight highlight;
+            if (description == null) {
+                highlight = new Highlight(broadcasterId);
+            } else {
+                highlight = new Highlight(broadcasterId, description);
+            }
+            marker = twitch.getHelix().createStreamMarker(null, highlight).execute();
+        } catch (Exception e) {
+            StreamUtils.queueAddMessages(new String[]{
+                    EnumChatFormatting.RED+"Failed to create marker on "+broadcaster.getDisplayName()+"'s stream: "+e.getClass().getName()+": "+e.getMessage(),
+                    ""+EnumChatFormatting.GRAY+EnumChatFormatting.ITALIC+"Make sure they are streaming and that you have editor permissions on their channel!",
+                    ""+EnumChatFormatting.GRAY+EnumChatFormatting.ITALIC+"If error persists, try regenerating your token using /twitch token."
+            });
+            return;
+        }
+        String seconds = String.valueOf(marker.getPositionSeconds() % 60);
+        String minutes = String.valueOf(marker.getPositionSeconds() / 60 % 60);
+        String hours = String.valueOf(marker.getPositionSeconds() / 3600);
+        seconds = (seconds.length() < 2 ? "0" : "") + seconds;
+        minutes = (minutes.length() < 2 ? "0" : "") + minutes;
+        hours = (hours.length() < 2 ? "0" : "") + hours;
+        StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Successfully created a marker on "+broadcaster.getDisplayName()+"'s stream at "+hours+":"+minutes+":"+seconds);
+    }
+
+    public void createMarker(String description) {
+        if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+        String broadcasterName = config.twitchSelectedChannel.getString();
+        User broadcaster = getTwitchUserByName(broadcasterName);
+        if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+broadcasterName);
+        else createMarker(description, broadcaster.getId());
+    }
+
+    public void createMarker() {
+        if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+        String broadcasterName = config.twitchSelectedChannel.getString();
+        User broadcaster = getTwitchUserByName(broadcasterName);
+        if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+broadcasterName);
+        else createMarker(broadcaster.getId());
+    }
+
+    public void asyncCreateMarker(String description, String broadcasterId) throws ConcurrentModificationException {
+        asyncTwitchAction(() -> createMarker(description, broadcasterId));
+    }
+
+    public void asyncCreateMarker(String description) throws ConcurrentModificationException {
+        asyncTwitchAction(() -> createMarker(description));
+    }
+
+    public void asyncCreateMarker() throws ConcurrentModificationException {
+        asyncTwitchAction(this::createMarker);
+    }
+
     public boolean startTwitch() {
         if (twitch != null || !config.twitchEnabled.getBoolean()) return false;
         String token = config.twitchToken.getString();
@@ -353,6 +410,21 @@ public class StreamChatMod
             List<User> users = twitch.getHelix().getUsers(null, Collections.singletonList(userId), null).execute().getUsers();
             Optional<User> result = users.size() == 0 ? Optional.empty() : Optional.of(users.get(0));
             userCache.put(userId, result.orElse(null));
+            result.ifPresent(user -> userCacheByNames.put(user.getLogin(), user));
+            return result;
+        }).orElse(null);
+    }
+
+    public User getTwitchUserByName(String userName) {
+        return userCacheByNames.getOptional(userName).orElseGet(() -> {
+            if (twitch == null) {
+                LOGGER.error("Twitch client was disabled during an user lookup!");
+                return Optional.empty();
+            }
+            List<User> users = twitch.getHelix().getUsers(null, null, Collections.singletonList(userName)).execute().getUsers();
+            Optional<User> result = users.size() == 0 ? Optional.empty() : Optional.of(users.get(0));
+            userCacheByNames.put(userName, result.orElse(null));
+            result.ifPresent(user -> userCache.put(user.getId(), user));
             return result;
         }).orElse(null);
     }

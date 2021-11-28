@@ -71,13 +71,13 @@ public class TwitchTokenSubcommand extends TwitchSubcommand {
         boolean opened = false;
         if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             try {
-                Desktop.getDesktop().browse(new URI("https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate"));
+                Desktop.getDesktop().browse(new URI("https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate+channel:manage:broadcast+user:edit:broadcast"));
                 opened = true;
             } catch (Exception ignored) {}
         }
         if (!opened) StreamUtils.addMessages(sender, new String[]{
             EnumChatFormatting.GREEN+"Please open this link in your browser:",
-            EnumChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate"
+            EnumChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate+channel:manage:broadcast+user:edit:broadcast"
         });
         else StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Opening link in your browser...");
         StreamUtils.addMessage(sender, EnumChatFormatting.AQUA+"The token will be automatically saved if generated within 120 seconds.");

@@ -64,9 +64,10 @@ public class TwitchHelpSubcommand extends TwitchSubcommand {
                     new ChatComponentText(EnumChatFormatting.GRAY + "Setup commands "+EnumChatFormatting.DARK_GRAY+"(/twitch help setup)"),
                     new ChatComponentText(EnumChatFormatting.GRAY + "Configuration commands "+EnumChatFormatting.DARK_GRAY+"(/twitch help config)"),
                     new ChatComponentText(EnumChatFormatting.GRAY + "Moderation commands "+EnumChatFormatting.DARK_GRAY+"(/twitch help moderation)"),
+                    new ChatComponentText(EnumChatFormatting.GRAY + "Streaming commands "+EnumChatFormatting.DARK_GRAY+"(/twitch help streaming)"),
             };
-            String[] categories = new String[]{"general", "setup", "config", "moderation"};
-            for (int i = 0; i < 4; i++) {
+            String[] categories = new String[]{"general", "setup", "config", "moderation", "streaming"};
+            for (int i = 0; i < categories.length; i++) {
                 ChatStyle style = new ChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText("Click to show subcommands in the "+categories[i]+" category")))
                         .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/twitch help "+categories[i]));
                 components[i+1].setChatStyle(style);
