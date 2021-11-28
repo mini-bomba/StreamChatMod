@@ -149,8 +149,6 @@ public class TwitchMessageHandler implements Runnable {
                     .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, clipUrl));
             component.setChatStyle(style);
         } else {
-            User user = mod.getTwitchUserById(clip.getCreatorId());
-            User streamer = mod.getTwitchUserById(clip.getBroadcasterId());
             Game category = mod.getTwitchCategory(clip.getGameId());
             String componentText = "Clip: \""+clip.getTitle()+"\"";
             if (component == null)
@@ -161,7 +159,7 @@ public class TwitchMessageHandler implements Runnable {
                     .setColor(EnumChatFormatting.AQUA)
                     .setItalic(true)
                     .setUnderlined(true)
-                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GRAY+"Title: "+EnumChatFormatting.AQUA+clip.getTitle()+"\n"+EnumChatFormatting.GRAY+"Category: "+EnumChatFormatting.AQUA+(user == null ? "unknown" : category.getName())+"\n"+EnumChatFormatting.GRAY+"Clip author: "+EnumChatFormatting.AQUA+(user == null ? "unknown" : user.getDisplayName())+"\n"+EnumChatFormatting.GRAY+"Streamer: "+EnumChatFormatting.AQUA+(streamer == null ? "unknown" : streamer.getDisplayName())+"\n"+EnumChatFormatting.GRAY+"Length: "+EnumChatFormatting.AQUA+clip.getDuration()+" seconds\n\n"+EnumChatFormatting.YELLOW+"Click to view clip")))
+                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GRAY+"Title: "+EnumChatFormatting.AQUA+clip.getTitle()+"\n"+EnumChatFormatting.GRAY+"Category: "+EnumChatFormatting.AQUA+(category == null ? "unknown" : category.getName())+"\n"+EnumChatFormatting.GRAY+"Clip author: "+EnumChatFormatting.AQUA+clip.getCreatorName()+"\n"+EnumChatFormatting.GRAY+"Streamer: "+EnumChatFormatting.AQUA+clip.getBroadcasterName()+"\n"+EnumChatFormatting.GRAY+"Length: "+EnumChatFormatting.AQUA+clip.getDuration()+" seconds\n\n"+EnumChatFormatting.YELLOW+"Click to view clip")))
                     .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, clip.getUrl()));
             component.setChatStyle(style);
         }
