@@ -56,7 +56,7 @@ public class TwitchUnbanSubcommand extends TwitchSubcommandWithOutline {
         if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
         if (args.length == 0) throw new CommandException("Missing required parameter: user to unban");
         mod.twitch.getChat().unban(channel, args[0]);
-        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Unbanned " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GREEN + " from "  + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s chat.");
+        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Unbanning " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + " from " + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat...");
     }
 
     @Override

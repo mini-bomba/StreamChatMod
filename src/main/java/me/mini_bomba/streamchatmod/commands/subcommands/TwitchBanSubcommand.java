@@ -56,7 +56,7 @@ public class TwitchBanSubcommand extends TwitchSubcommandWithOutline {
         if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
         if (args.length == 0) throw new CommandException("Missing required parameter: user to ban");
         mod.twitch.getChat().ban(channel, args[0], String.join(" ", Arrays.asList(args).subList(1, args.length)));
-        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Banned " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GREEN + " from "  + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s chat." + (args.length >= 2 ? " Reason: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(1, args.length)) : ""));
+        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Banning " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + " from "  + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat..." + (args.length >= 2 ? " Reason: " + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(1, args.length)) : ""));
     }
 
     @Override

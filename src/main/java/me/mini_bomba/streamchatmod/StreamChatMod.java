@@ -4,8 +4,11 @@ import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.TwitchChat;
+import com.github.twitch4j.chat.enums.NoticeTag;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
+import com.github.twitch4j.chat.events.channel.ChannelNoticeEvent;
 import com.github.twitch4j.chat.events.channel.FollowEvent;
+import com.github.twitch4j.chat.events.channel.IRCMessageEvent;
 import com.github.twitch4j.helix.domain.*;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
@@ -35,6 +38,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import scala.tools.nsc.transform.patmat.Logic;
 
 import java.util.*;
 
@@ -386,6 +390,7 @@ public class StreamChatMod
                     .build();
             twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
             twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);
+            twitch.getEventManager().onEvent(ChannelNoticeEvent.class, this::onTwitchNotice);
             TwitchChat chat = twitch.getChat();
             chat.connect();
             List<String> channels = Arrays.asList(config.twitchChannels.getStringList());
@@ -419,8 +424,191 @@ public class StreamChatMod
     }
 
     private void onTwitchFollow(FollowEvent event) {
-        Minecraft.getMinecraft().addScheduledTask(() -> StreamUtils.addMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!"));
+        StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
         if (this.config.playSoundOnFollow.getBoolean()) new Thread(new TwitchFollowSoundScheduler(this)).start();
+    }
+
+    private void onTwitchNotice(ChannelNoticeEvent event) {
+        String message = event.getMessage();
+        NoticeTag type = event.getType();
+        boolean showChannel = config.forceShowChannelName.getBoolean() ||(twitch != null && twitch.getChat().getChannels().size() > 1);
+        if (type == null) return;
+        switch (type) {
+            // Chat mode updates
+            case EMOTE_ONLY_OFF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Emote only mode has been disabled" : message));
+                break;
+            case EMOTE_ONLY_ON:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Emote only mode has been enabled" : message));
+                break;
+            case FOLLOWERS_OFF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Followers only mode has been disabled" : message));
+                break;
+            case FOLLOWERS_ON:
+            case FOLLOWERS_ONZERO:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Followers only mode has been enabled" : message));
+                break;
+            case R9K_OFF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Unique only mode has been disabled" : message));
+                break;
+            case R9K_ON:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Unique only mode has been enabled" : message));
+                break;
+            case SLOW_OFF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Slow mode has been disabled" : message));
+                break;
+            case SLOW_ON:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Slow mode has been enabled" : message));
+                break;
+            case SUBS_OFF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Sub only mode has been disabled" : message));
+                break;
+            case SUBS_ON:
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Sub only mode has been enabled" : message));
+                break;
+            // /twitchchat
+            case MSG_BANNED:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "You are banned from this channel" : message));
+                break;
+            case MSG_BAD_CHARACTERS:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "Your message contained too many weird characters" : message));
+                break;
+            case MSG_CHANNEL_BLOCKED:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "You have been blocked from this channel" : message));
+                break;
+            case MSG_CHANNEL_SUSPENDED:
+            case TOS_BAN:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "This channel has been banned" : message));
+                break;
+            case MSG_DUPLICATE:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "Your message was a duplicate of your previous message" : message));
+                break;
+            case MSG_EMOTEONLY:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "This channel is currently in emote-only mode" : message));
+                break;
+            case MSG_FACEBOOK:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "This channel requires that you give your personal information to Facebook" : message));
+                break;
+            case MSG_FOLLOWERSONLY:
+            case MSG_FOLLOWERSONLY_FOLLOWED:
+            case MSG_FOLLOWERSONLY_ZERO:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "This channel is in follower only mode" : message));
+                break;
+            case MSG_R9K:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "This channel is in unique mode and your message was not unique" : message));
+                break;
+            case MSG_RATELIMIT:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "You are sending your messages too quickly!" : message));
+                break;
+            case MSG_REJECTED:
+                StreamUtils.queueAddMessage(EnumChatFormatting.YELLOW+(message == null ? "Your message has been held by AutoMod and is being reviewed by channel mods." : message));
+                break;
+            case MSG_REJECTED_MANDATORY:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "Your message has been blocked due this channel's moderation settings." : message));
+                break;
+            case MSG_SLOWMODE:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "You are sending your messages too quickly; this channel has slow mode enabled" : message));
+                break;
+            case MSG_SUBSONLY:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "This channel is in sub only mode" : message));
+                break;
+            case MSG_SUSPENDED:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "Your account has been suspended" : message));
+                break;
+            case MSG_TIMEDOUT:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "You are currently muted in this channel" : message));
+                break;
+            case MSG_VERIFIED_EMAIL:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "This channel requires a verified email" : message));
+                break;
+            case MSG_BANNED_EMAIL_ALIAS:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "Your email has been banned from this channel" : message));
+                break;
+            case MSG_REQUIRES_VERIFIED_PHONE_NUMBER:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "This channel requires a verified phone number" : message));
+                break;
+            case MSG_ROOM_NOT_FOUND:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message sending failed: "+(message == null ? "The selected channel was not found" : message));
+                break;
+            // General moderation
+            case NO_PERMISSION:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Action failed: "+(message == null ? "You do not have the permission to do this!" : message));
+                break;
+            // /twitch delete
+            case BAD_DELETE_MESSAGE_ERROR:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message delete failed: "+(message == null ? "Invalid message" : message));
+                break;
+            case BAD_DELETE_MESSAGE_BROADCASTER:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message delete failed: "+(message == null ? "You cannot delete broadcaster's messages!" : message));
+                break;
+            case BAD_DELETE_MESSAGE_MOD:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Message delete failed: "+(message == null ? "You cannot delete moderator's messages!" : message));
+                break;
+            case DELETE_MESSAGE_SUCCESS:
+                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+(message == null ? "Message has been deleted successfully!" : message));
+                break;
+            // /twitch ban
+            case BAD_BAN_ADMIN:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Ban failed: "+(message == null ? "You cannot ban a Twitch admin!" : message));
+                break;
+            case BAD_BAN_ANON:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Ban failed: "+(message == null ? "You cannot ban an anonymous user!" : message));
+                break;
+            case BAD_BAN_BROADCASTER:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Ban failed: "+(message == null ? "You cannot ban the broadcaster!" : message));
+                break;
+            case BAD_BAN_MOD:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Ban failed: "+(message == null ? "You cannot ban another channel moderator!" : message));
+                break;
+            case BAD_BAN_SELF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Ban failed: "+(message == null ? "You cannot ban yourself!" : message));
+                break;
+            case BAD_BAN_STAFF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Ban failed: "+(message == null ? "You cannot ban a Twitch staff member!" : message));
+                break;
+            case ALREADY_BANNED:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Ban failed: "+(message == null ? "User is already banned!" : message));
+                break;
+            case BAN_SUCCESS:
+                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+(message == null ? "User has been banned successfully!" : message));
+                break;
+            // /twitch timeout
+            case BAD_TIMEOUT_ADMIN:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Timeout failed: "+(message == null ? "You cannot timeout a Twitch admin!" : message));
+                break;
+            case BAD_TIMEOUT_ANON:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Timeout failed: "+(message == null ? "You cannot timeout an anonymous user!" : message));
+                break;
+            case BAD_TIMEOUT_BROADCASTER:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Timeout failed: "+(message == null ? "You cannot timeout the broadcaster!" : message));
+                break;
+            case BAD_TIMEOUT_DURATION:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Timeout failed: "+(message == null ? "You cannot timeout a user for this long!" : message));
+                break;
+            case BAD_TIMEOUT_MOD:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Timeout failed: "+(message == null ? "You cannot timeout another moderator!" : message));
+                break;
+            case BAD_TIMEOUT_SELF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Timeout failed: "+(message == null ? "You cannot timeout yourself!" : message));
+                break;
+            case BAD_TIMEOUT_STAFF:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Timeout failed: "+(message == null ? "You cannot timeout a member of Twitch staff!" : message));
+                break;
+            case TIMEOUT_NO_TIMEOUT:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Timeout failed: "+(message == null ? "The user is not timed out" : message));
+                break;
+            case TIMEOUT_SUCCESS:
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED+(message == null ? "User has been timed out successfully!" : message));
+                break;
+            default:
+                StreamUtils.queueAddMessage(EnumChatFormatting.YELLOW+"Unknown Twitch IRC Notice: Type: "+type+", message: "+message);
+                IChatComponent cc = new ChatComponentText(EnumChatFormatting.GOLD+"Please report this to StreamChatMod's repository as an issue, including reproduction steps.");
+                ChatStyle style = new ChatStyle();
+                style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GREEN+"Click to open the issues page")));
+                style.setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/mini-bomba/StreamChatMod/issues"));
+                cc.setChatStyle(style);
+                StreamUtils.queueAddMessage(cc);
+        }
     }
 
     public void printTwitchStatus() {

@@ -61,7 +61,7 @@ public class TwitchTimeoutSubcommand extends TwitchSubcommandWithOutline {
         Duration dur = parseDuration(args[1]);
         if (dur == null) throw new CommandException("Could not parse " + args[1] + " to a Duration. Use a whole number of seconds or the ISO 8601 format.");
         mod.twitch.getChat().timeout(channel, args[0], dur, String.join(" ", Arrays.asList(args).subList(2, args.length)));
-        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Timed out " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GREEN + " from "  + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s chat for " + dur.getSeconds() + " seconds." + (args.length >= 3 ? " Reason: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(2, args.length)) : ""));
+        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Timing out " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + " from " + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat for " + dur.getSeconds() + " seconds..." + (args.length >= 3 ? " Reason: " + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(2, args.length)) : ""));
     }
 
     @Override

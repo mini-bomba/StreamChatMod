@@ -54,7 +54,7 @@ public class TwitchDeleteMessageSubcommand extends TwitchSubcommandWithOutline {
         if (args.length == 0) throw new CommandException("Missing required parameters: channel & id of the message to delete");
         if (args.length == 1) throw new CommandException("Missing required parameter: id of the message to delete");
         mod.twitch.getChat().delete(args[0], args[1]);
-        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Message deleted.");
+        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Deleting message...");
     }
 
     @Override
