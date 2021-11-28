@@ -1,0 +1,37 @@
+package me.mini_bomba.streamchatmod;
+
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
+import org.lwjgl.input.Keyboard;
+
+import java.util.ConcurrentModificationException;
+
+public class StreamKeybinds {
+    public static final KeyBinding createMarker = new KeyBinding("Create new marker", Keyboard.KEY_NONE, "StreamChatMod");
+    private final StreamChatMod mod;
+
+    protected StreamKeybinds(StreamChatMod mod) {
+        this.mod = mod;
+    }
+
+    protected final void registerKeybindings() {
+        ClientRegistry.registerKeyBinding(createMarker);
+    }
+
+    @SubscribeEvent
+    public void onKeybind(InputEvent.KeyInputEvent event) {
+        if (createMarker.isPressed()) onCreateMarker();
+    }
+
+    private void onCreateMarker() {
+        StreamUtils.addMessage(EnumChatFormatting.GRAY+"Creating a marker...");
+        try {
+            mod.asyncCreateMarker();
+        } catch (ConcurrentModificationException e) {
+            StreamUtils.addMessage(EnumChatFormatting.RED+"Creating a marker failed: Another async operation is already in progress");
+        }
+    }
+}

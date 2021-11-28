@@ -48,6 +48,7 @@ public class StreamChatMod
     public static final boolean PRERELEASE = "@PRERELEASE@"=="true";
     private static final Logger LOGGER = LogManager.getLogger();
     public StreamConfig config;
+    public StreamKeybinds keybinds;
     @Nullable
     public String latestVersion = null;
     // LatestCommit is set only on prerelease builds
@@ -78,6 +79,7 @@ public class StreamChatMod
 
     public StreamChatMod() {
         events = new StreamEvents(this);
+        keybinds = new StreamKeybinds(this);
         twitchCommand = new TwitchCommand(this);
     }
     
@@ -102,8 +104,10 @@ public class StreamChatMod
         ClientCommandHandler commandHandler = ClientCommandHandler.instance;
         commandHandler.registerCommand(new TwitchChatCommand(this));
         commandHandler.registerCommand(twitchCommand);
+        keybinds.registerKeybindings();
 
         MinecraftForge.EVENT_BUS.register(events);
+        MinecraftForge.EVENT_BUS.register(keybinds);
     }
 
     @EventHandler
