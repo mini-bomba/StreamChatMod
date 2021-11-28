@@ -11,6 +11,7 @@ import java.util.ConcurrentModificationException;
 
 public class StreamKeybinds {
     public static final KeyBinding createMarker = new KeyBinding("Create new marker", Keyboard.KEY_NONE, "StreamChatMod");
+    public static final KeyBinding createClip = new KeyBinding("Create new clip", Keyboard.KEY_NONE, "StreamChatMod");
     private final StreamChatMod mod;
 
     protected StreamKeybinds(StreamChatMod mod) {
@@ -19,11 +20,13 @@ public class StreamKeybinds {
 
     protected final void registerKeybindings() {
         ClientRegistry.registerKeyBinding(createMarker);
+        ClientRegistry.registerKeyBinding(createClip);
     }
 
     @SubscribeEvent
     public void onKeybind(InputEvent.KeyInputEvent event) {
         if (createMarker.isPressed()) onCreateMarker();
+        if (createClip.isPressed()) onCreateClip();
     }
 
     private void onCreateMarker() {
@@ -32,6 +35,15 @@ public class StreamKeybinds {
             mod.asyncCreateMarker();
         } catch (ConcurrentModificationException e) {
             StreamUtils.addMessage(EnumChatFormatting.RED+"Creating a marker failed: Another async operation is already in progress");
+        }
+    }
+
+    private void onCreateClip() {
+        StreamUtils.addMessage(EnumChatFormatting.GRAY+"Creating a clip...");
+        try {
+            mod.asyncCreateClip(true);
+        } catch (ConcurrentModificationException e) {
+            StreamUtils.addMessage(EnumChatFormatting.RED+"Creating a clip failed: Another async operation is already in progress");
         }
     }
 }

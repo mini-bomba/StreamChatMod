@@ -16,6 +16,7 @@ import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
 import me.mini_bomba.streamchatmod.runnables.UpdateChecker;
 import me.mini_bomba.streamchatmod.utils.Cache;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
@@ -300,7 +301,7 @@ public class StreamChatMod
         asyncTwitchAction(this::createMarker);
     }
 
-    private void createClip(String broadcasterId, boolean hasDelay) {
+    private void createClip(String broadcasterId, boolean copyToClipboard, boolean hasDelay) {
         if (lastClipCreated+(60000*2) > System.currentTimeMillis()) {
             StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Please wait "+(lastClipCreated+(60000*2))/1000+" seconds before creating another clip.");
             return;
@@ -335,31 +336,39 @@ public class StreamChatMod
             clipComponent.setChatStyle(style);
             mainComponent.appendSibling(clipComponent);
             StreamUtils.queueAddMessage(mainComponent);
+            if (copyToClipboard) GuiScreen.setClipboardString(clip.getUrl());
         } catch (Exception e) {
             lastClipCreated = lastClipCreatedCopy;
         }
     }
 
+    public void asyncCreateClip(String broadcasterId, boolean copyToClipboard, boolean hasDelay) {
+        asyncTwitchAction(() -> createClip(broadcasterId, copyToClipboard, hasDelay));
+    }
 
-    public void asyncCreateClip(String broadcasterId, boolean hasDelay) {
-        asyncTwitchAction(() -> createClip(broadcasterId, hasDelay));
+    public void asyncCreateClip(String broadcasterId, boolean copyToClipboard) {
+        asyncTwitchAction(() -> createClip(broadcasterId, copyToClipboard, false));
     }
 
     public void asyncCreateClip(String broadcasterId) {
-        asyncCreateClip(broadcasterId, false);
+        asyncCreateClip(broadcasterId, false, false);
     }
 
-    public void asyncCreateClip(boolean hasDelay) {
+    public void asyncCreateClip(boolean copyToClipboard, boolean hasDelay) {
         asyncTwitchAction(() -> {
             if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
             User broadcaster = getSelectedChannelUser();
             if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+config.twitchSelectedChannel.getString());
-            else createClip(broadcaster.getId(), hasDelay);
+            else createClip(broadcaster.getId(), copyToClipboard, hasDelay);
         });
     }
 
+    public void asyncCreateClip(boolean copyToClipboard) {
+        asyncCreateClip(copyToClipboard, false);
+    }
+
     public void asyncCreateClip() {
-        asyncCreateClip(false);
+        asyncCreateClip(false, false);
     }
 
     public boolean startTwitch() {
