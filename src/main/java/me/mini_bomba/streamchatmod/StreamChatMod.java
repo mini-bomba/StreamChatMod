@@ -8,7 +8,6 @@ import com.github.twitch4j.chat.enums.NoticeTag;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.ChannelNoticeEvent;
 import com.github.twitch4j.chat.events.channel.FollowEvent;
-import com.github.twitch4j.chat.events.channel.IRCMessageEvent;
 import com.github.twitch4j.helix.domain.*;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
@@ -38,7 +37,6 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import scala.tools.nsc.transform.patmat.Logic;
 
 import java.util.*;
 
@@ -620,7 +618,13 @@ public class StreamChatMod
         IChatComponent component = new ChatComponentText(prefix + EnumChatFormatting.GRAY + "Mod version: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + VERSION + (PRERELEASE ? EnumChatFormatting.GRAY + "@" + EnumChatFormatting.AQUA + GIT_HASH : "") + EnumChatFormatting.GRAY + " (" + (latestVersion == null || (PRERELEASE && latestCommit == null) ? EnumChatFormatting.RED + "Could not check latest version" : (latestVersion.equals(VERSION) && (!PRERELEASE || latestCommit.shortHash.equals(GIT_HASH)) ? EnumChatFormatting.GREEN + "Latest version" : EnumChatFormatting.GOLD + "Update available: " + latestVersion + (PRERELEASE ? "@" + latestCommit.shortHash : "")) ) + EnumChatFormatting.GRAY + ")");
         IChatComponent commitMessage = null;
         if (latestVersion != null && !latestVersion.equals(VERSION) || (PRERELEASE && latestCommit != null && !latestCommit.shortHash.equals(GIT_HASH))) {
-            if (PRERELEASE && latestCommit != null) commitMessage = new ChatComponentText(prefix + EnumChatFormatting.GRAY + "Latest commit message: " + EnumChatFormatting.AQUA + latestCommit.shortMessage);
+            IChatComponent changelog = new ChatComponentText(EnumChatFormatting.GRAY + " (" + EnumChatFormatting.YELLOW + "View Changes" + EnumChatFormatting.GRAY + ")");
+            ChatStyle changelogStyle = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/mini-bomba/StreamChatMod/compare/" + (PRERELEASE ? GIT_HASH : "v" + VERSION) + ".." + (PRERELEASE ? "latest" : "v" + latestVersion)));
+            changelogStyle.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GREEN + "Click here to view changes between your current & the latest version")));
+            changelog.setChatStyle(changelogStyle);
+            component.appendSibling(changelog);
+            if (PRERELEASE && latestCommit != null)
+                commitMessage = new ChatComponentText(prefix + EnumChatFormatting.GRAY + "Latest commit message: " + EnumChatFormatting.AQUA + latestCommit.shortMessage);
             ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/mini-bomba/StreamChatMod/releases"));
             style.setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GREEN + "Click here to see mod releases on GitHub!")));
             component.setChatStyle(style);
