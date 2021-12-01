@@ -430,7 +430,7 @@ public class StreamChatMod
     private void onTwitchChatClear(ClearChatEvent event) {
         if (config.allowMessageDeletion.getBoolean()) StreamUtils.queueClearTwitchChat(event.getChannel().getId());
         boolean showChannel = config.forceShowChannelName.getBoolean() || (twitch != null && twitch.getChat().getChannels().size() > 1);
-        StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE + "[TWITCH" + (showChannel ? "/" + event.getChannel().getName() : "") + "] " + "The chat has been cleared.");
+        StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE + "[TWITCH" + (showChannel ? "/" + event.getChannel().getName() : "") + "] " + EnumChatFormatting.GRAY + "The chat has been cleared.");
     }
 
     private void onUserTimedOut(UserTimeoutEvent event) {
