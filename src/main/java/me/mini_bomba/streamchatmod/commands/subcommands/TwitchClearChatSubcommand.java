@@ -54,7 +54,7 @@ public class TwitchClearChatSubcommand extends TwitchSubcommandWithOutline {
         if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
         if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
         mod.twitch.getChat().clearChat(channel);
-        StreamUtils.addMessage("" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GREEN + "'s Twitch chat cleared. Use F3+D to clear your in-game chat.");
+        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Clearing " + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat...");
     }
 
     @Override

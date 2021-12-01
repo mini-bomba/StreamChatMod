@@ -15,21 +15,27 @@ import static me.mini_bomba.streamchatmod.StreamChatMod.PRERELEASE;
 
 public class StreamConfig {
     private final Configuration config;
+    // common
     public final Property updateCheckerEnabled;
     public final Property forceShowChannelName;
     public final Property allowFormatting;
     public final Property subOnlyFormatting;
     public final Property minecraftChatPrefix;
+    public final Property allowMessageDeletion;
+    // tokens
     protected final Property twitchToken;
+    // twitch
     public final Property twitchEnabled;
     public final Property twitchChannels;
     public final Property twitchSelectedChannel;
     public final Property twitchMessageRedirectEnabled;
+    // sounds
     public final Property playSoundOnMessage;
     public final Property playSoundOnFollow;
-    public final Property followEventEnabled;
     public final Property messageSoundVolume;
     public final Property eventSoundVolume;
+    // twitch events
+    public final Property followEventEnabled;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -40,6 +46,7 @@ public class StreamConfig {
         allowFormatting = config.get("common", "allowFormatting", false);
         subOnlyFormatting = config.get("common", "subOnlyFormatting", false);
         minecraftChatPrefix = config.get("common", "minecraftChatPrefix", "!!");
+        allowMessageDeletion = config.get("common", "allowMessageDeletion", true);
         twitchToken = config.get("tokens", "twitch", "");
         twitchEnabled = config.get("twitch", "enabled", false);
         twitchChannels = config.get("twitch", "channels", new String[0]);

@@ -4,9 +4,9 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 import com.github.twitch4j.helix.domain.Clip;
 import com.github.twitch4j.helix.domain.Game;
-import com.github.twitch4j.helix.domain.User;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
+import me.mini_bomba.streamchatmod.utils.ChatComponentTwitchMessage;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
@@ -64,7 +64,7 @@ public class TwitchMessageHandler implements Runnable {
         String message = event.getMessage();
         Matcher matcher = urlPattern.matcher(message);
         List<ClipComponentMapping> clips = new ArrayList<>();
-        IChatComponent component = new ChatComponentText(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"]"+ prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY+" >> ");
+        IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), EnumChatFormatting.DARK_PURPLE + "[TWITCH" + (showChannel ? "/" + event.getChannel().getName() : "") + "]" + prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY + " >> ");
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)

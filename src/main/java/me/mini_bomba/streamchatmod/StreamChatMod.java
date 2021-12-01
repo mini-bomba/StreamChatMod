@@ -5,9 +5,7 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.enums.NoticeTag;
-import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
-import com.github.twitch4j.chat.events.channel.ChannelNoticeEvent;
-import com.github.twitch4j.chat.events.channel.FollowEvent;
+import com.github.twitch4j.chat.events.channel.*;
 import com.github.twitch4j.helix.domain.*;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
@@ -389,6 +387,9 @@ public class StreamChatMod
             twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
             twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);
             twitch.getEventManager().onEvent(ChannelNoticeEvent.class, this::onTwitchNotice);
+            twitch.getEventManager().onEvent(ClearChatEvent.class, this::onTwitchChatClear);
+            twitch.getEventManager().onEvent(UserTimeoutEvent.class, this::onUserTimedOut);
+            twitch.getEventManager().onEvent(UserBanEvent.class, this::onUserBanned);
             TwitchChat chat = twitch.getChat();
             chat.connect();
             List<String> channels = Arrays.asList(config.twitchChannels.getStringList());
@@ -422,19 +423,35 @@ public class StreamChatMod
     }
 
     private void onTwitchFollow(FollowEvent event) {
-        StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
+        StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE + "[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
         if (this.config.playSoundOnFollow.getBoolean()) new Thread(new TwitchFollowSoundScheduler(this)).start();
+    }
+
+    private void onTwitchChatClear(ClearChatEvent event) {
+        if (config.allowMessageDeletion.getBoolean()) StreamUtils.queueClearTwitchChat(event.getChannel().getId());
+        boolean showChannel = config.forceShowChannelName.getBoolean() || (twitch != null && twitch.getChat().getChannels().size() > 1);
+        StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE + "[TWITCH" + (showChannel ? "/" + event.getChannel().getName() : "") + "] " + "The chat has been cleared.");
+    }
+
+    private void onUserTimedOut(UserTimeoutEvent event) {
+        if (config.allowMessageDeletion.getBoolean())
+            StreamUtils.queueClearTwitchUserMessages(event.getChannel().getId(), event.getUser().getId());
+    }
+
+    private void onUserBanned(UserBanEvent event) {
+        if (config.allowMessageDeletion.getBoolean())
+            StreamUtils.queueClearTwitchUserMessages(event.getChannel().getId(), event.getUser().getId());
     }
 
     private void onTwitchNotice(ChannelNoticeEvent event) {
         String message = event.getMessage();
         NoticeTag type = event.getType();
-        boolean showChannel = config.forceShowChannelName.getBoolean() ||(twitch != null && twitch.getChat().getChannels().size() > 1);
+        boolean showChannel = config.forceShowChannelName.getBoolean() || (twitch != null && twitch.getChat().getChannels().size() > 1);
         if (type == null) return;
         switch (type) {
             // Chat mode updates
             case EMOTE_ONLY_OFF:
-                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Emote only mode has been disabled" : message));
+                StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE + "[TWITCH" + (showChannel ? "/" + event.getChannel().getName() : "") + "] " + EnumChatFormatting.GRAY + (message == null ? "Emote only mode has been disabled" : message));
                 break;
             case EMOTE_ONLY_ON:
                 StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE+"[TWITCH"+(showChannel ? "/"+event.getChannel().getName() : "")+"] "+EnumChatFormatting.GRAY+(message == null ? "Emote only mode has been enabled" : message));

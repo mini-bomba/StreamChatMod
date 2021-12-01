@@ -4,11 +4,10 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import me.mini_bomba.streamchatmod.tweaker.TransformerField;
+import me.mini_bomba.streamchatmod.utils.ChatComponentTwitchMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiChat;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.*;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
@@ -24,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +37,7 @@ public class StreamUtils {
 
     // Reflection stuff for editing "private" & "final" fields on stuff
     private static final Field textComponentTextField;
+    private static final Field guiNewChatChatLines;
 
     static {
         Field field = null;
@@ -48,6 +49,15 @@ public class StreamUtils {
             e.printStackTrace();
         }
         textComponentTextField = field;
+        field = null;
+        try {
+            field = GuiNewChat.class.getDeclaredField(TransformerField.GuiNewChat_chatLines.getReflectorName());
+            field.setAccessible(true);
+        } catch (ReflectiveOperationException e) {
+            LOGGER.error("Failed to get DeclaredField 'chatLines' of GuiNewChat & set it accessible");
+            e.printStackTrace();
+        }
+        guiNewChatChatLines = field;
     }
 
     public static void addMessage(ICommandSender player, String message) {
@@ -147,6 +157,70 @@ public class StreamUtils {
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Nullable
+    public static List<ChatLine> getChatLines() {
+        try {
+            return (List<ChatLine>) guiNewChatChatLines.get(Minecraft.getMinecraft().ingameGUI.getChatGUI());
+        } catch (ReflectiveOperationException e) {
+            LOGGER.error("Failed to get chatLines from GuiNewChat");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void deleteTwitchMessage(String messageId) {
+        List<ChatLine> chatLines = getChatLines();
+        if (chatLines == null) return;
+        ChatLine toDelete = null;
+        for (ChatLine line : chatLines) {
+            IChatComponent component = line.getChatComponent();
+            if (component instanceof ChatComponentTwitchMessage && Objects.equals(((ChatComponentTwitchMessage) component).messageId, messageId)) {
+                toDelete = line;
+                break;
+            }
+        }
+        if (toDelete != null) chatLines.remove(toDelete);
+        Minecraft.getMinecraft().ingameGUI.getChatGUI().refreshChat();
+    }
+
+    public static void queueDeleteTwitchMessage(String messageId) {
+        Minecraft.getMinecraft().addScheduledTask(() -> deleteTwitchMessage(messageId));
+    }
+
+    public static void clearTwitchChat(String channelId) {
+        List<ChatLine> chatLines = getChatLines();
+        if (chatLines == null) return;
+        List<ChatLine> toDelete = new ArrayList<>();
+        for (ChatLine line : chatLines) {
+            IChatComponent component = line.getChatComponent();
+            if (component instanceof ChatComponentTwitchMessage && ((ChatComponentTwitchMessage) component).channelId.equals(channelId))
+                toDelete.add(line);
+        }
+        chatLines.removeAll(toDelete);
+        Minecraft.getMinecraft().ingameGUI.getChatGUI().refreshChat();
+    }
+
+    public static void queueClearTwitchChat(String channelId) {
+        Minecraft.getMinecraft().addScheduledTask(() -> clearTwitchChat(channelId));
+    }
+
+    public static void clearTwitchUserMessages(String channelId, String userId) {
+        List<ChatLine> chatLines = getChatLines();
+        if (chatLines == null) return;
+        List<ChatLine> toDelete = new ArrayList<>();
+        for (ChatLine line : chatLines) {
+            IChatComponent component = line.getChatComponent();
+            if (component instanceof ChatComponentTwitchMessage && ((ChatComponentTwitchMessage) component).channelId.equals(channelId) && ((ChatComponentTwitchMessage) component).channelId.equals(userId))
+                toDelete.add(line);
+        }
+        chatLines.removeAll(toDelete);
+        Minecraft.getMinecraft().ingameGUI.getChatGUI().refreshChat();
+    }
+
+    public static void queueClearTwitchUserMessages(String channelId, String userId) {
+        Minecraft.getMinecraft().addScheduledTask(() -> clearTwitchUserMessages(channelId, userId));
     }
 
     public static void playSound(String sound, float volume, float pitch) {
