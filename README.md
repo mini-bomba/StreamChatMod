@@ -49,7 +49,7 @@ Some moderation commands are available from in-game. They are listed below:
 * `/twitch unban <user>`: Unbans the given user in the currently selected Twitch Chat.
 * Tip 19: *Ban an annoying humanoid from your stream with `/twitch ban <user> [reason]` (ex: `/twitch ban Rajdo Being an annoying humanoid.`)*
 
-**NOTE: The mod has no way to verify that an action has been done, and the confirmation messages are always sent, even if the action was not performed on the Twitch servers.**
+**Confirmation messages for moderation commands have been recently implemented in commit `45b4be14`**
 
 ## Other features
 
@@ -92,11 +92,11 @@ ProTip: a purple outline will appear if you are in Twitch chat mode, so you alwa
 ProProTip: the outline will change to green when you enter the prefix while in Twitch chat mode to notify you that the message will be sent to the Minecraft server.
 
 ### Chat outline for selected SCM commands
-The outline visible with Twitch chat mode enabled will also appear when typing some StreamChatMod commands.
-This currently mostly applies to moderation commands & the `/twitchchat` command.
+The outline visible with Twitch chat mode enabled will also appear when typing some StreamChatMod commands. This
+currently mostly applies to moderation commands & the `/twitchchat` command.
 
-The outline will be either purple or red, indicating whether you've made an obvious mistake or not.
-The text above the chat input bar will tell you what the command will do and what obvious mistake you've made.
+The outline will be either purple or red, indicating whether you've made an obvious mistake or not. The text above the
+chat input bar will tell you what the command will do and what obvious mistake you've made.
 
 Examples:
 ![Valid Ban Command](https://cdn.upload.systems/uploads/SkKnCNQl.png)
@@ -104,12 +104,35 @@ Examples:
 ![Invalid Timeout Duration](https://cdn.upload.systems/uploads/BIXbpaLC.png)
 ![Missing Parameters](https://cdn.upload.systems/uploads/cSGZ0Ghp.png)
 
+### Clip & Marker commands & shortcuts
+
+StreamChatMod allows you to quickly & easily create clips or markers on your streams with configurable keyboard
+shortcuts!
+
+Simply find the StreamChatMod category in Controls and assign keys to the shortcuts you need. All shortcuts are
+currently unassigned by default.
+
+You may also use the `/twitch clip` & `/twitch marker [optional description]` to create a clip or a marker.
+
+![Shortcuts](https://cdn.upload.systems/uploads/z39N17dk.png)
+
+**Notes:**
+
+* Clips & markers are created on the currently selected channel. Change it using `/twitch channel select`
+* Clip creation has a cooldown of 2 minutes, due to Twitch's API having a global limit on clip creation per app.
+* Clips cannot be named via command. This is a Twitch API limitation.
+* Markers cannot be named when using the `Create new marker` shortcut. A `Create new marker with description` shortcut
+  is planned.
+* You must either be the broadcaster or have editor permissions on the channel you want to create markers on.
+
 ### Quick revoking of your token
+
 Accidentally showed the configuration file or authorization window on stream?
 
 Use `/twitch revoketoken` to quickly invalidate that token to minimize damage.
 
 ## Note to self:
+
 Run `setupDecompWorkspace` Gradle task before configuring Gradle project
 
 [![forthebadge](https://forthebadge.com/images/badges/made-with-java.svg)](https://forthebadge.com)
