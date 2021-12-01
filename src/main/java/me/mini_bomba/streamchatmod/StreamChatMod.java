@@ -387,6 +387,7 @@ public class StreamChatMod
             twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
             twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);
             twitch.getEventManager().onEvent(ChannelNoticeEvent.class, this::onTwitchNotice);
+            twitch.getEventManager().onEvent(IRCMessageEvent.class, this::onTwitchMessageDeleted);
             twitch.getEventManager().onEvent(ClearChatEvent.class, this::onTwitchChatClear);
             twitch.getEventManager().onEvent(UserTimeoutEvent.class, this::onUserTimedOut);
             twitch.getEventManager().onEvent(UserBanEvent.class, this::onUserBanned);
@@ -425,6 +426,11 @@ public class StreamChatMod
     private void onTwitchFollow(FollowEvent event) {
         StreamUtils.queueAddMessage(EnumChatFormatting.DARK_PURPLE + "[TWITCH] " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
         if (this.config.playSoundOnFollow.getBoolean()) new Thread(new TwitchFollowSoundScheduler(this)).start();
+    }
+
+    private void onTwitchMessageDeleted(IRCMessageEvent event) {
+        if ("CLEARMSG".equals(event.getCommandType()))
+            event.getTagValue("target-msg-id").ifPresent(StreamUtils::queueDeleteTwitchMessage);
     }
 
     private void onTwitchChatClear(ClearChatEvent event) {
