@@ -77,7 +77,7 @@ public class StreamChatMod
     public final Cache<String, User> userCache = new Cache<>(32);
     public final Cache<String, User> userCacheByNames = new Cache<>(32);
 
-    // Cooldown for /twitch clip
+    // Cooldown for /twitch clip, /twitch streamstats
     private long lastClipCreated = 0;
 
     public StreamChatMod() {
@@ -338,37 +338,80 @@ public class StreamChatMod
             StreamUtils.queueAddMessage(mainComponent);
             if (copyToClipboard) GuiScreen.setClipboardString(clip.getUrl());
         } catch (Exception e) {
-            lastClipCreated = lastClipCreatedCopy;
+            lastClipCreated = System.currentTimeMillis() - 60 * 1000; // Set cooldown to 1 minute instead of 2 minutes
+            LOGGER.error("Failed to create clip");
+            e.printStackTrace();
         }
     }
 
-    public void asyncCreateClip(String broadcasterId, boolean copyToClipboard, boolean hasDelay) {
+    public void asyncCreateClip(String broadcasterId, boolean copyToClipboard, boolean hasDelay) throws ConcurrentModificationException {
         asyncTwitchAction(() -> createClip(broadcasterId, copyToClipboard, hasDelay));
     }
 
-    public void asyncCreateClip(String broadcasterId, boolean copyToClipboard) {
+    public void asyncCreateClip(String broadcasterId, boolean copyToClipboard) throws ConcurrentModificationException {
         asyncTwitchAction(() -> createClip(broadcasterId, copyToClipboard, false));
     }
 
-    public void asyncCreateClip(String broadcasterId) {
+    public void asyncCreateClip(String broadcasterId) throws ConcurrentModificationException {
         asyncCreateClip(broadcasterId, false, false);
     }
 
-    public void asyncCreateClip(boolean copyToClipboard, boolean hasDelay) {
+    public void asyncCreateClip(boolean copyToClipboard, boolean hasDelay) throws ConcurrentModificationException {
         asyncTwitchAction(() -> {
-            if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            if (twitch == null) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!");
+                return;
+            }
             User broadcaster = getSelectedChannelUser();
-            if (broadcaster == null) StreamUtils.addMessage(EnumChatFormatting.RED+"Could not find ID of current selected channel, "+config.twitchSelectedChannel.getString());
+            if (broadcaster == null)
+                StreamUtils.addMessage(EnumChatFormatting.RED + "Could not find ID of current selected channel, " + config.twitchSelectedChannel.getString());
             else createClip(broadcaster.getId(), copyToClipboard, hasDelay);
         });
     }
 
-    public void asyncCreateClip(boolean copyToClipboard) {
+    public void asyncCreateClip(boolean copyToClipboard) throws ConcurrentModificationException {
         asyncCreateClip(copyToClipboard, false);
     }
 
-    public void asyncCreateClip() {
+    public void asyncCreateClip() throws ConcurrentModificationException {
         asyncCreateClip(false, false);
+    }
+
+    private void showTwitchStreamStats(String broadcasterName) {
+        if (twitch == null) {
+            StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!");
+            return;
+        }
+        try {
+            List<Stream> streams = twitch.getHelix().getStreams(null, null, null, null, null, null, null, Collections.singletonList(broadcasterName)).execute().getStreams();
+            if (streams.size() < 1) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Could not find " + EnumChatFormatting.BOLD + broadcasterName + EnumChatFormatting.GRAY + "'s stream! " + EnumChatFormatting.ITALIC + "(They are probably offline)");
+                return;
+            }
+            Stream stream = streams.get(0);
+            long uptime = stream.getUptime().getSeconds();
+            StreamUtils.queueAddMessages(new String[]{
+                    "" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + broadcasterName + EnumChatFormatting.DARK_AQUA + "'s stream stats:",
+                    EnumChatFormatting.GRAY + "Stream Title: " + EnumChatFormatting.AQUA + stream.getTitle(),
+                    EnumChatFormatting.GRAY + "Game: " + EnumChatFormatting.AQUA + stream.getGameName(),
+                    EnumChatFormatting.GRAY + "Viewers: " + EnumChatFormatting.AQUA + stream.getViewerCount(),
+                    EnumChatFormatting.GRAY + "Stream uptime: " + EnumChatFormatting.AQUA + (uptime / 3600) + " hours " + (uptime / 60 % 60) + " minutes " + (uptime % 60) + "seconds"
+            });
+        } catch (Exception e) {
+            LOGGER.error("Failed to lookup stream");
+            e.printStackTrace();
+            StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Failed to lookup " + broadcasterName + "'s stream, an unexpected error occurred.");
+        }
+    }
+
+    public void asyncShowTwitchStreamStats(String broadcasterName) throws ConcurrentModificationException {
+        asyncTwitchAction(() -> showTwitchStreamStats(broadcasterName));
+    }
+
+    public void asyncShowTwitchStreamStats() throws ConcurrentModificationException {
+        String broadcaster = config.twitchSelectedChannel.getString();
+        if (broadcaster.length() == 0) StreamUtils.addMessage(EnumChatFormatting.RED + "No channel is selected!");
+        else asyncShowTwitchStreamStats(broadcaster);
     }
 
     public boolean startTwitch() {
