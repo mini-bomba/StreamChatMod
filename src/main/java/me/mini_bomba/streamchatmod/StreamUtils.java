@@ -24,7 +24,8 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -173,15 +174,10 @@ public class StreamUtils {
     public static void deleteTwitchMessage(String messageId) {
         List<ChatLine> chatLines = getChatLines();
         if (chatLines == null) return;
-        ChatLine toDelete = null;
-        for (ChatLine line : chatLines) {
+        chatLines.removeIf(line -> {
             IChatComponent component = line.getChatComponent();
-            if (component instanceof ChatComponentTwitchMessage && Objects.equals(((ChatComponentTwitchMessage) component).messageId, messageId)) {
-                toDelete = line;
-                break;
-            }
-        }
-        if (toDelete != null) chatLines.remove(toDelete);
+            return component instanceof ChatComponentTwitchMessage && messageId.equals(((ChatComponentTwitchMessage) component).messageId);
+        });
         Minecraft.getMinecraft().ingameGUI.getChatGUI().refreshChat();
     }
 
@@ -192,13 +188,10 @@ public class StreamUtils {
     public static void clearTwitchChat(String channelId) {
         List<ChatLine> chatLines = getChatLines();
         if (chatLines == null) return;
-        List<ChatLine> toDelete = new ArrayList<>();
-        for (ChatLine line : chatLines) {
+        chatLines.removeIf(line -> {
             IChatComponent component = line.getChatComponent();
-            if (component instanceof ChatComponentTwitchMessage && ((ChatComponentTwitchMessage) component).channelId.equals(channelId))
-                toDelete.add(line);
-        }
-        chatLines.removeAll(toDelete);
+            return component instanceof ChatComponentTwitchMessage && channelId.equals(((ChatComponentTwitchMessage) component).channelId);
+        });
         Minecraft.getMinecraft().ingameGUI.getChatGUI().refreshChat();
     }
 
@@ -209,13 +202,10 @@ public class StreamUtils {
     public static void clearTwitchUserMessages(String channelId, String userId) {
         List<ChatLine> chatLines = getChatLines();
         if (chatLines == null) return;
-        List<ChatLine> toDelete = new ArrayList<>();
-        for (ChatLine line : chatLines) {
+        chatLines.removeIf(line -> {
             IChatComponent component = line.getChatComponent();
-            if (component instanceof ChatComponentTwitchMessage && ((ChatComponentTwitchMessage) component).channelId.equals(channelId) && ((ChatComponentTwitchMessage) component).channelId.equals(userId))
-                toDelete.add(line);
-        }
-        chatLines.removeAll(toDelete);
+            return component instanceof ChatComponentTwitchMessage && channelId.equals(((ChatComponentTwitchMessage) component).channelId) && userId.equals(((ChatComponentTwitchMessage) component).userId);
+        });
         Minecraft.getMinecraft().ingameGUI.getChatGUI().refreshChat();
     }
 
