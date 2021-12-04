@@ -385,7 +385,7 @@ public class StreamChatMod
         try {
             List<Stream> streams = twitch.getHelix().getStreams(null, null, null, null, null, null, null, Collections.singletonList(broadcasterName)).execute().getStreams();
             if (streams.size() < 1) {
-                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Could not find " + EnumChatFormatting.BOLD + broadcasterName + EnumChatFormatting.GRAY + "'s stream! " + EnumChatFormatting.ITALIC + "(They are probably offline)");
+                StreamUtils.queueAddMessage("" + EnumChatFormatting.RED + EnumChatFormatting.BOLD + broadcasterName + EnumChatFormatting.RED + " is offline! " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "(or doesn't exist)");
                 return;
             }
             Stream stream = streams.get(0);
