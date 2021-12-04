@@ -53,14 +53,23 @@ public class TwitchTimeoutSubcommand extends TwitchSubcommand implements IDrawsC
     }
 
     @Override
+    public boolean hasParameters() {
+        return true;
+    }
+
+    @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
         String channel = mod.config.twitchSelectedChannel.getString();
-        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
-        if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
-        if (args.length == 0) throw new CommandException("Missing required parameters: user to unban & time to timeout for");
+        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean())
+            throw new CommandException("Twitch chat is disabled!");
+        if (channel.length() == 0)
+            throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
+        if (args.length == 0)
+            throw new CommandException("Missing required parameters: user to unban & time to timeout for");
         if (args.length == 1) throw new CommandException("Missing required parameter: time to timeout for");
         Duration dur = parseDuration(args[1]);
-        if (dur == null) throw new CommandException("Could not parse " + args[1] + " to a Duration. Use a whole number of seconds or the ISO 8601 format.");
+        if (dur == null)
+            throw new CommandException("Could not parse " + args[1] + " to a Duration. Use a whole number of seconds or the ISO 8601 format.");
         mod.twitch.getChat().timeout(channel, args[0], dur, String.join(" ", Arrays.asList(args).subList(2, args.length)));
         StreamUtils.addMessage(EnumChatFormatting.GRAY + "Timing out " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + " from " + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat for " + dur.getSeconds() + " seconds..." + (args.length >= 3 ? " Reason: " + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(2, args.length)) : ""));
     }

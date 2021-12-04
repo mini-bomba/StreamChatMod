@@ -48,13 +48,19 @@ public class TwitchSetTokenSubcommand extends TwitchSubcommand {
     }
 
     @Override
+    public boolean hasParameters() {
+        return true;
+    }
+
+    @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
-        if (args.length == 0) throw new CommandException("Missing required parameter: token. You can generate it by running /twitch token");
+        if (args.length == 0)
+            throw new CommandException("Missing required parameter: token. You can generate it by running /twitch token");
         mod.config.setTwitchToken(args[0]);
         mod.config.saveIfChanged();
-        StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Twitch token was successfully updated!");
+        StreamUtils.addMessage(sender, EnumChatFormatting.GREEN + "Twitch token was successfully updated!");
         if (mod.config.twitchEnabled.getBoolean()) {
-            StreamUtils.addMessage(sender, EnumChatFormatting.GRAY+"Restarting Twitch Chat...");
+            StreamUtils.addMessage(sender, EnumChatFormatting.GRAY + "Restarting Twitch Chat...");
             mod.asyncRestartTwitch();
         }
     }

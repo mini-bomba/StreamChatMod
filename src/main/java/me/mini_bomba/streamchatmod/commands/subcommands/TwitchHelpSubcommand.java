@@ -3,6 +3,8 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import me.mini_bomba.streamchatmod.commands.IHasAutocomplete;
+import me.mini_bomba.streamchatmod.utils.LazyUnmodifiableMap;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.event.ClickEvent;
@@ -13,16 +15,20 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class TwitchHelpSubcommand extends TwitchSubcommand {
+public class TwitchHelpSubcommand extends TwitchSubcommand implements IHasAutocomplete {
+    private final Map<TwitchSubcommandCategory, List<TwitchSubcommand>> subcommandsByCategory = LazyUnmodifiableMap.from(() -> getParentSubcommand().getSubcommands().stream().collect(Collectors.groupingBy(TwitchSubcommand::getCategory)));
+    private final List<String> categoryNames = Collections.unmodifiableList(Arrays.stream(TwitchSubcommandCategory.values()).map(TwitchSubcommandCategory::getName).sorted().collect(Collectors.toList()));
+    private final List<String> autocompletions;
 
     public TwitchHelpSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
+        List<String> tempList = new ArrayList<>(TwitchSubcommandCategory.categoryMap.size());
+        tempList.addAll(categoryNames);
+        tempList.addAll(Arrays.stream(TwitchSubcommandCategory.values()).flatMap(category -> category.getAliases().stream()).collect(Collectors.toList()));
+        autocompletions = Collections.unmodifiableList(tempList);
     }
 
     @Override
@@ -76,12 +82,24 @@ public class TwitchHelpSubcommand extends TwitchSubcommand {
             return;
         }
         TwitchSubcommandCategory category = TwitchSubcommandCategory.getCategoryByName(args[0]);
-        if (category == null) throw new CommandException("Unknown category name: "+args[0]);
-        Stream<TwitchSubcommand> filteredSubcommands = getParentSubcommand().getSubcommands().stream().filter(cmd -> cmd.getCategory() == category);
+        if (category == null) throw new CommandException("Unknown category name: " + args[0]);
         IChatComponent titleComponent = new ChatComponentText(EnumChatFormatting.GREEN + StreamUtils.capitalize(category.getName()) + " subcommand list of the /twitch command:");
-        List<IChatComponent> components = filteredSubcommands.map(cmd -> new ChatComponentText(EnumChatFormatting.GRAY+"/twitch "+cmd.getSubcommandUsage()+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+cmd.getDescription())
-                    .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch "+cmd.getSubcommandUsage())))).collect(Collectors.toList());
+        List<IChatComponent> components = subcommandsByCategory.get(category).stream().map(cmd -> new ChatComponentText(EnumChatFormatting.GRAY + "/twitch " + cmd.getSubcommandUsage() + EnumChatFormatting.WHITE + " - " + EnumChatFormatting.AQUA + cmd.getDescription())
+                .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch " + cmd.getSubcommandUsage())))).collect(Collectors.toList());
         components.add(0, titleComponent);
         StreamUtils.addMessages(components.toArray(new IChatComponent[0]));
+    }
+
+    @Override
+    public List<String> getAutocompletions(String[] args) {
+        if (args.length > 1) return null;
+        if (args[0].length() == 0)
+            return new ArrayList<>(categoryNames);
+        List<String> result = autocompletions.stream().filter(name -> name.startsWith(args[0])).collect(Collectors.toList());
+        if (result.stream().map(TwitchSubcommandCategory.categoryMap::get).distinct().count() == 1) {
+            TwitchSubcommandCategory category = TwitchSubcommandCategory.categoryMap.get(result.get(0));
+            result = StreamUtils.singletonModifiableList(category.getName());
+        }
+        return result;
     }
 }

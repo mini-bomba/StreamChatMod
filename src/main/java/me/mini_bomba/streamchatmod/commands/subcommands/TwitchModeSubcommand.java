@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import me.mini_bomba.streamchatmod.commands.IHasAutocomplete;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
@@ -11,8 +12,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class TwitchModeSubcommand extends TwitchSubcommand {
+public class TwitchModeSubcommand extends TwitchSubcommand implements IHasAutocomplete {
 
     public TwitchModeSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
@@ -78,5 +81,11 @@ public class TwitchModeSubcommand extends TwitchSubcommand {
             mod.config.saveIfChanged();
             StreamUtils.addMessage(EnumChatFormatting.AQUA + "Minecraft chat mode has been set to " + (newState ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server"));
         }
+    }
+
+    @Override
+    public List<String> getAutocompletions(String[] args) {
+        if (args.length > 1) return null;
+        return Stream.of("twitch", "minecraft").filter(s -> s.startsWith(args[0])).collect(Collectors.toList());
     }
 }

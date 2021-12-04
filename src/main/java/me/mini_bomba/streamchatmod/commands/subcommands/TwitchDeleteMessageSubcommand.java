@@ -50,9 +50,16 @@ public class TwitchDeleteMessageSubcommand extends TwitchSubcommand implements I
     }
 
     @Override
+    public boolean hasParameters() {
+        return true;
+    }
+
+    @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
-        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
-        if (args.length == 0) throw new CommandException("Missing required parameters: channel & id of the message to delete");
+        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean())
+            throw new CommandException("Twitch chat is disabled!");
+        if (args.length == 0)
+            throw new CommandException("Missing required parameters: channel & id of the message to delete");
         if (args.length == 1) throw new CommandException("Missing required parameter: id of the message to delete");
         mod.twitch.getChat().delete(args[0], args[1]);
         StreamUtils.addMessage(EnumChatFormatting.GRAY + "Deleting message...");

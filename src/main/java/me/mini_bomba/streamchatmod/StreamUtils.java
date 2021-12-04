@@ -24,8 +24,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -211,6 +210,10 @@ public class StreamUtils {
 
     public static void queueClearTwitchUserMessages(String channelId, String userId) {
         Minecraft.getMinecraft().addScheduledTask(() -> clearTwitchUserMessages(channelId, userId));
+    }
+
+    public static <T> List<T> singletonModifiableList(T obj) {
+        return new ArrayList<>(Collections.singleton(obj));
     }
 
     public static void playSound(String sound, float volume, float pitch) {

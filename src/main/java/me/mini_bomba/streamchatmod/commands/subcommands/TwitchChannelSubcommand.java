@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import me.mini_bomba.streamchatmod.commands.IHasAutocomplete;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.event.ClickEvent;
@@ -15,20 +16,26 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class TwitchChannelSubcommand extends TwitchSubcommand {
+public class TwitchChannelSubcommand extends TwitchSubcommand implements IHasAutocomplete {
     private final List<TwitchSubcommand> subcommands;
-    private final Map<String, TwitchSubcommand> subcommandMap;  
-    
+    private final Map<String, TwitchSubcommand> subcommandMap;
+    private final Map<String, IHasAutocomplete> subcommandMapWithAutocomplete;
+    private final List<String> subcommandNames;
+    private final List<String> autocompletions;
+
     public TwitchChannelSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
         subcommands = Collections.unmodifiableList(Arrays.asList(
-            new TwitchChannelJoinSubcommand(mod, this),
-            new TwitchChannelLeaveSubcommand(mod, this),
-            new TwitchChannelListSubcommand(mod, this),
-            new TwitchChannelSelectSubcommand(mod, this)
+                new TwitchChannelJoinSubcommand(mod, this),
+                new TwitchChannelLeaveSubcommand(mod, this),
+                new TwitchChannelListSubcommand(mod, this),
+                new TwitchChannelSelectSubcommand(mod, this)
         ));
         // Create param -> subcommand map
         subcommandMap = createNameMap();
+        subcommandMapWithAutocomplete = createAutcompletableMap(subcommandMap);
+        subcommandNames = createNameList();
+        autocompletions = createAutocompletionList();
     }
 
     @Override
@@ -67,9 +74,14 @@ public class TwitchChannelSubcommand extends TwitchSubcommand {
         if (args.length == 0 || !subcommandMap.containsKey(cmdName)) {
             List<IChatComponent> components = new ArrayList<>();
             components.add(new ChatComponentText(EnumChatFormatting.GREEN + "Subcommand list of /twitch channels:"));
-            components.addAll(getSubcommands().stream().map(cmd -> new ChatComponentText(EnumChatFormatting.GRAY+"/twitch channel "+cmd.getSubcommandUsage()+EnumChatFormatting.WHITE+" - "+EnumChatFormatting.AQUA+cmd.getDescription())
-                    .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch channel "+cmd.getSubcommandUsage())))).collect(Collectors.toList()));
+            components.addAll(getSubcommands().stream().map(cmd -> new ChatComponentText(EnumChatFormatting.GRAY + "/twitch channel " + cmd.getSubcommandUsage() + EnumChatFormatting.WHITE + " - " + EnumChatFormatting.AQUA + cmd.getDescription())
+                    .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch channel " + cmd.getSubcommandUsage())))).collect(Collectors.toList()));
             StreamUtils.addMessages(sender, components.toArray(new IChatComponent[0]));
         } else subcommandMap.get(cmdName).processSubcommand(sender, Arrays.copyOfRange(args, 1, args.length));
+    }
+
+    @Override
+    public List<String> getAutocompletions(String[] args) {
+        return getAutocompletions(args, subcommandMap, subcommandMapWithAutocomplete, subcommandNames, autocompletions);
     }
 }

@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import me.mini_bomba.streamchatmod.commands.IHasAutocomplete;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class TwitchSoundsMessageVolumeSubcommand extends TwitchSubcommand {
+public class TwitchSoundsMessageVolumeSubcommand extends TwitchSubcommand implements IHasAutocomplete {
 
     public TwitchSoundsMessageVolumeSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
@@ -64,5 +65,11 @@ public class TwitchSoundsMessageVolumeSubcommand extends TwitchSubcommand {
             mod.config.saveIfChanged();
             StreamUtils.addMessage(EnumChatFormatting.GREEN + "Volume for message sound effects has been set to " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + newState * 100 + "%");
         }
+    }
+
+    @Override
+    public List<String> getAutocompletions(String[] args) {
+        if (args.length > 1 || args[0].length() > 0) return null;
+        return StreamUtils.singletonModifiableList(String.valueOf(mod.config.messageSoundVolume.getDouble() * 100));
     }
 }

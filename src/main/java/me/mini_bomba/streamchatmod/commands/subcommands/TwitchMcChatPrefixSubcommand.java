@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import me.mini_bomba.streamchatmod.commands.IHasAutocomplete;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class TwitchMcChatPrefixSubcommand extends TwitchSubcommand {
+public class TwitchMcChatPrefixSubcommand extends TwitchSubcommand implements IHasAutocomplete {
     private static final List<String> resetPrefixes = Collections.unmodifiableList(Arrays.asList("reset", "disable", "remove", "null", "nil", "delete", "none", "disabled"));
 
     public TwitchMcChatPrefixSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
@@ -64,10 +65,16 @@ public class TwitchMcChatPrefixSubcommand extends TwitchSubcommand {
             mod.config.minecraftChatPrefix.set(newPrefix);
             mod.config.saveIfChanged();
             if (newPrefix.length() != 0) StreamUtils.addMessages(new String[]{
-                    EnumChatFormatting.GREEN + "Minecraft chat prefix has been set to: "+EnumChatFormatting.GRAY+newPrefix+EnumChatFormatting.GREEN+"!",
+                    EnumChatFormatting.GREEN + "Minecraft chat prefix has been set to: " + EnumChatFormatting.GRAY + newPrefix + EnumChatFormatting.GREEN + "!",
                     EnumChatFormatting.GRAY + "Prepend your messages with " + EnumChatFormatting.DARK_AQUA + newPrefix + EnumChatFormatting.GRAY + " while in 'Redirect to Twitch' mode to send your message to the Minecraft server instead!"
-                });
+            });
             else StreamUtils.addMessage(EnumChatFormatting.GREEN + "Minecraft chat prefix has been disabled!");
         }
+    }
+
+    @Override
+    public List<String> getAutocompletions(String[] args) {
+        if (args.length > 1 || args[0].length() > 0) return null;
+        return StreamUtils.singletonModifiableList(mod.config.minecraftChatPrefix.getString());
     }
 }

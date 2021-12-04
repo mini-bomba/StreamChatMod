@@ -50,14 +50,21 @@ public class TwitchChannelJoinSubcommand extends TwitchSubcommand {
     }
 
     @Override
+    public boolean hasParameters() {
+        return true;
+    }
+
+    @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
         TwitchChat chat = mod.twitch != null ? mod.twitch.getChat() : null;
         if (chat == null) throw new CommandException("Please enable Twitch chat first!");
         if (args.length == 0) throw new CommandException("Missing parameter: channel to join");
         String channel = args[0];
         List<String> channelList = Arrays.asList(mod.config.twitchChannels.getStringList());
-        if (channelList.contains(channel) && chat.isChannelJoined(channel)) throw new CommandException("Channel "+channel+" is already joined!");
-        if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+        if (channelList.contains(channel) && chat.isChannelJoined(channel))
+            throw new CommandException("Channel " + channel + " is already joined!");
+        if (mod.twitchAsyncAction != null)
+            throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
         mod.asyncJoinTwitchChannel(channel);
         StreamUtils.addMessage(EnumChatFormatting.GRAY + "Joining channel...");
     }

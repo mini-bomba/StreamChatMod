@@ -51,13 +51,20 @@ public class TwitchBanSubcommand extends TwitchSubcommand implements IDrawsChatO
     }
 
     @Override
+    public boolean hasParameters() {
+        return true;
+    }
+
+    @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
         String channel = mod.config.twitchSelectedChannel.getString();
-        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
-        if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
+        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean())
+            throw new CommandException("Twitch chat is disabled!");
+        if (channel.length() == 0)
+            throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
         if (args.length == 0) throw new CommandException("Missing required parameter: user to ban");
         mod.twitch.getChat().ban(channel, args[0], String.join(" ", Arrays.asList(args).subList(1, args.length)));
-        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Banning " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + " from "  + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat..." + (args.length >= 2 ? " Reason: " + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(1, args.length)) : ""));
+        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Banning " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + " from " + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat..." + (args.length >= 2 ? " Reason: " + EnumChatFormatting.BOLD + String.join(" ", Arrays.asList(args).subList(1, args.length)) : ""));
     }
 
     @Override

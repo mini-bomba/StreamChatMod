@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import me.mini_bomba.streamchatmod.commands.IHasAutocomplete;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
@@ -11,8 +12,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class TwitchSoundsFollowerSubcommand extends TwitchSubcommand {
+public class TwitchSoundsFollowerSubcommand extends TwitchSubcommand implements IHasAutocomplete {
 
     public TwitchSoundsFollowerSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
@@ -49,6 +52,11 @@ public class TwitchSoundsFollowerSubcommand extends TwitchSubcommand {
     }
 
     @Override
+    public boolean hasParameters() {
+        return true;
+    }
+
+    @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
         if (args.length == 0)
             StreamUtils.addMessage(EnumChatFormatting.AQUA + "Sound effect on new twitch follower is: " + (mod.config.playSoundOnFollow.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"));
@@ -62,5 +70,11 @@ public class TwitchSoundsFollowerSubcommand extends TwitchSubcommand {
                 StreamUtils.addMessage(EnumChatFormatting.GREEN + "Sound effect on new twitch follower has been " + (newState ? "enabled" : "disabled") + "!");
             }
         }
+    }
+
+    @Override
+    public List<String> getAutocompletions(String[] args) {
+        if (args.length > 1) return null;
+        return Stream.of("enable", "disable").filter(s -> s.startsWith(args[0])).collect(Collectors.toList());
     }
 }

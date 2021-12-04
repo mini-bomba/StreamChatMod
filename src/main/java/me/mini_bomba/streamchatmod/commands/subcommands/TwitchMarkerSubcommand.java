@@ -50,13 +50,20 @@ public class TwitchMarkerSubcommand extends TwitchSubcommand implements IDrawsCh
     }
 
     @Override
+    public boolean hasParameters() {
+        return true;
+    }
+
+    @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
         String channel = mod.config.twitchSelectedChannel.getString();
-        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
-        if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
+        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean())
+            throw new CommandException("Twitch chat is disabled!");
+        if (channel.length() == 0)
+            throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
         if (args.length == 0) mod.asyncCreateMarker();
         else mod.asyncCreateMarker(String.join(" ", args));
-        StreamUtils.addMessage(EnumChatFormatting.GRAY+"Creating marker...");
+        StreamUtils.addMessage(EnumChatFormatting.GRAY + "Creating marker...");
     }
 
     @Override

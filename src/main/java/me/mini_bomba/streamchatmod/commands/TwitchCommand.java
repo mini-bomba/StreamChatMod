@@ -5,6 +5,7 @@ import me.mini_bomba.streamchatmod.commands.subcommands.*;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.util.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -14,6 +15,9 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
     public final List<TwitchSubcommand> subcommands;
     public final Map<String, TwitchSubcommand> subcommandMap;
     public final Map<String, IDrawsChatOutline> subcommandMapWithChatOutlines;
+    public final Map<String, IHasAutocomplete> subcommandMapWithAutocomplete;
+    public final List<String> subcommandNames;
+    public final List<String> autocompletions;
 
     public TwitchCommand(StreamChatMod mod) {
         this.mod = mod;
@@ -43,11 +47,19 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
         ));
         // Create param -> subcommand map
         subcommandMap = Subcommand.createNameMap(subcommands);
-        Map<String, IDrawsChatOutline> tempMap = new HashMap<>();
-        for (String key : subcommandMap.keySet())
-            if (subcommandMap.get(key) instanceof IDrawsChatOutline)
-                tempMap.put(key, (IDrawsChatOutline) subcommandMap.get(key));
-        subcommandMapWithChatOutlines = Collections.unmodifiableMap(tempMap);
+        Map<String, IDrawsChatOutline> tempMap1 = new HashMap<>();
+        Map<String, IHasAutocomplete> tempMap2 = new HashMap<>();
+        for (String key : subcommandMap.keySet()) {
+            TwitchSubcommand subcommand = subcommandMap.get(key);
+            if (subcommand instanceof IDrawsChatOutline)
+                tempMap1.put(key, (IDrawsChatOutline) subcommand);
+            if (subcommand instanceof IHasAutocomplete)
+                tempMap2.put(key, (IHasAutocomplete) subcommand);
+        }
+        subcommandMapWithChatOutlines = Collections.unmodifiableMap(tempMap1);
+        subcommandMapWithAutocomplete = Collections.unmodifiableMap(tempMap2);
+        subcommandNames = Subcommand.createNameList(subcommands);
+        autocompletions = Subcommand.createAutocompletionList(subcommands);
     }
 
     @Override
@@ -78,12 +90,17 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (args.length == 0)
-          subcommandMap.get("help").processSubcommand(sender, new String[0]);
+            subcommandMap.get("help").processSubcommand(sender, new String[0]);
         else {
             String cmdName = args[0].toLowerCase();
             if (!subcommandMap.containsKey(cmdName))
                 throw new CommandException("Unknown subcommand: use /twitch help to see available subcommands.");
             subcommandMap.get(cmdName).processSubcommand(sender, Arrays.copyOfRange(args, 1, args.length));
         }
+    }
+
+    @Override
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+        return Subcommand.getAutocompletions(args, subcommandMap, subcommandMapWithAutocomplete, subcommandNames, autocompletions);
     }
 }

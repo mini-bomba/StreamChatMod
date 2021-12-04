@@ -51,10 +51,17 @@ public class TwitchUnbanSubcommand extends TwitchSubcommand implements IDrawsCha
     }
 
     @Override
+    public boolean hasParameters() {
+        return true;
+    }
+
+    @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
         String channel = mod.config.twitchSelectedChannel.getString();
-        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is disabled!");
-        if (channel.length() == 0) throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
+        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean())
+            throw new CommandException("Twitch chat is disabled!");
+        if (channel.length() == 0)
+            throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
         if (args.length == 0) throw new CommandException("Missing required parameter: user to unban");
         mod.twitch.getChat().unban(channel, args[0]);
         StreamUtils.addMessage(EnumChatFormatting.GREEN + "Unbanning " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + " from " + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat...");
