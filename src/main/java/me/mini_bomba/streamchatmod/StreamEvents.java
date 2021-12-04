@@ -1,6 +1,6 @@
 package me.mini_bomba.streamchatmod;
 
-import me.mini_bomba.streamchatmod.commands.subcommands.TwitchSubcommandWithOutline;
+import me.mini_bomba.streamchatmod.commands.IDrawsChatOutline;
 import me.mini_bomba.streamchatmod.events.LocalMessageEvent;
 import me.mini_bomba.streamchatmod.tweaker.TransformerField;
 import net.minecraft.client.gui.GuiChat;
@@ -79,7 +79,7 @@ public class StreamEvents {
         } else if (text.startsWith("/twitch")) {
             String[] args = text.split(" ");
             if (args.length > 1 && mod.twitchCommand.subcommandMapWithChatOutlines.containsKey(args[1].toLowerCase())) {
-                TwitchSubcommandWithOutline subcommand =  mod.twitchCommand.subcommandMapWithChatOutlines.get(args[1].toLowerCase());
+                IDrawsChatOutline subcommand = mod.twitchCommand.subcommandMapWithChatOutlines.get(args[1].toLowerCase());
                 subcommand.drawChatOutline(gui, Arrays.copyOfRange(args, 2, args.length));
             }
         }

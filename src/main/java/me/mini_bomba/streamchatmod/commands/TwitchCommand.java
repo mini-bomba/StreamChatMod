@@ -13,7 +13,7 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
     private final StreamChatMod mod;
     public final List<TwitchSubcommand> subcommands;
     public final Map<String, TwitchSubcommand> subcommandMap;
-    public final Map<String, TwitchSubcommandWithOutline> subcommandMapWithChatOutlines;
+    public final Map<String, IDrawsChatOutline> subcommandMapWithChatOutlines;
 
     public TwitchCommand(StreamChatMod mod) {
         this.mod = mod;
@@ -43,10 +43,10 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
         ));
         // Create param -> subcommand map
         subcommandMap = Subcommand.createNameMap(subcommands);
-        Map<String, TwitchSubcommandWithOutline> tempMap = new HashMap<>();
+        Map<String, IDrawsChatOutline> tempMap = new HashMap<>();
         for (String key : subcommandMap.keySet())
-            if (subcommandMap.get(key) instanceof TwitchSubcommandWithOutline)
-                tempMap.put(key, (TwitchSubcommandWithOutline) subcommandMap.get(key));
+            if (subcommandMap.get(key) instanceof IDrawsChatOutline)
+                tempMap.put(key, (IDrawsChatOutline) subcommandMap.get(key));
         subcommandMapWithChatOutlines = Collections.unmodifiableMap(tempMap);
     }
 

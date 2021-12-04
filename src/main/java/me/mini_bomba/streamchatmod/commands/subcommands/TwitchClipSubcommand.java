@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import me.mini_bomba.streamchatmod.commands.IDrawsChatOutline;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-public class TwitchClipSubcommand extends TwitchSubcommandWithOutline {
+public class TwitchClipSubcommand extends TwitchSubcommand implements IDrawsChatOutline {
 
     public TwitchClipSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
