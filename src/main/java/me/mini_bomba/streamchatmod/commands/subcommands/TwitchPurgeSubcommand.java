@@ -12,12 +12,14 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.util.EnumChatFormatting;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class TwitchUnbanSubcommand extends TwitchSubcommand implements IDrawsChatOutline, IHasAutocomplete {
+public class TwitchPurgeSubcommand extends TwitchSubcommand implements IDrawsChatOutline, IHasAutocomplete {
 
-    public TwitchUnbanSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
+    public TwitchPurgeSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
     }
 
@@ -28,22 +30,22 @@ public class TwitchUnbanSubcommand extends TwitchSubcommand implements IDrawsCha
 
     @Override
     public @NotNull String getSubcommandName() {
-        return "unban";
+        return "purge";
     }
 
     @Override
     public @NotNull List<String> getSubcommandAliases() {
-        return Collections.singletonList("pardon");
+        return Collections.emptyList();
     }
 
     @Override
     public @NotNull String getSubcommandUsage() {
-        return "unban <user>";
+        return "purge <user> [reason]";
     }
 
     @Override
     public @NotNull String getDescription() {
-        return "Unbans the user in the currently selected channel";
+        return "Removes all user's messages from the currently selected channel";
     }
 
     @Override
@@ -58,9 +60,9 @@ public class TwitchUnbanSubcommand extends TwitchSubcommand implements IDrawsCha
             throw new CommandException("Twitch chat is disabled!");
         if (channel.length() == 0)
             throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
-        if (args.length == 0) throw new CommandException("Missing required parameter: user to unban");
-        mod.twitch.getChat().unban(channel, args[0]);
-        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Unbanning " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + " from " + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat...");
+        if (args.length == 0) throw new CommandException("Missing required parameter: user whose messages to remove");
+        mod.twitch.getChat().timeout(channel, args[0], Duration.ofSeconds(1), String.join(" ", Arrays.asList(args).subList(1, args.length)));
+        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Removing " + EnumChatFormatting.BOLD + args[0] + EnumChatFormatting.GRAY + "'s messages from " + EnumChatFormatting.BOLD + channel + EnumChatFormatting.GRAY + "'s chat...");
     }
 
     @Override
@@ -71,9 +73,11 @@ public class TwitchUnbanSubcommand extends TwitchSubcommand implements IDrawsCha
         else if (channel.length() == 0)
             StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.RED + "No Twitch channel selected!");
         else if (args.length == 0)
-            StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE + "Unbanning in " + EnumChatFormatting.AQUA + channel + EnumChatFormatting.LIGHT_PURPLE + "'s chat " + EnumChatFormatting.RED + "(missing user to unban parameter)");
+            StreamUtils.drawChatWarning(gui, StreamUtils.RED, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE + "Removing user messages from " + EnumChatFormatting.AQUA + channel + EnumChatFormatting.LIGHT_PURPLE + "'s chat " + EnumChatFormatting.RED + "(missing user whose messages to remove parameter)");
+        else if (args.length == 1)
+            StreamUtils.drawChatWarning(gui, StreamUtils.PURPLE, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE + "Removing " + EnumChatFormatting.AQUA + args[0] + EnumChatFormatting.LIGHT_PURPLE + "'s messages from " + EnumChatFormatting.AQUA + channel + EnumChatFormatting.LIGHT_PURPLE + "'s chat");
         else
-            StreamUtils.drawChatWarning(gui, StreamUtils.PURPLE, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE + "Unbanning " + EnumChatFormatting.AQUA + args[0] + EnumChatFormatting.LIGHT_PURPLE + " in " + EnumChatFormatting.AQUA + channel + EnumChatFormatting.LIGHT_PURPLE + "'s chat");
+            StreamUtils.drawChatWarning(gui, StreamUtils.PURPLE, StreamUtils.BACKGROUND, EnumChatFormatting.LIGHT_PURPLE + "Removing " + EnumChatFormatting.AQUA + args[0] + EnumChatFormatting.LIGHT_PURPLE + "'s messages from " + EnumChatFormatting.AQUA + channel + EnumChatFormatting.LIGHT_PURPLE + "'s chat with reason \"" + EnumChatFormatting.AQUA + String.join(" ", Arrays.asList(args).subList(1, args.length)) + EnumChatFormatting.LIGHT_PURPLE + "\"");
     }
 
     @Override

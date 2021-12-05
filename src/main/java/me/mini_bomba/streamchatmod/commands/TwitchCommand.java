@@ -42,6 +42,7 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
                 new TwitchBanSubcommand(mod, this),
                 new TwitchUnbanSubcommand(mod, this),
                 new TwitchTimeoutSubcommand(mod, this),
+                new TwitchPurgeSubcommand(mod, this),
                 new TwitchClearChatSubcommand(mod, this),
                 new TwitchDeleteMessageSubcommand(mod, this),
                 new TwitchMarkerSubcommand(mod, this),
