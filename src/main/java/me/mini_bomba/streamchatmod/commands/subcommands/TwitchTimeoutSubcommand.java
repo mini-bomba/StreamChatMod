@@ -4,6 +4,8 @@ import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
 import me.mini_bomba.streamchatmod.commands.IDrawsChatOutline;
+import me.mini_bomba.streamchatmod.commands.IHasAutocomplete;
+import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -16,7 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class TwitchTimeoutSubcommand extends TwitchSubcommand implements IDrawsChatOutline {
+public class TwitchTimeoutSubcommand extends TwitchSubcommand implements IDrawsChatOutline, IHasAutocomplete {
 
     public TwitchTimeoutSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
@@ -50,11 +52,6 @@ public class TwitchTimeoutSubcommand extends TwitchSubcommand implements IDrawsC
     @Override
     public TwitchSubcommandCategory getCategory() {
         return TwitchSubcommandCategory.MODERATION;
-    }
-
-    @Override
-    public boolean hasParameters() {
-        return true;
     }
 
     @Override
@@ -105,5 +102,10 @@ public class TwitchTimeoutSubcommand extends TwitchSubcommand implements IDrawsC
             }
         }
         return dur;
+    }
+
+    @Override
+    public List<String> getAutocompletions(String[] args) {
+        return TwitchCommand.moderationAutocompletions(mod, args);
     }
 }

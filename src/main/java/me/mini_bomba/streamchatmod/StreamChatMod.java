@@ -7,6 +7,7 @@ import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.enums.NoticeTag;
 import com.github.twitch4j.chat.events.channel.*;
 import com.github.twitch4j.helix.domain.*;
+import com.github.twitch4j.tmi.domain.Chatters;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
@@ -35,8 +36,10 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import rx.schedulers.Timestamped;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 @Mod(modid = StreamChatMod.MODID, version = StreamChatMod.VERSION, clientSideOnly = true)
 public class StreamChatMod
@@ -76,8 +79,9 @@ public class StreamChatMod
     public final Cache<String, Clip> clipCache = new Cache<>(16);
     public final Cache<String, User> userCache = new Cache<>(32);
     public final Cache<String, User> userCacheByNames = new Cache<>(32);
+    public final Cache<String, Timestamped<Chatters>> timestampedChatterCache = new Cache<>(4);
 
-    // Cooldown for /twitch clip, /twitch streamstats
+    // Cooldown for /twitch clip
     private long lastClipCreated = 0;
 
     public StreamChatMod() {
@@ -426,6 +430,7 @@ public class StreamChatMod
                     .withEnableChat(true)
                     .withChatAccount(credential)
                     .withEnableHelix(true)
+                    .withEnableTMI(true)
                     .build();
             twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
             twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);
@@ -753,7 +758,7 @@ public class StreamChatMod
     }
 
     public User getTwitchUserByName(String userName) {
-        return userCacheByNames.getOptional(userName).orElseGet(() -> {
+        return userCacheByNames.getOptional(userName.toLowerCase()).orElseGet(() -> {
             if (twitch == null) {
                 LOGGER.error("Twitch client was disabled during an user lookup!");
                 return Optional.empty();
@@ -790,5 +795,34 @@ public class StreamChatMod
             categoryCache.put(categoryId, result.orElse(null));
             return result;
         }).orElse(null);
+    }
+
+    public Chatters getChatters(String channel) {
+        String channelName = channel.toLowerCase();
+        Timestamped<Chatters> cached = timestampedChatterCache.contains(channelName) ? timestampedChatterCache.get(channelName) : null;
+        if (cached == null || cached.getTimestampMillis() + 60 * 1000 > System.currentTimeMillis()) {
+            if (twitch == null) {
+                LOGGER.error("Twitch client was disabled during a chatter list lookup!");
+                return null;
+            }
+            Supplier<Chatters> lookup = () -> {
+                Chatters chatters;
+                try {
+                    chatters = twitch.getMessagingInterface().getChatters(channelName).execute();
+                } catch (Exception e) {
+                    LOGGER.error("Failed to lookup chatters in channel " + channelName);
+                    e.printStackTrace();
+                    return null;
+                }
+                timestampedChatterCache.put(channelName, new Timestamped<>(System.currentTimeMillis(), chatters));
+                return chatters;
+            };
+            // If no value cached - send request synchronously.
+            // If a value is cached - return old value and start an async request, if there's none running right now.
+            if (cached == null) return lookup.get();
+            if (twitchAsyncAction == null) asyncTwitchAction(lookup::get);
+            return cached.getValue();
+        }
+        return cached.getValue();
     }
 }

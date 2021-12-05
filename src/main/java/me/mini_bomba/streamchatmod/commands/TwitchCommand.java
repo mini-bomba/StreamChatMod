@@ -1,5 +1,6 @@
 package me.mini_bomba.streamchatmod.commands;
 
+import com.github.twitch4j.tmi.domain.Chatters;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.commands.subcommands.*;
 import net.minecraft.command.CommandBase;
@@ -9,6 +10,8 @@ import net.minecraft.util.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSubcommand> {
     private final StreamChatMod mod;
@@ -102,5 +105,12 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         return Subcommand.getAutocompletions(args, subcommandMap, subcommandMapWithAutocomplete, subcommandNames, autocompletions);
+    }
+
+    public static List<String> moderationAutocompletions(StreamChatMod mod, String[] args) {
+        if (mod.twitch == null || !mod.config.twitchEnabled.getBoolean() || args.length > 1) return null;
+        Chatters chatters = mod.getChatters(mod.config.twitchSelectedChannel.getString());
+        if (chatters == null) return null;
+        return Stream.concat(chatters.getViewers().stream(), chatters.getVips().stream()).filter(user -> user.startsWith(args[0])).collect(Collectors.toList());
     }
 }

@@ -4,9 +4,11 @@ import me.mini_bomba.streamchatmod.StreamChatMod;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.util.BlockPos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TwitchChatCommand extends CommandBase {
 
@@ -44,5 +46,11 @@ public class TwitchChatCommand extends CommandBase {
     @Override
     public int getRequiredPermissionLevel() {
         return 0;
+    }
+
+    @Override
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+        if (mod.twitch == null || mod.twitchSender == null || !args[args.length - 1].startsWith("@")) return null;
+        return mod.getChatters(mod.config.twitchSelectedChannel.getString()).getAllViewers().stream().filter(user -> user.startsWith(args[args.length - 1].substring(1))).map(user -> "@" + user).collect(Collectors.toList());
     }
 }
