@@ -35,7 +35,7 @@ your player's local chat.
 
 If you selected a channel in the configuration section, you can use `/tc <message>` to send any message from in-game to your selected stream chat.
 
-You can delete a message (if you have permissions to do so) by clicking on it in-game and sending the suggested command. Note that the message will stay visible in-game; use F3+D to clear your in-game chat.
+You can delete a message (if you have permissions to do so) by clicking on it in-game and sending the suggested command. Since commit 0e6601e3 deleted messages are also deleted from minecraft's chat.
 
 All Twitch related configuration commands can be viewed by running `/twitch help`.
 
