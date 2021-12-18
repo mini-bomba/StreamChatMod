@@ -146,6 +146,21 @@ public class StreamChatMod
         stopUpdateChecker();
         stopTwitch();
         config.saveIfChanged();
+        asyncExecutor.shutdown();
+        boolean terminated = false;
+        try {
+            terminated = asyncExecutor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
+        if (!terminated) {
+            LOGGER.warn("The async executor did not terminate after 5 seconds! Calling .shutdownNow()");
+            asyncExecutor.shutdownNow();
+            try {
+                terminated = asyncExecutor.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+            }
+            if (!terminated) LOGGER.error("The async executor did not terminate after 15 seconds!");
+        }
     }
 
     public void checkUpdates() {
