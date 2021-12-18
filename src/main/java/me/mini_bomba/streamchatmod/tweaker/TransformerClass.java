@@ -8,6 +8,7 @@ public enum TransformerClass {
     VE_BetterChat("com/orangemarshall/enhancements/modules/chat/BetterChat"),
     VE_BetterChatWithTabs("com/orangemarshall/enhancements/modules/chat/tab/BetterChatWithTabs"),
     VE_ChatTab("com/orangemarshall/enhancements/modules/chat/tab/ChatTab"),
+    VE_GuiChatExtended("com/orangemarshall/enhancements/modules/chat/GuiChatExtended")
     ;
 
     private final String name;

@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.Getter;
 import me.mini_bomba.streamchatmod.asm.transformers.GuiScreenTransformer;
+import me.mini_bomba.streamchatmod.asm.transformers.VE_GuiChatExtendedTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.relauncher.FMLRelaunchLog;
@@ -20,12 +21,13 @@ import java.util.Collection;
 public class StreamChatModTransformer implements IClassTransformer {
 
     @Getter
-    private static boolean deobfuscated = (boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
+    private static final boolean deobfuscated = (boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
 
     private final Multimap<String, IStreamTransformer> transformerMap = ArrayListMultimap.create();
 
     public StreamChatModTransformer() {
         registerTransformer(new GuiScreenTransformer());
+        registerTransformer(new VE_GuiChatExtendedTransformer());
     }
 
     private void registerTransformer(IStreamTransformer transformer) {

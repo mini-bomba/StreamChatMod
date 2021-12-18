@@ -23,7 +23,8 @@ public enum TransformerField {
     GuiNewChat_chatLines_deobf("chatLines", "Ljava/util/List;"),
 
     // Vanilla Enhancements
-    VE_BetterChatWithTabs_allTab("allTab", TransformerClass.VE_ChatTab.getName());
+    VE_BetterChatWithTabs_allTab("allTab", TransformerClass.VE_ChatTab.getName()),
+    ;
 
 
     private final String transformerName;

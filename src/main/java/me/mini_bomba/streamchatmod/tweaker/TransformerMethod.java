@@ -11,10 +11,18 @@ public enum TransformerMethod {
     GuiScreen_sendChatMessage("sendChatMessage", "func_175281_b", "b", "(Ljava/lang/String;Z)V"),
 
     // EntityPlayerSP
-    EntityPlayerSP_sendChatMessage("sendChatMessage", "func_71165_d", "e", "(Ljava/lang/String;)V");
+    EntityPlayerSP_sendChatMessage("sendChatMessage", "func_71165_d", "e", "(Ljava/lang/String;)V"),
 
-    private String name;
-    private String description;
+    // Vanilla Enhancements
+    VE_GuiChatExtended_keyTyped("func_73869_a", "(CI)V"),
+    ;
+
+    private final String name;
+    private final String description;
+
+    TransformerMethod(String name, String desc) {
+        this(name, name, name, desc, desc);
+    }
 
     TransformerMethod(String deobfName, String srgName, String notchName, String srgDesc) {
         this(deobfName, srgName, notchName, srgDesc, srgDesc);
