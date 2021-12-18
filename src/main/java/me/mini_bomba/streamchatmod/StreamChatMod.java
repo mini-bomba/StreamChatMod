@@ -43,14 +43,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
+@SuppressWarnings({"ConstantConditions", "unused"})
 @Mod(modid = StreamChatMod.MODID, version = StreamChatMod.VERSION, clientSideOnly = true)
-public class StreamChatMod
-{
+public class StreamChatMod {
     public static final String MODID = "streamchatmod";
     public static final String MODNAME = "StreamChatMod";
     public static final String VERSION = "@VERSION@";
     public static final String GIT_HASH = "@GIT_HASH@";
-    public static final boolean PRERELEASE = "@PRERELEASE@"=="true";
+    @SuppressWarnings("MismatchedStringCase")
+    public static final boolean PRERELEASE = "@PRERELEASE@".equals("true");
     private static final Logger LOGGER = LogManager.getLogger();
     public StreamConfig config;
     public StreamKeybinds keybinds;
@@ -72,7 +73,7 @@ public class StreamChatMod
     private ScheduledThreadPoolExecutor asyncExecutor;
 
     // Flag for scheduling actions that may break other actions, such as Twitch client stopping/starting
-    private AtomicBoolean importantActionScheduled = new AtomicBoolean(false);
+    private final AtomicBoolean importantActionScheduled = new AtomicBoolean(false);
 
     // The update checker future, scheduled via the asyncExecutor
     public ScheduledFuture<?> updateChecker = null;
@@ -95,7 +96,7 @@ public class StreamChatMod
         keybinds = new StreamKeybinds(this);
         twitchCommand = new TwitchCommand(this);
     }
-    
+
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         LOGGER.info("Checking for updates...");
