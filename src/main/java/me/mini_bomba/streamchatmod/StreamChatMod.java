@@ -11,10 +11,8 @@ import com.github.twitch4j.tmi.domain.Chatters;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
-import me.mini_bomba.streamchatmod.runnables.TwitchAsyncClientAction;
 import me.mini_bomba.streamchatmod.runnables.TwitchFollowSoundScheduler;
 import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
-import me.mini_bomba.streamchatmod.runnables.UpdateChecker;
 import me.mini_bomba.streamchatmod.utils.Cache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -39,6 +37,10 @@ import org.jetbrains.annotations.Nullable;
 import rx.schedulers.Timestamped;
 
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 @Mod(modid = StreamChatMod.MODID, version = StreamChatMod.VERSION, clientSideOnly = true)
@@ -66,10 +68,14 @@ public class StreamChatMod
     public Thread httpShutdownScheduler = null;
     public int loginMessageTimer = -1;
 
-    // Thread reference for running async Twitch client action, such as starting or stopping.
-    public Thread twitchAsyncAction;
+    // Executor for async actions
+    private ScheduledThreadPoolExecutor asyncExecutor;
 
-    public Thread updateCheckerThread;
+    // Flag for scheduling actions that may break other actions, such as Twitch client stopping/starting
+    private AtomicBoolean importantActionScheduled = new AtomicBoolean(false);
+
+    // The update checker future, scheduled via the asyncExecutor
+    public ScheduledFuture<?> updateChecker = null;
 
     private final StreamEvents events;
     protected final TwitchCommand twitchCommand;
@@ -91,8 +97,7 @@ public class StreamChatMod
     }
     
     @EventHandler
-    public void postInit(FMLPostInitializationEvent event)
-    {
+    public void postInit(FMLPostInitializationEvent event) {
         LOGGER.info("Checking for updates...");
         latestVersion = StreamUtils.getLatestVersion();
         if (PRERELEASE) {
@@ -102,8 +107,9 @@ public class StreamChatMod
             LOGGER.warn("New version available: " + latestVersion + (latestCommit != null ? "@" + latestCommit.shortHash : "") + "!");
         else
             LOGGER.info("Mod is up to date!");
-		startTwitch();
-		if (config.updateCheckerEnabled.getBoolean()) startUpdateChecker();
+        startTwitch();
+        asyncExecutor = new ScheduledThreadPoolExecutor(1);
+        if (config.updateCheckerEnabled.getBoolean()) startUpdateChecker();
     }
 
     @EventHandler
@@ -142,51 +148,107 @@ public class StreamChatMod
         config.saveIfChanged();
     }
 
-    public void startUpdateChecker() {
-        if (updateCheckerThread == null) {
-            updateCheckerThread = new Thread(new UpdateChecker(this));
-            updateCheckerThread.start();
+    public void checkUpdates() {
+        String newLatestVersion = StreamUtils.getLatestVersion();
+        StreamUtils.GitCommit newLatestCommit = null;
+        if (PRERELEASE) {
+            newLatestCommit = StreamUtils.getLatestCommit();
         }
+        if ((newLatestVersion != null && latestVersion != null && !newLatestVersion.equals(latestVersion)) || (newLatestCommit != null && latestCommit != null && !newLatestCommit.shortHash.equals(latestCommit.shortHash))) {
+            latestVersion = newLatestVersion;
+            latestCommit = newLatestCommit;
+            LOGGER.warn("New version available: " + newLatestVersion + (newLatestCommit != null ? "@" + newLatestCommit.shortHash : "") + "!");
+            IChatComponent component1 = new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "[TWITCH] " + EnumChatFormatting.GOLD + "New update published: " + newLatestVersion + (PRERELEASE ? "@" + newLatestCommit.shortHash : ""));
+            IChatComponent component2 = null;
+            if (PRERELEASE && newLatestCommit != null)
+                component2 = new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "[TWITCH] " + EnumChatFormatting.GRAY + "Update commit message: " + EnumChatFormatting.AQUA + newLatestCommit.shortMessage);
+            IChatComponent component3 = new ChatComponentText("" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Want to check for updates only on startup? Click here!");
+            ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/mini-bomba/StreamChatMod/releases"))
+                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GREEN + "Click here to see mod releases on GitHub!")));
+            component1.setChatStyle(style);
+            if (component2 != null) component2.setChatStyle(style);
+            style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/twitch updatechecker disable"))
+                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GRAY + "Use " + EnumChatFormatting.DARK_GRAY + "/twitch updatechecker disable" + EnumChatFormatting.GRAY + " to disable, or " + EnumChatFormatting.DARK_GRAY + "/twitch updatechecker enable" + EnumChatFormatting.GRAY + " to enable")));
+            component3.setChatStyle(style);
+            if (component2 != null)
+                StreamUtils.queueAddMessages(new IChatComponent[]{component1, component2, component3});
+            else
+                StreamUtils.queueAddMessages(new IChatComponent[]{component1, component3});
+        } else
+            LOGGER.info("Mod is up to date!");
+    }
+
+    public void startUpdateChecker() {
+        if (updateChecker == null)
+            updateChecker = asyncExecutor.scheduleWithFixedDelay(this::checkUpdates, 15, 15, TimeUnit.MINUTES);
     }
 
     public void stopUpdateChecker() {
-        if (updateCheckerThread != null)
-            if (updateCheckerThread.isAlive())
-                updateCheckerThread.interrupt();
-            else
-                updateCheckerThread = null;
+        if (updateChecker != null) {
+            updateChecker.cancel(true);
+            updateChecker = null;
+        }
+    }
+
+    /**
+     * Schedules an action to be run in another thread.<br>
+     * <b>This will throw a ConcurrentModificationException if an important action is scheduled</b> (such as Twitch client stopping)<br>
+     * Use isImportantActionScheduled() to check if this is the case.
+     *
+     * @param action      action to schedule
+     * @param isImportant can this action cause other actions to fail?
+     */
+    private void asyncTwitchAction(Runnable action, boolean isImportant) throws ConcurrentModificationException {
+        if (importantActionScheduled.get())
+            throw new ConcurrentModificationException("An important async action is currently scheduled!");
+        if (isImportant) {
+            importantActionScheduled.set(true);
+            Runnable oldAction = action;
+            action = () -> {
+                oldAction.run();
+                importantActionScheduled.set(false);
+            };
+        }
+        asyncExecutor.execute(action);
     }
 
     private void asyncTwitchAction(Runnable action) throws ConcurrentModificationException {
-        if (twitchAsyncAction != null) throw new ConcurrentModificationException("An async action is already running!");
-        twitchAsyncAction = new Thread(new TwitchAsyncClientAction(this, action));
-        twitchAsyncAction.start();
+        asyncTwitchAction(action, false);
+    }
+
+    /**
+     * Checks if an important async action is scheduled (such as Twitch client stopping)
+     *
+     * @return is an important action scheduled?
+     */
+    public boolean isImportantActionScheduled() {
+        return importantActionScheduled.get();
     }
 
     public void asyncStartTwitch() throws ConcurrentModificationException {
         asyncTwitchAction(() -> {
             if (startTwitch())
-                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Enabled the Twitch Chat!");
+                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "Enabled the Twitch Chat!");
             else
-                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Could not start the Twitch client, the token may be invalid!");
-        });
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Could not start the Twitch client, the token may be invalid!");
+        }, true);
     }
 
     public void asyncStopTwitch() throws ConcurrentModificationException {
         asyncTwitchAction(() -> {
             stopTwitch();
-            StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Disabled the Twitch Chat!");
-        });
+            StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "Disabled the Twitch Chat!");
+        }, true);
     }
 
     public void asyncRestartTwitch() throws ConcurrentModificationException {
         asyncTwitchAction(() -> {
             stopTwitch();
             if (startTwitch())
-                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Restarted the Twitch Chat!");
+                StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "Restarted the Twitch Chat!");
             else
-                StreamUtils.queueAddMessage(EnumChatFormatting.RED+"Could not restart the Twitch client, the token may be invalid!");
-        });
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Could not restart the Twitch client, the token may be invalid!");
+        }, true);
     }
 
     public void asyncRevokeTwitchToken() throws ConcurrentModificationException {
@@ -201,7 +263,7 @@ public class StreamChatMod
                 StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Could not revoke the token! It may be invalid, or the request could not have been sent!");
             }
             config.saveIfChanged();
-        });
+        }, true);
     }
 
     public void asyncJoinTwitchChannel(String channel) throws ConcurrentModificationException {
@@ -820,7 +882,7 @@ public class StreamChatMod
             // If no value cached - send request synchronously.
             // If a value is cached - return old value and start an async request, if there's none running right now.
             if (cached == null) return lookup.get();
-            if (twitchAsyncAction == null) asyncTwitchAction(lookup::get);
+            if (!isImportantActionScheduled()) asyncTwitchAction(lookup::get);
             return cached.getValue();
         }
         return cached.getValue();

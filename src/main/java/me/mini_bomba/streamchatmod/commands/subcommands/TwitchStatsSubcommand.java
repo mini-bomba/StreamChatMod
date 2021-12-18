@@ -59,8 +59,8 @@ public class TwitchStatsSubcommand extends TwitchSubcommand implements IDrawsCha
             throw new CommandException("Twitch chat is disabled!");
         if (channel.length() == 0)
             throw new CommandException("No selected channel. Use /twitch channels select <channel> to select one.");
-        if (mod.twitchAsyncAction != null)
-            throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+        if (mod.isImportantActionScheduled())
+            throw new CommandException("An important action for the Twitch Chat is currently pending, please wait.");
         mod.asyncShowTwitchStreamStats(channel);
     }
 

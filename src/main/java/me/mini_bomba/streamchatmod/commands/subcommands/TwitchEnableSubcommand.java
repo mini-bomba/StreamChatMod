@@ -50,9 +50,11 @@ public class TwitchEnableSubcommand extends TwitchSubcommand {
 
     @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
-        if (!mod.config.isTwitchTokenSet()) throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
+        if (!mod.config.isTwitchTokenSet())
+            throw new CommandException("Twitch token is not configured! Use /twitch token to configure it.");
         if (mod.twitch != null) throw new CommandException("Twitch chat is already enabled!");
-        if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+        if (mod.isImportantActionScheduled())
+            throw new CommandException("An important action for the Twitch Chat is currently pending, please wait.");
         mod.config.twitchEnabled.set(true);
         mod.config.saveIfChanged();
         mod.asyncStartTwitch();

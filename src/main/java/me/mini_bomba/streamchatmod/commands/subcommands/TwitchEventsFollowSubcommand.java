@@ -56,7 +56,8 @@ public class TwitchEventsFollowSubcommand extends TwitchSubcommand implements IH
         if (args.length == 0)
             StreamUtils.addMessage(EnumChatFormatting.AQUA + "Displaying of new channel followers is: " + (mod.config.followEventEnabled.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"));
         else {
-            if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+            if (mod.isImportantActionScheduled())
+                throw new CommandException("An important action for the Twitch Chat is currently pending, please wait.");
             Boolean newState = StreamUtils.readStringAsBoolean(args[0]);
             if (newState == null)
                 throw new CommandException("Invalid boolean value" + args[0]);

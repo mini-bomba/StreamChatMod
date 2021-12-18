@@ -63,8 +63,8 @@ public class TwitchChannelJoinSubcommand extends TwitchSubcommand {
         List<String> channelList = Arrays.asList(mod.config.twitchChannels.getStringList());
         if (channelList.contains(channel) && chat.isChannelJoined(channel))
             throw new CommandException("Channel " + channel + " is already joined!");
-        if (mod.twitchAsyncAction != null)
-            throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+        if (mod.isImportantActionScheduled())
+            throw new CommandException("An important action for the Twitch Chat is currently pending, please wait.");
         mod.asyncJoinTwitchChannel(channel);
         StreamUtils.addMessage(EnumChatFormatting.GRAY + "Joining channel...");
     }

@@ -60,8 +60,8 @@ public class TwitchChannelLeaveSubcommand extends TwitchSubcommand implements IH
         List<String> channelList = Arrays.asList(mod.config.twitchChannels.getStringList());
         if (!channelList.contains(channel) && !chat.isChannelJoined(channel))
             throw new CommandException("Channel " + channel + " is not joined!");
-        if (mod.twitchAsyncAction != null)
-            throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+        if (mod.isImportantActionScheduled())
+            throw new CommandException("An important action for the Twitch Chat is currently pending, please wait.");
         mod.asyncLeaveTwitchChannel(channel);
         StreamUtils.addMessage(EnumChatFormatting.GRAY + "Leaving channel...");
     }

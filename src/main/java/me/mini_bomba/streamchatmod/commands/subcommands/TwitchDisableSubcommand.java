@@ -50,8 +50,10 @@ public class TwitchDisableSubcommand extends TwitchSubcommand {
 
     @Override
     public void processSubcommand(ICommandSender sender, String[] args) throws CommandException {
-        if (mod.twitch == null && !mod.config.twitchEnabled.getBoolean()) throw new CommandException("Twitch chat is already disabled!");
-        if (mod.twitchAsyncAction != null) throw new CommandException("An action for the Twitch Chat is currently pending, please wait.");
+        if (mod.twitch == null && !mod.config.twitchEnabled.getBoolean())
+            throw new CommandException("Twitch chat is already disabled!");
+        if (mod.isImportantActionScheduled())
+            throw new CommandException("An important action for the Twitch Chat is currently pending, please wait.");
         mod.config.twitchEnabled.set(false);
         mod.config.saveIfChanged();
         mod.asyncStopTwitch();

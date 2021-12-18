@@ -349,7 +349,7 @@ public class StreamUtils {
                 mod.config.setTwitchToken(token);
                 mod.config.twitchEnabled.set(true);
                 mod.config.saveIfChanged();
-                if (mod.twitchAsyncAction == null) {
+                if (!mod.isImportantActionScheduled()) {
                     addMessage(EnumChatFormatting.GRAY + "Token set, restarting twitch chat...");
                     mod.asyncRestartTwitch();
                 } else {
