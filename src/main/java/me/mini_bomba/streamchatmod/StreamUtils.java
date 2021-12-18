@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import me.mini_bomba.streamchatmod.tweaker.TransformerClass;
 import me.mini_bomba.streamchatmod.tweaker.TransformerField;
 import me.mini_bomba.streamchatmod.utils.ChatComponentTwitchMessage;
 import net.minecraft.client.Minecraft;
@@ -36,28 +37,38 @@ public class StreamUtils {
     public static final int BACKGROUND = new Color(0, 0, 0, 127).getRGB();
 
     // Reflection stuff for editing "private" & "final" fields on stuff
-    private static final Field textComponentTextField;
-    private static final Field guiNewChatChatLines;
+    // Vanilla fields
+    private static final Field textComponentTextField = getVanillaAccessibleField(ChatComponentText.class, TransformerField.ChatComponentText_text);
+    private static final Field guiNewChatChatLines = getVanillaAccessibleField(GuiNewChat.class, TransformerField.GuiNewChat_chatLines);
+    // Vanilla Enhancements' fields
+    private static final Field ve_BetterChatChatLines = getExternalAccessibleField(TransformerClass.VE_BetterChat, TransformerField.GuiNewChat_chatLines_deobf);
+    private static final Field ve_BetterChatAllTab = getExternalAccessibleField(TransformerClass.VE_BetterChatWithTabs, TransformerField.VE_BetterChatWithTabs_allTab);
+    private static final Field ve_ChatTabChatLines = getExternalAccessibleField(TransformerClass.VE_ChatTab, TransformerField.GuiNewChat_chatLines_deobf);
 
-    static {
-        Field field = null;
+    private static Field getVanillaAccessibleField(Class<?> c, TransformerField f) {
         try {
-            field = ChatComponentText.class.getDeclaredField(TransformerField.ChatComponentText_text.getReflectorName());
+            Field field = c.getDeclaredField(f.getReflectorName());
             field.setAccessible(true);
+            return field;
         } catch (ReflectiveOperationException e) {
-            LOGGER.error("Failed to get DeclaredField 'text' of ChatComponentText & set it accessible");
+            LOGGER.error("Failed to get DeclaredField '" + f.getReflectorName() + "' of " + c.getSimpleName() + " & set it accessible");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static Field getExternalAccessibleField(TransformerClass c, TransformerField f) {
+        try {
+            Class<?> c_reflection = Class.forName(c.getTransformerName());
+            Field field = c_reflection.getDeclaredField(f.getReflectorName());
+            field.setAccessible(true);
+            return field;
+        } catch (ClassNotFoundException ignored) {
+        } catch (ReflectiveOperationException e) {
+            LOGGER.warn("Failed to get DeclaredField '" + f.getReflectorName() + "' from " + c.getTransformerName() + " & mark it accessible!");
             e.printStackTrace();
         }
-        textComponentTextField = field;
-        field = null;
-        try {
-            field = GuiNewChat.class.getDeclaredField(TransformerField.GuiNewChat_chatLines.getReflectorName());
-            field.setAccessible(true);
-        } catch (ReflectiveOperationException e) {
-            LOGGER.error("Failed to get DeclaredField 'chatLines' of GuiNewChat & set it accessible");
-            e.printStackTrace();
-        }
-        guiNewChatChatLines = field;
+        return null;
     }
 
     public static void addMessage(ICommandSender player, String message) {
@@ -144,6 +155,7 @@ public class StreamUtils {
         Minecraft.getMinecraft().addScheduledTask(() -> Minecraft.getMinecraft().ingameGUI.getChatGUI().refreshChat());
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public static boolean editTextComponent(ChatComponentText component, String newText) {
         if (textComponentTextField == null) {
             LOGGER.warn("Failed to edit text component - static field lookup & set-accessible has failed");
@@ -159,10 +171,22 @@ public class StreamUtils {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Nullable
     public static List<ChatLine> getChatLines() {
         try {
-            return (List<ChatLine>) guiNewChatChatLines.get(Minecraft.getMinecraft().ingameGUI.getChatGUI());
+            GuiNewChat chat = Minecraft.getMinecraft().ingameGUI.getChatGUI();
+            switch (chat.getClass().getName()) {
+                case "com.orangemarshall.enhancements.modules.chat.BetterChat":
+                    if (ve_BetterChatChatLines == null) return null;
+                    return (List<ChatLine>) ve_BetterChatChatLines.get(chat);
+                case "com.orangemarshall.enhancements.modules.chat.tab.BetterChatWithTabs":
+                    if (ve_ChatTabChatLines == null || ve_BetterChatAllTab == null) return null;
+                    return (List<ChatLine>) ve_ChatTabChatLines.get(ve_BetterChatAllTab.get(chat));
+                default:
+                    if (guiNewChatChatLines == null) return null;
+                    return (List<ChatLine>) guiNewChatChatLines.get(chat);
+            }
         } catch (ReflectiveOperationException e) {
             LOGGER.error("Failed to get chatLines from GuiNewChat");
             e.printStackTrace();
@@ -295,6 +319,7 @@ public class StreamUtils {
             shortHash = hash.substring(0, 8);
             this.message = message;
             Matcher matcher = shortMessagePattern.matcher(message);
+            //noinspection ResultOfMethodCallIgnored
             matcher.find();
             shortMessage = matcher.group();
         }
@@ -305,8 +330,8 @@ public class StreamUtils {
         try {
             URL url = new URL("https://api.github.com/repos/mini-bomba/StreamChatMod/commits/latest");
             Gson gson = new Gson();
-            Map data = gson.fromJson(new InputStreamReader(url.openStream()), Map.class);
-            return new GitCommit((String) data.get("sha"), (String) ((Map) data.get("commit")).get("message"));
+            Map<?, ?> data = gson.fromJson(new InputStreamReader(url.openStream()), Map.class);
+            return new GitCommit((String) data.get("sha"), (String) ((Map<?, ?>) data.get("commit")).get("message"));
         } catch (Exception e) {
             LOGGER.warn("Could not check for updates!");
             e.printStackTrace();

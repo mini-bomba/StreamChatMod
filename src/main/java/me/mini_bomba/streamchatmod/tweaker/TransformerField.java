@@ -17,12 +17,22 @@ public enum TransformerField {
     Minecraft_thePlayer("thePlayer", "field_71439_g", "h", "Lbew;", "Lnet/minecraft/client/entity/EntityPlayerSP;"),
 
     // ChatComponentText
-    ChatComponentText_text("text", "field_150267_b", "b", "Ljava/lang/String;");
+    ChatComponentText_text("text", "field_150267_b", "b", "Ljava/lang/String;"),
+
+    // Other mod compatibility
+    GuiNewChat_chatLines_deobf("chatLines", "Ljava/util/List;"),
+
+    // Vanilla Enhancements
+    VE_BetterChatWithTabs_allTab("allTab", TransformerClass.VE_ChatTab.getName());
 
 
-    private String transformerName;
-    private String reflectorName;
-    private String type;
+    private final String transformerName;
+    private final String reflectorName;
+    private final String type;
+
+    TransformerField(String name, String type) {
+        this(name, name, name, type, type);
+    }
 
     TransformerField(String deobfName, String srgName, String notchName, String srgType) {
         this(deobfName, srgName, notchName, srgType, srgType);
