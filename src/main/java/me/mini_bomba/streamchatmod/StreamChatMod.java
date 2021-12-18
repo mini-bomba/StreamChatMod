@@ -178,14 +178,18 @@ public class StreamChatMod
             LOGGER.info("Mod is up to date!");
     }
 
-    public void startUpdateChecker() {
+    public void startUpdateChecker(boolean checkNow) {
         if (updateChecker == null)
-            updateChecker = asyncExecutor.scheduleWithFixedDelay(this::checkUpdates, 15, 15, TimeUnit.MINUTES);
+            updateChecker = asyncExecutor.scheduleWithFixedDelay(this::checkUpdates, checkNow ? 0 : 15, 15, TimeUnit.MINUTES);
+    }
+
+    public void startUpdateChecker() {
+        startUpdateChecker(false);
     }
 
     public void stopUpdateChecker() {
         if (updateChecker != null) {
-            updateChecker.cancel(true);
+            updateChecker.cancel(false);
             updateChecker = null;
         }
     }
