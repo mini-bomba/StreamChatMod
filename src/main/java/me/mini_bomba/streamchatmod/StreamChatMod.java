@@ -27,6 +27,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.ModMetadata;
+import net.minecraftforge.fml.common.ProgressManager;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLModDisabledEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -99,6 +100,8 @@ public class StreamChatMod {
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
+        ProgressManager.ProgressBar progress = ProgressManager.push("Starting up", 3);
+        progress.step("Checking for updates");
         LOGGER.info("Checking for updates...");
         latestVersion = StreamUtils.getLatestVersion();
         if (PRERELEASE) {
@@ -108,9 +111,12 @@ public class StreamChatMod {
             LOGGER.warn("New version available: " + latestVersion + (latestCommit != null ? "@" + latestCommit.shortHash : "") + "!");
         else
             LOGGER.info("Mod is up to date!");
+        progress.step("Starting Twitch client");
         startTwitch();
+        progress.step("Starting async thread");
         asyncExecutor = new ScheduledThreadPoolExecutor(1);
         if (config.updateCheckerEnabled.getBoolean()) startUpdateChecker();
+        ProgressManager.pop(progress);
     }
 
     @EventHandler
