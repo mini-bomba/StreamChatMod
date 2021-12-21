@@ -36,6 +36,14 @@ public class StreamConfig {
     public final Property eventSoundVolume;
     // twitch events
     public final Property followEventEnabled;
+    // emotes
+    public final Property showTwitchGlobalEmotes;
+    public final Property showTwitchChannelEmotes;
+    public final Property showBTTVGlobalEmotes;
+    public final Property showBTTVChannelEmotes;
+    public final Property showFFZGlobalEmotes;
+    public final Property showFFZChannelEmotes;
+    public final Property allowAnimatedEmotes;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -57,6 +65,13 @@ public class StreamConfig {
         messageSoundVolume = config.get("sounds", "messageVolume", 1.0d);
         eventSoundVolume = config.get("sounds", "eventVolume", 1.0d);
         followEventEnabled = config.get("twitchEvents", "followers", true);
+        showTwitchGlobalEmotes = config.get("emotes", "twitch_globals", true);
+        showTwitchChannelEmotes = config.get("emotes", "twitch_channel", true);
+        showBTTVGlobalEmotes = config.get("emotes", "bttv_globals", true);
+        showBTTVChannelEmotes = config.get("emotes", "bttv_channel", true);
+        showFFZGlobalEmotes = config.get("emotes", "ffz_globals", true);
+        showFFZChannelEmotes = config.get("emotes", "ffz_channel", true);
+        allowAnimatedEmotes = config.get("emotes", "animated", true);
         saveIfChanged();
     }
 
@@ -64,6 +79,7 @@ public class StreamConfig {
         if (config.hasChanged()) config.save();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isTwitchTokenSet() {
         return !twitchToken.getString().equals("");
     }

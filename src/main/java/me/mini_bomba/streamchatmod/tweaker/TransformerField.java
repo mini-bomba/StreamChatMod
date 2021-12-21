@@ -19,6 +19,10 @@ public enum TransformerField {
     // ChatComponentText
     ChatComponentText_text("text", "field_150267_b", "b", "Ljava/lang/String;"),
 
+    // FontRenderer
+    FontRenderer_posX("posX", "field_78295_j", "i", "F"),
+    FontRenderer_posY("posY", "field_78296_k", "j", "F"),
+
     // Other mod compatibility
     GuiNewChat_chatLines_deobf("chatLines", "Ljava/util/List;"),
 

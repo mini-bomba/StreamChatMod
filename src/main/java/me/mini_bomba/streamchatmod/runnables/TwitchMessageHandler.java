@@ -6,6 +6,7 @@ import com.github.twitch4j.helix.domain.Clip;
 import com.github.twitch4j.helix.domain.Game;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
+import me.mini_bomba.streamchatmod.utils.ChatComponentStreamEmote;
 import me.mini_bomba.streamchatmod.utils.ChatComponentTwitchMessage;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
@@ -13,10 +14,12 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -29,6 +32,7 @@ public class TwitchMessageHandler implements Runnable {
     private static final char formatChar = '\u00a7';
     private static final String validFormats = "0123456789abcdefklmnorABCDEFKLMNOR";
     public static final Pattern urlPattern = Pattern.compile("https?://[^.\\s/]+(?:\\.[^.\\s/]+)+\\S*");
+    private static final Pattern formatCodePattern = Pattern.compile(formatChar + "[0-9a-fA-Fk-rK-R]");
     private static final String clipsDomain = "https://clips.twitch.tv/";
 
     public TwitchMessageHandler(StreamChatMod mod, ChannelMessageEvent event) {
@@ -42,7 +46,7 @@ public class TwitchMessageHandler implements Runnable {
             char[] msg = message.toCharArray();
             for (int i = 0; i < msg.length; i++) {
                 if (msg[i] == '&') {
-                    if (validFormats.contains(String.valueOf(msg[i+1])))
+                    if (validFormats.contains(String.valueOf(msg[i + 1])))
                         msg[i] = formatChar;
                 }
             }
@@ -51,24 +55,62 @@ public class TwitchMessageHandler implements Runnable {
         return message;
     }
 
+    private List<IChatComponent> processEmotes(String message) {
+        List<IChatComponent> result = new LinkedList<>();
+        List<String> nextComponent = new LinkedList<>();
+        char color = 0;
+        char format = 0;
+        char nextColor = 0;
+        char nextFormat = 0;
+        for (String word : StringUtils.split(message, " \n\t")) {
+            if (mod.emotes.isEmote(event.getChannel().getId(), word)) {
+                if (nextComponent.size() > 0)
+                    result.add(new ChatComponentText((color != 0 ? "" + formatChar + color : "") + (format != 0 ? "" + formatChar + format : "") + (result.size() == 0 ? "" : " ") + String.join(" ", nextComponent) + " "));
+                nextComponent.clear();
+                color = nextColor;
+                format = nextFormat;
+                result.add(new ChatComponentStreamEmote(mod, mod.emotes.getEmote(event.getChannel().getId(), word)));
+            } else {
+                Matcher formatMatcher = formatCodePattern.matcher(word);
+                while (formatMatcher.find()) {
+                    char code = formatMatcher.group().charAt(1);
+                    if ("rR".indexOf(code) >= 0) {
+                        nextColor = 0;
+                        nextFormat = 0;
+                    } else if ("klmnoKLMNO".indexOf(code) >= 0)
+                        nextFormat = code;
+                    else {
+                        nextColor = code;
+                        nextFormat = 0;
+                    }
+                }
+                nextComponent.add(word);
+            }
+        }
+        if (nextComponent.size() > 0)
+            result.add(new ChatComponentText((color != 0 ? "" + formatChar + color : "") + (format != 0 ? "" + formatChar + format : "") + (result.size() == 0 ? "" : " ") + String.join(" ", nextComponent)));
+        return result;
+    }
+
     @Override
     public void run() {
-        boolean showChannel = mod.config.forceShowChannelName.getBoolean() ||(mod.twitch != null && mod.twitch.getChat().getChannels().size() > 1);
+        boolean showChannel = mod.config.forceShowChannelName.getBoolean() || (mod.twitch != null && mod.twitch.getChat().getChannels().size() > 1);
         Set<CommandPermission> perms = event.getPermissions();
         String prefix = perms.contains(CommandPermission.BROADCASTER) ? EnumChatFormatting.RED + " STREAMER " :
-                      ( perms.contains(CommandPermission.TWITCHSTAFF) ? EnumChatFormatting.BLACK + " STAFF " :
-                      ( perms.contains(CommandPermission.MODERATOR) ? EnumChatFormatting.GREEN + " MOD " :
-                      ( perms.contains(CommandPermission.VIP) ? EnumChatFormatting.LIGHT_PURPLE + " VIP " :
-                      ( perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + " SUB " : " "))));
+                (perms.contains(CommandPermission.TWITCHSTAFF) ? EnumChatFormatting.BLACK + " STAFF " :
+                        (perms.contains(CommandPermission.MODERATOR) ? EnumChatFormatting.GREEN + " MOD " :
+                                (perms.contains(CommandPermission.VIP) ? EnumChatFormatting.LIGHT_PURPLE + " VIP " :
+                                        (perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + " SUB " : " "))));
         boolean allowFormatting = mod.config.allowFormatting.getBoolean() && (prefix.length() > 1 || !mod.config.subOnlyFormatting.getBoolean());
         String message = event.getMessage();
+
         Matcher matcher = urlPattern.matcher(message);
         List<ClipComponentMapping> clips = new ArrayList<>();
         IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), EnumChatFormatting.DARK_PURPLE + "[TWITCH" + (showChannel ? "/" + event.getChannel().getName() : "") + "]" + prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY + " >> ");
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)
-                component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd, matcher.start()), allowFormatting)));
+                processEmotes(processColorCodes(message.substring(lastEnd, matcher.start()), allowFormatting)).forEach(component::appendSibling);
             String url = matcher.group();
             // Check if URL is a clip
             ChatComponentText comp;
@@ -97,7 +139,7 @@ public class TwitchMessageHandler implements Runnable {
             lastEnd = matcher.end();
         }
         if (message.length() > lastEnd)
-            component.appendSibling(new ChatComponentText(processColorCodes(message.substring(lastEnd), allowFormatting)));
+            processEmotes(processColorCodes(message.substring(lastEnd), allowFormatting)).forEach(component::appendSibling);
         ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch delete " + event.getChannel().getName() + " " + event.getMessageEvent().getMessageId().orElse("")));
         component.setChatStyle(style);
         StreamUtils.addMessage(component);

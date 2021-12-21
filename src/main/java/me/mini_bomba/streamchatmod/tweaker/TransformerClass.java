@@ -3,13 +3,13 @@ package me.mini_bomba.streamchatmod.tweaker;
 public enum TransformerClass {
     // Vanilla
     GuiScreen("net/minecraft/client/gui/GuiScreen", "axu"),
+    FontRenderer("net/minecraft/client/gui/FontRenderer", "avn"),
 
     // Vanilla Enhancements
     VE_BetterChat("com/orangemarshall/enhancements/modules/chat/BetterChat"),
     VE_BetterChatWithTabs("com/orangemarshall/enhancements/modules/chat/tab/BetterChatWithTabs"),
     VE_ChatTab("com/orangemarshall/enhancements/modules/chat/tab/ChatTab"),
-    VE_GuiChatExtended("com/orangemarshall/enhancements/modules/chat/GuiChatExtended")
-    ;
+    VE_GuiChatExtended("com/orangemarshall/enhancements/modules/chat/GuiChatExtended");
 
     private final String name;
     private final String srgClass;

@@ -9,6 +9,7 @@ import com.github.twitch4j.chat.events.channel.*;
 import com.github.twitch4j.helix.domain.*;
 import com.github.twitch4j.tmi.domain.Chatters;
 import com.sun.net.httpserver.HttpServer;
+import me.mini_bomba.streamchatmod.asm.hooks.FontRendererHook;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import me.mini_bomba.streamchatmod.runnables.TwitchFollowSoundScheduler;
@@ -43,6 +44,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"ConstantConditions", "unused"})
 @Mod(modid = StreamChatMod.MODID, version = StreamChatMod.VERSION, clientSideOnly = true)
@@ -80,6 +82,7 @@ public class StreamChatMod {
     public ScheduledFuture<?> updateChecker = null;
 
     private final StreamEvents events;
+    public final StreamEmotes emotes;
     protected final TwitchCommand twitchCommand;
 
     // Caches for Twitch clips, users, etc.
@@ -94,13 +97,14 @@ public class StreamChatMod {
 
     public StreamChatMod() {
         events = new StreamEvents(this);
+        emotes = new StreamEmotes(this);
         keybinds = new StreamKeybinds(this);
         twitchCommand = new TwitchCommand(this);
     }
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        ProgressManager.ProgressBar progress = ProgressManager.push("Starting up", 3);
+        ProgressManager.ProgressBar progress = ProgressManager.push("Starting up", 4);
         progress.step("Checking for updates");
         LOGGER.info("Checking for updates...");
         latestVersion = StreamUtils.getLatestVersion();
@@ -112,10 +116,17 @@ public class StreamChatMod {
         else
             LOGGER.info("Mod is up to date!");
         progress.step("Starting Twitch client");
-        startTwitch();
+        startTwitch(false);
         progress.step("Starting async thread");
         asyncExecutor = new ScheduledThreadPoolExecutor(1);
         if (config.updateCheckerEnabled.getBoolean()) startUpdateChecker();
+        progress.step("Syncing emote cache");
+        if (twitch != null) {
+            ProgressManager.ProgressBar emoteProgress = ProgressManager.push("Syncing emotes", 7);
+            emotes.syncGlobalEmotes(emoteProgress, false);
+            emotes.syncAllChannelEmotes(emoteProgress, Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).map(User::getId).collect(Collectors.toList()), false);
+            ProgressManager.pop(emoteProgress);
+        }
         ProgressManager.pop(progress);
     }
 
@@ -146,6 +157,7 @@ public class StreamChatMod {
             metadata.description += "\n\nYou are running SCM release version " + VERSION + " built from git commit " + GIT_HASH;
         }
         config = new StreamConfig(event.getSuggestedConfigurationFile());
+        FontRendererHook.setAllowAnimated(config.allowAnimatedEmotes.getBoolean());
     }
 
     @EventHandler
@@ -214,6 +226,14 @@ public class StreamChatMod {
             updateChecker.cancel(false);
             updateChecker = null;
         }
+    }
+
+    protected List<Emote> queryGlobalTwitchEmotes() {
+        if (twitch == null) {
+            LOGGER.warn("Could not get global Twitch emotes: Twitch client is disabled");
+            return Collections.emptyList();
+        }
+        return twitch.getHelix().getGlobalEmotes(null).execute().getEmotes();
     }
 
     /**
@@ -294,15 +314,26 @@ public class StreamChatMod {
 
     public void asyncJoinTwitchChannel(String channel) throws ConcurrentModificationException {
         asyncTwitchAction(() -> {
-            if (twitch == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            if (twitch == null) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!");
+                return;
+            }
             TwitchChat chat = twitch.getChat();
-            if (chat == null) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!"); return; }
+            if (chat == null) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Twitch chat is not enabled!");
+                return;
+            }
             chat.joinChannel(channel);
-            if (!chat.isChannelJoined(channel)) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Something went wrong: Could not join the channel."); return; }
+            if (!chat.isChannelJoined(channel)) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Something went wrong: Could not join the channel.");
+                return;
+            }
             if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channel);
             config.twitchChannels.set(java.util.stream.Stream.concat(Arrays.stream(config.twitchChannels.getStringList()), java.util.stream.Stream.of(channel)).map(String::toLowerCase).distinct().toArray(String[]::new));
             config.saveIfChanged();
-            StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Joined "+channel+"'s chat!");
+            StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Syncing " + channel + "'s channel emotes...");
+            emotes.syncChannelEmotes(getTwitchUserByName(channel).getId(), true);
+            StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "Joined " + channel + "'s chat!");
         });
     }
 
@@ -501,6 +532,10 @@ public class StreamChatMod {
     }
 
     public boolean startTwitch() {
+        return startTwitch(true);
+    }
+
+    public boolean startTwitch(boolean syncEmotes) {
         if (twitch != null || !config.twitchEnabled.getBoolean()) return false;
         String token = config.twitchToken.getString();
         if (token.equals("")) return false;
@@ -514,6 +549,12 @@ public class StreamChatMod {
                     .withEnableHelix(true)
                     .withEnableTMI(true)
                     .build();
+            if (syncEmotes) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising global emote cache...");
+                emotes.syncGlobalEmotes(null, true);
+                StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising channel emote cache...");
+                emotes.syncAllChannelEmotes(null, Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).map(User::getId).collect(Collectors.toList()), true);
+            }
             twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
             twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);
             twitch.getEventManager().onEvent(ChannelNoticeEvent.class, this::onTwitchNotice);

@@ -48,7 +48,8 @@ public class TwitchCommand extends CommandBase implements ICommandNode<TwitchSub
                 new TwitchMarkerSubcommand(mod, this),
                 new TwitchClipSubcommand(mod, this),
                 new TwitchStatsSubcommand(mod, this),
-                new TwitchUpdateChecker(mod, this)
+                new TwitchUpdateChecker(mod, this),
+                new TwitchEmotesSubcommand(mod, this)
         ));
         // Create param -> subcommand map
         subcommandMap = Subcommand.createNameMap(subcommands);

@@ -13,6 +13,11 @@ public enum TransformerMethod {
     // EntityPlayerSP
     EntityPlayerSP_sendChatMessage("sendChatMessage", "func_71165_d", "e", "(Ljava/lang/String;)V"),
 
+    // FontRenderer
+//    FontRenderer_renderStringAtPos("renderStringAtPos", "func_78255_a", "a", "(Ljava/lang/String;Z)V"),
+    FontRenderer_getCharWidth("getCharWidth", "func_78263_a", "a", "(C)I"),
+    FontRenderer_renderChar("renderChar", "func_181559_a", "a", "(CZ)F"),
+
     // Vanilla Enhancements
     VE_GuiChatExtended_keyTyped("func_73869_a", "(CI)V"),
     ;

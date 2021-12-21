@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.tweaker;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.Getter;
+import me.mini_bomba.streamchatmod.asm.transformers.FontRendererTransformer;
 import me.mini_bomba.streamchatmod.asm.transformers.GuiScreenTransformer;
 import me.mini_bomba.streamchatmod.asm.transformers.VE_GuiChatExtendedTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -28,6 +29,7 @@ public class StreamChatModTransformer implements IClassTransformer {
     public StreamChatModTransformer() {
         registerTransformer(new GuiScreenTransformer());
         registerTransformer(new VE_GuiChatExtendedTransformer());
+        registerTransformer(new FontRendererTransformer());
     }
 
     private void registerTransformer(IStreamTransformer transformer) {
@@ -71,6 +73,7 @@ public class StreamChatModTransformer implements IClassTransformer {
         return writer.toByteArray();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void outputByteCode(String transformedName, ClassWriter writer) {
         try {
             File bytecodeDirectory = new File("bytecode");
