@@ -300,10 +300,7 @@ public class StreamChatMod {
             chat.joinChannel(channel);
             if (!chat.isChannelJoined(channel)) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Something went wrong: Could not join the channel."); return; }
             if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channel);
-            String[] channelArray = config.twitchChannels.getStringList();
-            ArrayList<String> channelList = new ArrayList<>(Arrays.asList(channelArray));
-            channelList.add(channel);
-            config.twitchChannels.set(channelList.toArray(new String[0]));
+            config.twitchChannels.set(java.util.stream.Stream.concat(Arrays.stream(config.twitchChannels.getStringList()), java.util.stream.Stream.of(channel)).map(String::toLowerCase).distinct().toArray(String[]::new));
             config.saveIfChanged();
             StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Joined "+channel+"'s chat!");
         });
@@ -317,10 +314,7 @@ public class StreamChatMod {
             chat.leaveChannel(channel);
             if (chat.isChannelJoined(channel)) { StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Something went wrong: Could not leave the channel."); return; }
             if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().disableFollowEventListener(channel);
-            String[] channelArray = config.twitchChannels.getStringList();
-            ArrayList<String> channelList = new ArrayList<>(Arrays.asList(channelArray));
-            channelList.remove(channel);
-            config.twitchChannels.set(channelList.toArray(new String[0]));
+            config.twitchChannels.set(Arrays.stream(config.twitchChannels.getStringList()).filter(c -> !c.equalsIgnoreCase(channel)).toArray(String[]::new));
             config.saveIfChanged();
             StreamUtils.queueAddMessage(EnumChatFormatting.GREEN+"Left "+channel+"'s chat!");
         });
