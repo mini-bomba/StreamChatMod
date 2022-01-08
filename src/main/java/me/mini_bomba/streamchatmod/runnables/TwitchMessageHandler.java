@@ -96,17 +96,32 @@ public class TwitchMessageHandler implements Runnable {
     public void run() {
         boolean showChannel = mod.config.forceShowChannelName.getBoolean() || (mod.twitch != null && mod.twitch.getChat().getChannels().size() > 1);
         Set<CommandPermission> perms = event.getPermissions();
-        String badges = perms.contains(CommandPermission.BROADCASTER) ? EnumChatFormatting.RED + "STREAMER " :
-                (perms.contains(CommandPermission.TWITCHSTAFF) ? EnumChatFormatting.BLACK + "STAFF " :
-                        (perms.contains(CommandPermission.MODERATOR) ? EnumChatFormatting.GREEN + "MOD " :
-                                (perms.contains(CommandPermission.VIP) ? EnumChatFormatting.LIGHT_PURPLE + "VIP " :
-                                        (perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + "SUB " : ""))));
-        boolean allowFormatting = mod.config.allowFormatting.getBoolean() && (badges.length() > 1 || !mod.config.subOnlyFormatting.getBoolean());
+        IChatComponent badges = new ChatComponentText("");
+        if (mod.config.showTwitchGlobalBadges.getBoolean())
+            event.getMessageEvent().getBadges().forEach((name, version) -> badges.appendSibling(new ChatComponentStreamEmote(mod, mod.emotes.getGlobalBadge(name, version))));
+        else {
+            ArrayList<String> badgesTexts = new ArrayList<>();
+            if (perms.contains(CommandPermission.BROADCASTER))
+                badgesTexts.add(EnumChatFormatting.RED + "STREAMER");
+            if (perms.contains(CommandPermission.TWITCHSTAFF))
+                badgesTexts.add(EnumChatFormatting.BLACK + "STAFF");
+            if (perms.contains(CommandPermission.MODERATOR) && !perms.contains(CommandPermission.BROADCASTER))
+                badgesTexts.add(EnumChatFormatting.GREEN + "MOD");
+            if (perms.contains(CommandPermission.VIP))
+                badgesTexts.add(EnumChatFormatting.LIGHT_PURPLE + "VIP");
+            if (perms.contains(CommandPermission.SUBSCRIBER))
+                badgesTexts.add(EnumChatFormatting.GOLD + "SUB");
+            if (badgesTexts.size() > 0)
+                badges.appendSibling(new ChatComponentText(StringUtils.join(badgesTexts, " ")));
+        }
+        boolean allowFormatting = mod.config.allowFormatting.getBoolean() && (!mod.config.subOnlyFormatting.getBoolean() || perms.stream().anyMatch(p -> p == CommandPermission.SUBSCRIBER || p == CommandPermission.VIP || p == CommandPermission.MODERATOR || p == CommandPermission.TWITCHSTAFF || p == CommandPermission.BROADCASTER));
         String message = event.getMessage();
 
         Matcher matcher = urlPattern.matcher(message);
         List<ClipComponentMapping> clips = new ArrayList<>();
-        IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), StreamUtils.createPrefixedString(mod.config, badges + EnumChatFormatting.WHITE + event.getUser().getName() + " " + mod.config.getTwitchUserMessageSeparator() + " ", showChannel ? event.getChannel().getName() : null));
+        IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), (showChannel ? mod.config.getTwitchPrefixWithChannel(event.getChannel().getName()) : mod.config.getFullTwitchPrefix()) + " ");
+        if (badges.getSiblings().size() > 0) component.appendSibling(badges);
+        component.appendSibling(new ChatComponentText((badges.getSiblings().size() > 0 ? " " : "") + EnumChatFormatting.WHITE + event.getUser().getName() + " " + mod.config.getTwitchUserMessageSeparator() + " "));
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)

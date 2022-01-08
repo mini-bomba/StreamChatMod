@@ -68,6 +68,8 @@ public class ChatComponentStreamEmote extends ChatComponentStyle {
             return ((BTTVStreamEmote) emote).emote.getLargeEmoteURL();
         if (emote instanceof FFZStreamEmote)
             return ((FFZStreamEmote) emote).emote.getLargeEmoteURL();
+        if (emote instanceof TwitchGlobalBadge)
+            return ((TwitchGlobalBadge) emote).badge.getLargeImageUrl();
         return null;
     }
 

@@ -122,7 +122,8 @@ public class StreamChatMod {
         if (config.updateCheckerEnabled.getBoolean()) startUpdateChecker();
         progress.step("Syncing emote cache");
         if (twitch != null) {
-            ProgressManager.ProgressBar emoteProgress = ProgressManager.push("Syncing emotes", 7);
+            ProgressManager.ProgressBar emoteProgress = ProgressManager.push("Syncing emotes", 9);
+            emotes.syncGlobalBadges(emoteProgress, false);
             emotes.syncGlobalEmotes(emoteProgress, false);
             emotes.syncAllChannelEmotes(emoteProgress, Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).map(User::getId).collect(Collectors.toList()), false);
             ProgressManager.pop(emoteProgress);
@@ -234,6 +235,14 @@ public class StreamChatMod {
             return Collections.emptyList();
         }
         return twitch.getHelix().getGlobalEmotes(null).execute().getEmotes();
+    }
+
+    protected List<ChatBadgeSet> queryGlobalTwitchBadges() {
+        if (twitch == null) {
+            LOGGER.warn("Could not get global Twitch badges: Twitch client is disabled");
+            return Collections.emptyList();
+        }
+        return twitch.getHelix().getGlobalChatBadges(null).execute().getBadgeSets();
     }
 
     /**
@@ -550,6 +559,8 @@ public class StreamChatMod {
                     .withEnableTMI(true)
                     .build();
             if (syncEmotes) {
+                StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising global badge cache...");
+                emotes.syncGlobalBadges(null, true);
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising global emote cache...");
                 emotes.syncGlobalEmotes(null, true);
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising channel emote cache...");

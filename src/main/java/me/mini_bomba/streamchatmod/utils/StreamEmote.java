@@ -135,6 +135,7 @@ public abstract class StreamEmote {
     public enum Type {
         TWITCH_GLOBAL("Twitch global emote"),
         TWITCH_CHANNEL("Twitch channel emote"),
+        TWITCH_GLOBAL_BADGE("Twitch global badge"),
         BTTV_GLOBAL("BetterTTV global emote"),
         BTTV_CHANNEL("BetterTTV channel emote"),
         FFZ_GLOBAL("FrankerFaceZ global emote"),
@@ -152,6 +153,8 @@ public abstract class StreamEmote {
                     return config.showTwitchGlobalEmotes;
                 case TWITCH_CHANNEL:
                     return config.showTwitchChannelEmotes;
+                case TWITCH_GLOBAL_BADGE:
+                    return config.showTwitchGlobalBadges;
                 case BTTV_GLOBAL:
                     return config.showBTTVGlobalEmotes;
                 case BTTV_CHANNEL:

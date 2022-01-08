@@ -43,6 +43,7 @@ public class StreamConfig {
     // emotes
     public final Property showTwitchGlobalEmotes;
     public final Property showTwitchChannelEmotes;
+    public final Property showTwitchGlobalBadges;
     public final Property showBTTVGlobalEmotes;
     public final Property showBTTVChannelEmotes;
     public final Property showFFZGlobalEmotes;
@@ -81,6 +82,7 @@ public class StreamConfig {
         // emotes
         showTwitchGlobalEmotes = config.get("emotes", "twitch_globals", true);
         showTwitchChannelEmotes = config.get("emotes", "twitch_channel", true);
+        showTwitchGlobalBadges = config.get("emotes", "twitch_global_badges", true);
         showBTTVGlobalEmotes = config.get("emotes", "bttv_globals", true);
         showBTTVChannelEmotes = config.get("emotes", "bttv_channel", true);
         showFFZGlobalEmotes = config.get("emotes", "ffz_globals", true);
