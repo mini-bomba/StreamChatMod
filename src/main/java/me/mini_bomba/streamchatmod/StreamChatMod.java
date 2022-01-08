@@ -1,8 +1,11 @@
 package me.mini_bomba.streamchatmod;
 
+import com.github.philippheuer.credentialmanager.CredentialManager;
+import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
+import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.enums.NoticeTag;
 import com.github.twitch4j.chat.events.channel.*;
@@ -67,6 +70,12 @@ public class StreamChatMod {
     public TwitchClient twitch = null;
     @Nullable
     public TwitchClient twitchSender = null;
+    @Nullable
+    private CredentialManager twitchCredentialManager = null;
+    @Nullable
+    private String twitchUsername = null;
+    @Nullable
+    private List<String> twitchScopes = null;
     @Nullable
     public HttpServer httpServer = null;
     public Thread httpShutdownScheduler = null;
@@ -282,9 +291,10 @@ public class StreamChatMod {
 
     public void asyncStartTwitch() throws ConcurrentModificationException {
         asyncTwitchAction(() -> {
-            if (startTwitch())
+            if (startTwitch()) {
                 StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "Enabled the Twitch Chat!");
-            else
+                checkScopes();
+            } else
                 StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Could not start the Twitch client, the token may be invalid!");
         }, true);
     }
@@ -299,9 +309,10 @@ public class StreamChatMod {
     public void asyncRestartTwitch() throws ConcurrentModificationException {
         asyncTwitchAction(() -> {
             stopTwitch();
-            if (startTwitch())
+            if (startTwitch()) {
                 StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "Restarted the Twitch Chat!");
-            else
+                checkScopes();
+            } else
                 StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Could not restart the Twitch client, the token may be invalid!");
         }, true);
     }
@@ -550,8 +561,10 @@ public class StreamChatMod {
         if (token.equals("")) return false;
         try {
             // Build the main TwitchClient
+            twitchCredentialManager = CredentialManagerBuilder.builder().build();
             OAuth2Credential credential = new OAuth2Credential("twitch", token);
             twitch = TwitchClientBuilder.builder()
+                    .withCredentialManager(twitchCredentialManager)
                     .withDefaultAuthToken(credential)
                     .withEnableChat(true)
                     .withChatAccount(credential)
@@ -583,6 +596,12 @@ public class StreamChatMod {
                 chat.joinChannel(channel);
             }
             if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channels);
+            // Get username & scopes
+            OAuth2Credential queriedCredential = twitchCredentialManager.getIdentityProviderByName("twitch").flatMap(provider -> provider instanceof TwitchIdentityProvider ? ((TwitchIdentityProvider) provider).getAdditionalCredentialInformation(credential) : Optional.empty()).orElse(null);
+            if (queriedCredential != null) {
+                twitchUsername = queriedCredential.getUserName();
+                twitchScopes = queriedCredential.getScopes();
+            }
             // Build the TwitchClient for sending messages (so they can be seen in-game)
             twitchSender = TwitchClientBuilder.builder()
                     .withDefaultAuthToken(credential)
@@ -839,13 +858,16 @@ public class StreamChatMod {
         if (commitMessage != null) StreamUtils.addMessage(commitMessage);
         if (config.twitchEnabled.getBoolean() && twitch != null) {
             String channel = config.twitchSelectedChannel.getString();
-            StreamUtils.addMessages(new String[] {
+            StreamUtils.addMessages(new String[]{
                     prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.GREEN + "Enabled",
+                    prefix + EnumChatFormatting.GRAY + "Logged in as: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + twitchUsername,
                     prefix + EnumChatFormatting.GRAY + "Channels joined: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + twitch.getChat().getChannels().size(),
-                    prefix + EnumChatFormatting.GRAY + "Selected channel: " +  (channel.length() > 0 ? "" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel : EnumChatFormatting.RED + "None"),
+                    prefix + EnumChatFormatting.GRAY + "Selected channel: " + (channel.length() > 0 ? "" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + channel : EnumChatFormatting.RED + "None"),
                     prefix + EnumChatFormatting.GRAY + "Formatted messages: " + (config.allowFormatting.getBoolean() ? (config.subOnlyFormatting.getBoolean() ? EnumChatFormatting.GOLD + "Subscriber+ only" : EnumChatFormatting.GREEN + "Enabled") : EnumChatFormatting.RED + "Disabled"),
                     prefix + EnumChatFormatting.GRAY + "Minecraft chat mode: " + (config.twitchMessageRedirectEnabled.getBoolean() ? EnumChatFormatting.DARK_PURPLE + "Redirect to selected Twitch channel" : EnumChatFormatting.GREEN + "Send to Minecraft server") + EnumChatFormatting.GRAY + " (/twitch mode)"
             });
+            // Warn about missing scopes
+            checkScopes();
             if (config.twitchMessageRedirectEnabled.getBoolean()) {
                 String minecraftPrefix = config.minecraftChatPrefix.getString();
                 StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Minecraft chat prefix: " + (minecraftPrefix.length() == 0 ? EnumChatFormatting.RED + "Disabled!" : EnumChatFormatting.AQUA + minecraftPrefix));
@@ -853,6 +875,11 @@ public class StreamChatMod {
         } else {
             StreamUtils.addMessage(prefix + EnumChatFormatting.GRAY + "Twitch Chat status: " + EnumChatFormatting.RED + "Disabled" + (config.twitchEnabled.getBoolean() && config.twitchToken.getString().length() > 0 ? ", the token may be invalid!" : ""));
         }
+    }
+
+    public void checkScopes() {
+        if (twitchScopes != null && !twitchScopes.containsAll(Arrays.asList("chat:read", "chat:edit", "channel:moderate", "channel:manage:broadcast", "user:edit:broadcast", "clips:edit")))
+            StreamUtils.queueAddMessage(EnumChatFormatting.RED + "Warning: Your current token seems to be missing some required scopes. Please regenerate your token using " + EnumChatFormatting.GRAY + "/twitch token");
     }
 
     public void stopTwitch() {
