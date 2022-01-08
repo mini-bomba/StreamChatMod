@@ -22,8 +22,6 @@ public class StreamConfig {
     public final Property subOnlyFormatting;
     public final Property minecraftChatPrefix;
     public final Property allowMessageDeletion;
-    public final Property twitchPrefix;
-    public final Property twitchPrefixLastChar;
     // tokens
     protected final Property twitchToken;
     // twitch
@@ -31,6 +29,10 @@ public class StreamConfig {
     public final Property twitchChannels;
     public final Property twitchSelectedChannel;
     public final Property twitchMessageRedirectEnabled;
+    public final Property twitchPrefix;
+    public final Property twitchPrefixChannelSeparator;
+    public final Property twitchPrefixLastChar;
+    public final Property twitchUserMessageSeparator;
     // sounds
     public final Property playSoundOnMessage;
     public final Property playSoundOnFollow;
@@ -51,22 +53,32 @@ public class StreamConfig {
 
     public StreamConfig(File configFile) {
         config = new Configuration(configFile);
+        // common
         updateCheckerEnabled = config.get("common", "updateCheckerEnabled", PRERELEASE);
         forceShowChannelName = config.get("common", "forceShowChannelName", false);
         allowFormatting = config.get("common", "allowFormatting", false);
         subOnlyFormatting = config.get("common", "subOnlyFormatting", false);
         minecraftChatPrefix = config.get("common", "minecraftChatPrefix", "!!");
         allowMessageDeletion = config.get("common", "allowMessageDeletion", true);
+        // tokens
         twitchToken = config.get("tokens", "twitch", "");
+        // twitch
         twitchEnabled = config.get("twitch", "enabled", false);
         twitchChannels = config.get("twitch", "channels", new String[0]);
         twitchSelectedChannel = config.get("twitch", "selectedChannel", "");
         twitchMessageRedirectEnabled = config.get("twitch", "messageRedirectEnabled", false);
+        twitchPrefix = config.get("twitch", "prefix", "&5[TWITCH");
+        twitchPrefixChannelSeparator = config.get("twitch", "prefix_channel_separator", "/");
+        twitchPrefixLastChar = config.get("twitch", "prefix_last_char", "]");
+        twitchUserMessageSeparator = config.get("twitch", "user-message_separator", "&7>>");
+        // sounds
         playSoundOnMessage = config.get("sounds", "onMessage", true);
         playSoundOnFollow = config.get("sounds", "onFollow", true);
         messageSoundVolume = config.get("sounds", "messageVolume", 1.0d);
         eventSoundVolume = config.get("sounds", "eventVolume", 1.0d);
+        // twitch events
         followEventEnabled = config.get("twitchEvents", "followers", true);
+        // emotes
         showTwitchGlobalEmotes = config.get("emotes", "twitch_globals", true);
         showTwitchChannelEmotes = config.get("emotes", "twitch_channel", true);
         showBTTVGlobalEmotes = config.get("emotes", "bttv_globals", true);
@@ -74,8 +86,6 @@ public class StreamConfig {
         showFFZGlobalEmotes = config.get("emotes", "ffz_globals", true);
         showFFZChannelEmotes = config.get("emotes", "ffz_channel", true);
         allowAnimatedEmotes = config.get("emotes", "animated", true);
-        twitchPrefix = config.get("common", "twitch_prefix", "&5[TWITCH");
-        twitchPrefixLastChar = config.get("common", "twitch_prefix_last_char", "]");
         saveIfChanged();
     }
 
@@ -109,15 +119,27 @@ public class StreamConfig {
         return code == 200;
     }
 
-    public String getTwitchPrefix1() {
-        return twitchPrefix.getString().replace("&", "\u00a7") + getTwitchPrefixLastChar();
+    public String getFullTwitchPrefix() {
+        return getTwitchPrefixWithoutLast() + getTwitchPrefixLastChar();
+    }
+
+    public String getTwitchPrefixWithChannel(String channel) {
+        return getTwitchPrefixWithoutLast() + getTwitchPrefixChannelSeparator() + channel + getTwitchPrefixLastChar();
     }
 
     public String getTwitchPrefixLastChar() {
-        return twitchPrefixLastChar.getString();
+        return twitchPrefixLastChar.getString().replace("&", "\u00a7");
     }
 
-    public String getPrefixWithoutLast() {
+    public String getTwitchPrefixWithoutLast() {
         return twitchPrefix.getString().replace("&", "\u00a7");
+    }
+
+    public String getTwitchPrefixChannelSeparator() {
+        return twitchPrefixChannelSeparator.getString().replace("&", "\u00a7");
+    }
+
+    public String getTwitchUserMessageSeparator() {
+        return twitchUserMessageSeparator.getString().replace("&", "\u00a7");
     }
 }

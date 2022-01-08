@@ -192,11 +192,11 @@ public class StreamChatMod {
             latestVersion = newLatestVersion;
             latestCommit = newLatestCommit;
             LOGGER.warn("New version available: " + newLatestVersion + (newLatestCommit != null ? "@" + newLatestCommit.shortHash : "") + "!");
-            IChatComponent component1 = new ChatComponentText(config.getTwitchPrefix1().replace(config.getTwitchPrefixLastChar(), (config.getTwitchPrefixLastChar() + " ")) + EnumChatFormatting.GOLD + "New update published: " + newLatestVersion + (PRERELEASE ? "@" + newLatestCommit.shortHash : ""));
+            IChatComponent component1 = StreamUtils.createPrefixedComponent(config, EnumChatFormatting.GOLD + "New update published: " + newLatestVersion + (PRERELEASE ? "@" + newLatestCommit.shortHash : ""));
             IChatComponent component2 = null;
             if (PRERELEASE && newLatestCommit != null)
-                component2 = new ChatComponentText(config.getTwitchPrefix1().replace(config.getTwitchPrefixLastChar(), (config.getTwitchPrefixLastChar() + " ")) + EnumChatFormatting.GRAY + "Update commit message: " + EnumChatFormatting.AQUA + newLatestCommit.shortMessage);
-            IChatComponent component3 = new ChatComponentText("" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Want to check for updates only on startup? Click here!");
+                component2 = StreamUtils.createPrefixedComponent(config, EnumChatFormatting.GRAY + "Update commit message: " + EnumChatFormatting.AQUA + newLatestCommit.shortMessage);
+            IChatComponent component3 = StreamUtils.createPrefixedComponent(config, "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Want to check for updates only on startup? Click here!");
             ChatStyle style = new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/mini-bomba/StreamChatMod/releases"))
                     .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GREEN + "Click here to see mod releases on GitHub!")));
             component1.setChatStyle(style);
@@ -595,7 +595,8 @@ public class StreamChatMod {
     }
 
     private void onTwitchFollow(FollowEvent event) {
-        StreamUtils.queueAddMessage(config.getTwitchPrefix1().replace(config.getTwitchPrefixLastChar(), (config.getTwitchPrefixLastChar() + " ")) + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!");
+        boolean showChannel = config.forceShowChannelName.getBoolean() || (twitch != null && twitch.getChat().getChannels().size() > 1);
+        StreamUtils.queueAddPrefixedMessage(config, "" + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getUser().getName() + EnumChatFormatting.DARK_GREEN + " is now following " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + event.getChannel().getName() + EnumChatFormatting.DARK_GREEN + "!", showChannel ? event.getChannel().getName() : null);
         if (this.config.playSoundOnFollow.getBoolean()) new Thread(new TwitchFollowSoundScheduler(this)).start();
     }
 
@@ -607,7 +608,7 @@ public class StreamChatMod {
     private void onTwitchChatClear(ClearChatEvent event) {
         if (config.allowMessageDeletion.getBoolean()) StreamUtils.queueClearTwitchChat(event.getChannel().getId());
         boolean showChannel = config.forceShowChannelName.getBoolean() || (twitch != null && twitch.getChat().getChannels().size() > 1);
-        StreamUtils.queueAddMessage(config.getPrefixWithoutLast() + (showChannel ? "/" + event.getChannel().getName() : "") + config.getTwitchPrefixLastChar() + " " + EnumChatFormatting.GRAY + "The chat has been cleared.");
+        StreamUtils.queueAddPrefixedMessage(config, "" + EnumChatFormatting.GRAY + "The chat has been cleared.", showChannel ? event.getChannel().getName() : null);
     }
 
     private void onUserTimedOut(UserTimeoutEvent event) {
@@ -628,35 +629,35 @@ public class StreamChatMod {
         switch (type) {
             // Chat mode updates
             case EMOTE_ONLY_OFF:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast() + (showChannel ? "/" + event.getChannel().getName() : "") +  config.getTwitchPrefixLastChar() + " " + EnumChatFormatting.GRAY + (message == null ? "Emote only mode has been disabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Emote only mode has been disabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case EMOTE_ONLY_ON:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Emote only mode has been enabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Emote only mode has been enabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case FOLLOWERS_OFF:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Followers only mode has been disabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Followers only mode has been disabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case FOLLOWERS_ON:
             case FOLLOWERS_ONZERO:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Followers only mode has been enabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Followers only mode has been enabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case R9K_OFF:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Unique only mode has been disabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Unique only mode has been disabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case R9K_ON:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Unique only mode has been enabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Unique only mode has been enabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case SLOW_OFF:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Slow mode has been disabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Slow mode has been disabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case SLOW_ON:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Slow mode has been enabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Slow mode has been enabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case SUBS_OFF:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Sub only mode has been disabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Sub only mode has been disabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             case SUBS_ON:
-                StreamUtils.queueAddMessage(config.getPrefixWithoutLast()+(showChannel ? "/"+event.getChannel().getName() : "")+ config.getTwitchPrefixLastChar() + " "+EnumChatFormatting.GRAY+(message == null ? "Sub only mode has been enabled" : message));
+                StreamUtils.queueAddPrefixedMessage(config, EnumChatFormatting.GRAY + (message == null ? "Sub only mode has been enabled" : message), showChannel ? event.getChannel().getName() : null);
                 break;
             // /twitchchat
             case MSG_BANNED:
@@ -808,8 +809,8 @@ public class StreamChatMod {
     }
 
     public void printTwitchStatus(boolean includePrefix) {
-        String prefix = includePrefix ?  EnumChatFormatting.DARK_PURPLE+config.getTwitchPrefix1().replace(config.getTwitchPrefixLastChar(), config.getTwitchPrefixLastChar() + " ") : "";
-        IChatComponent component = new ChatComponentText(prefix + EnumChatFormatting.GRAY + "Mod version: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + VERSION + (PRERELEASE ? EnumChatFormatting.GRAY + "@" + EnumChatFormatting.AQUA + GIT_HASH : "") + EnumChatFormatting.GRAY + " (" + (latestVersion == null || (PRERELEASE && latestCommit == null) ? EnumChatFormatting.RED + "Could not check latest version" : (latestVersion.equals(VERSION) && (!PRERELEASE || latestCommit.shortHash.equals(GIT_HASH)) ? EnumChatFormatting.GREEN + "Latest version" : EnumChatFormatting.GOLD + "Update available: " + latestVersion + (PRERELEASE ? "@" + latestCommit.shortHash : "")) ) + EnumChatFormatting.GRAY + ")");
+        String prefix = includePrefix ? config.getFullTwitchPrefix() + " " : "";
+        IChatComponent component = new ChatComponentText(prefix + EnumChatFormatting.GRAY + "Mod version: " + EnumChatFormatting.AQUA + EnumChatFormatting.BOLD + VERSION + (PRERELEASE ? EnumChatFormatting.GRAY + "@" + EnumChatFormatting.AQUA + GIT_HASH : "") + EnumChatFormatting.GRAY + " (" + (latestVersion == null || (PRERELEASE && latestCommit == null) ? EnumChatFormatting.RED + "Could not check latest version" : (latestVersion.equals(VERSION) && (!PRERELEASE || latestCommit.shortHash.equals(GIT_HASH)) ? EnumChatFormatting.GREEN + "Latest version" : EnumChatFormatting.GOLD + "Update available: " + latestVersion + (PRERELEASE ? "@" + latestCommit.shortHash : ""))) + EnumChatFormatting.GRAY + ")");
         IChatComponent commitMessage = null;
         if (latestVersion != null && !latestVersion.equals(VERSION) || (PRERELEASE && latestCommit != null && !latestCommit.shortHash.equals(GIT_HASH))) {
             IChatComponent changelog = new ChatComponentText(EnumChatFormatting.GRAY + " (" + EnumChatFormatting.YELLOW + "View Changes" + EnumChatFormatting.GRAY + ")");

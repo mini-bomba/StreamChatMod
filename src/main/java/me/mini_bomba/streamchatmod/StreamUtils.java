@@ -135,6 +135,54 @@ public class StreamUtils {
         }
     }
 
+    public static String createPrefixedString(StreamConfig config, String message, @Nullable String channelName) {
+        return (channelName == null ? config.getFullTwitchPrefix() : config.getTwitchPrefixWithChannel(channelName)) + " " + message;
+    }
+
+    public static String createPrefixedString(StreamConfig config, String message) {
+        return config.getFullTwitchPrefix() + " " + message;
+    }
+
+    public static ChatComponentText createPrefixedComponent(StreamConfig config, String message, @Nullable String channelName) {
+        return new ChatComponentText(createPrefixedString(config, message, channelName));
+    }
+
+    public static ChatComponentText createPrefixedComponent(StreamConfig config, String message) {
+        return new ChatComponentText(createPrefixedString(config, message));
+    }
+
+    public static void addPrefixedMessage(StreamConfig config, String message, @Nullable String channelName) {
+        addMessage(createPrefixedComponent(config, message, channelName));
+    }
+
+    public static void addPrefixedMessage(StreamConfig config, String message) {
+        addMessage(createPrefixedComponent(config, message));
+    }
+
+    public static void queueAddPrefixedMessage(StreamConfig config, String message, @Nullable String channelName) {
+        queueAddMessage(createPrefixedComponent(config, message, channelName));
+    }
+
+    public static void queueAddPrefixedMessage(StreamConfig config, String message) {
+        queueAddMessage(createPrefixedComponent(config, message));
+    }
+
+    public static void addPrefixedMessages(StreamConfig config, String[] messages, @Nullable String channelName) {
+        addMessages(Arrays.stream(messages).map(m -> createPrefixedComponent(config, m, channelName)).toArray(ChatComponentText[]::new));
+    }
+
+    public static void addPrefixedMessages(StreamConfig config, String[] messages) {
+        addMessages(Arrays.stream(messages).map(m -> createPrefixedComponent(config, m)).toArray(ChatComponentText[]::new));
+    }
+
+    public static void queueAddPrefixedMessages(StreamConfig config, String[] messages, @Nullable String channelName) {
+        queueAddMessages(Arrays.stream(messages).map(m -> createPrefixedComponent(config, m, channelName)).toArray(ChatComponentText[]::new));
+    }
+
+    public static void queueAddPrefixedMessages(StreamConfig config, String[] messages) {
+        queueAddMessages(Arrays.stream(messages).map(m -> createPrefixedComponent(config, m)).toArray(ChatComponentText[]::new));
+    }
+
     public static void queueAddMessage(String message) {
         Minecraft.getMinecraft().addScheduledTask(() -> addMessage(message));
     }

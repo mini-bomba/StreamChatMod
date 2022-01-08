@@ -96,17 +96,17 @@ public class TwitchMessageHandler implements Runnable {
     public void run() {
         boolean showChannel = mod.config.forceShowChannelName.getBoolean() || (mod.twitch != null && mod.twitch.getChat().getChannels().size() > 1);
         Set<CommandPermission> perms = event.getPermissions();
-        String prefix = perms.contains(CommandPermission.BROADCASTER) ? EnumChatFormatting.RED + " STREAMER " :
-                (perms.contains(CommandPermission.TWITCHSTAFF) ? EnumChatFormatting.BLACK + " STAFF " :
-                        (perms.contains(CommandPermission.MODERATOR) ? EnumChatFormatting.GREEN + " MOD " :
-                                (perms.contains(CommandPermission.VIP) ? EnumChatFormatting.LIGHT_PURPLE + " VIP " :
-                                        (perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + " SUB " : " "))));
-        boolean allowFormatting = mod.config.allowFormatting.getBoolean() && (prefix.length() > 1 || !mod.config.subOnlyFormatting.getBoolean());
+        String badges = perms.contains(CommandPermission.BROADCASTER) ? EnumChatFormatting.RED + "STREAMER " :
+                (perms.contains(CommandPermission.TWITCHSTAFF) ? EnumChatFormatting.BLACK + "STAFF " :
+                        (perms.contains(CommandPermission.MODERATOR) ? EnumChatFormatting.GREEN + "MOD " :
+                                (perms.contains(CommandPermission.VIP) ? EnumChatFormatting.LIGHT_PURPLE + "VIP " :
+                                        (perms.contains(CommandPermission.SUBSCRIBER) ? EnumChatFormatting.GOLD + "SUB " : ""))));
+        boolean allowFormatting = mod.config.allowFormatting.getBoolean() && (badges.length() > 1 || !mod.config.subOnlyFormatting.getBoolean());
         String message = event.getMessage();
 
         Matcher matcher = urlPattern.matcher(message);
         List<ClipComponentMapping> clips = new ArrayList<>();
-        IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), mod.config.getPrefixWithoutLast() + (showChannel ? "/" + event.getChannel().getName() : "") + mod.config.getTwitchPrefixLastChar() + prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY + " >> ");
+        IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), StreamUtils.createPrefixedString(mod.config, badges + EnumChatFormatting.WHITE + event.getUser().getName() + " " + mod.config.getTwitchUserMessageSeparator() + " ", showChannel ? event.getChannel().getName() : null));
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)
