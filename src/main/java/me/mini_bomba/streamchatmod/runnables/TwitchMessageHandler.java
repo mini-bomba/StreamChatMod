@@ -30,9 +30,9 @@ public class TwitchMessageHandler implements Runnable {
     private final StreamChatMod mod;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final char formatChar = '\u00a7';
-    private static final String validFormats = "0123456789abcdefklmnorABCDEFKLMNOR";
+    private static final String validFormats = "0123456789abcdefklmnorABCDEFKLMNORzZ";
     public static final Pattern urlPattern = Pattern.compile("https?://[^.\\s/]+(?:\\.[^.\\s/]+)+\\S*");
-    private static final Pattern formatCodePattern = Pattern.compile(formatChar + "[0-9a-fA-Fk-rK-R]");
+    private static final Pattern formatCodePattern = Pattern.compile(formatChar + "[0-9a-fA-Fk-rK-RzZ]");
     private static final String clipsDomain = "https://clips.twitch.tv/";
 
     public TwitchMessageHandler(StreamChatMod mod, ChannelMessageEvent event) {
@@ -106,7 +106,7 @@ public class TwitchMessageHandler implements Runnable {
 
         Matcher matcher = urlPattern.matcher(message);
         List<ClipComponentMapping> clips = new ArrayList<>();
-        IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), EnumChatFormatting.DARK_PURPLE + "[TWITCH" + (showChannel ? "/" + event.getChannel().getName() : "") + "]" + prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY + " >> ");
+        IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), mod.config.getPrefixWithoutLast() + (showChannel ? "/" + event.getChannel().getName() : "") + mod.config.getTwitchPrefixLastChar() + prefix + EnumChatFormatting.WHITE + event.getUser().getName() + EnumChatFormatting.GRAY + " >> ");
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)

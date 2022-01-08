@@ -22,6 +22,8 @@ public class StreamConfig {
     public final Property subOnlyFormatting;
     public final Property minecraftChatPrefix;
     public final Property allowMessageDeletion;
+    public final Property twitchPrefix;
+    public final Property twitchPrefixLastChar;
     // tokens
     protected final Property twitchToken;
     // twitch
@@ -72,6 +74,8 @@ public class StreamConfig {
         showFFZGlobalEmotes = config.get("emotes", "ffz_globals", true);
         showFFZChannelEmotes = config.get("emotes", "ffz_channel", true);
         allowAnimatedEmotes = config.get("emotes", "animated", true);
+        twitchPrefix = config.get("common", "twitch_prefix", "&5[TWITCH");
+        twitchPrefixLastChar = config.get("common", "twitch_prefix_last_char", "]");
         saveIfChanged();
     }
 
@@ -105,4 +109,15 @@ public class StreamConfig {
         return code == 200;
     }
 
+    public String getTwitchPrefix1() {
+        return twitchPrefix.getString().replace("&", "\u00a7") + getTwitchPrefixLastChar();
+    }
+
+    public String getTwitchPrefixLastChar() {
+        return twitchPrefixLastChar.getString();
+    }
+
+    public String getPrefixWithoutLast() {
+        return twitchPrefix.getString().replace("&", "\u00a7");
+    }
 }
