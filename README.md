@@ -72,6 +72,25 @@ You can also prevent each type of emotes from being rendered in an image form, u
 
 ![Emote feature showcase](https://cdn.upload.systems/uploads/0DfjY2HF.png)
 
+### Badges
+
+Since [8fea1932a](https://github.com/mini-bomba/StreamChatMod/commit/8fea1932a4abaf1203a8ce29c6a7c6e2f76f004f),
+StreamChatMod also allows you to display your chatter's badges, as icons (same as the emotes).
+
+This can be disabled using `/twitch emote`, which reverts to text-based display for the 5 main badges (streamer, twitch
+staff, channel mod, VIP, subscriber)
+
+![Badge icon showcase](https://cdn.upload.systems/uploads/6XmL8IYp.png)
+
+### Showing Twitch emotes in all messages
+
+Since [80489715](https://github.com/mini-bomba/StreamChatMod/commit/80489715adfb76f17ec8cf17d38154b271cdd21c),
+StreamChatMod allows you to render Twitch emotes in all Minecraft messages!<br>
+This is disabled by default and can be enabled in `/twitch emotes`.<br>
+The channel emotes rendered are pulled from your currently selected channel (or your channel, if no channel is selected)
+
+![Using a BTTV emote in guild chat](https://cdn.upload.systems/uploads/mrjQrWSF.png)
+
 ### Automatic update checker
 
 The mod automatically checks for updates on startup.
@@ -145,6 +164,16 @@ You may also use the `/twitch clip` & `/twitch marker [optional description]` to
 * Markers cannot be named when using the `Create new marker` shortcut. A `Create new marker with description` shortcut
   is planned.
 * You must either be the broadcaster or have editor permissions on the channel you want to create markers on.
+
+### Customizable prefix for Twitch messages (thanks to NopoTheGamer)
+
+Since [d3a56390ff](https://github.com/mini-bomba/StreamChatMod/commit/d3a56390ff444b28a24bd34f1ab91fb882250d6c), you can
+change the text shown before each Twitch message in the chat!
+
+Currently, this can only be done by editing the config file (config/streamchatmod.cfg), command will be added... someday
+
+![Default prefix](https://cdn.upload.systems/uploads/6XmL8IYp.png)
+![Customized prefix](https://cdn.upload.systems/uploads/lXCJNNg9.png)
 
 ### Quick revoking of your token
 
