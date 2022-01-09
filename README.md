@@ -68,6 +68,8 @@ pack)
 
 You can also prevent each type of emotes from being rendered in an image form, using the `/twitch emote` command.
 
+**NOTE: If you are using the [Patcher](https://github.com/Sk1erLLC/Patcher) mod, you need to turn off the `Optimized Font Renderer` feature for emotes to work.**
+
 ![Emote feature showcase](https://cdn.upload.systems/uploads/0DfjY2HF.png)
 
 ### Automatic update checker
