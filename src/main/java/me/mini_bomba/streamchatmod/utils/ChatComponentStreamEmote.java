@@ -56,7 +56,8 @@ public class ChatComponentStreamEmote extends ChatComponentStyle {
             BTTVApi.EmoteOwner user = ((BTTVStreamEmote) emote).emote.getUser();
             if (user != null)
                 text += "\n" + EnumChatFormatting.GRAY + "Channel: " + EnumChatFormatting.AQUA + user.displayName;
-        }
+        } else if (emote instanceof TwitchChannelBadge)
+            text += "\n" + EnumChatFormatting.GRAY + "Channel: " + EnumChatFormatting.AQUA + ((TwitchChannelBadge) emote).channelName;
         return new ChatComponentText(text);
     }
 
@@ -68,8 +69,8 @@ public class ChatComponentStreamEmote extends ChatComponentStyle {
             return ((BTTVStreamEmote) emote).emote.getLargeEmoteURL();
         if (emote instanceof FFZStreamEmote)
             return ((FFZStreamEmote) emote).emote.getLargeEmoteURL();
-        if (emote instanceof TwitchGlobalBadge)
-            return ((TwitchGlobalBadge) emote).badge.getLargeImageUrl();
+        if (emote instanceof TwitchBadge)
+            return ((TwitchBadge) emote).badge.getLargeImageUrl();
         return null;
     }
 

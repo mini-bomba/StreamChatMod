@@ -5,6 +5,7 @@ import com.github.twitch4j.helix.domain.ChatBadgeSet;
 import com.github.twitch4j.helix.domain.Emote;
 import me.mini_bomba.streamchatmod.utils.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Tuple;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -32,8 +33,11 @@ public class StreamEmotes {
     private final Map<String, TwitchEmote> twitchEmotes = new HashMap<>();
     private final Map<String, BTTVStreamEmote> bttvEmotes = new HashMap<>();
     private final Map<String, FFZStreamEmote> ffzEmotes = new HashMap<>();
+    private final Map<String, TwitchGlobalBadge> twitchGlobalBadges = new HashMap<>();
+    private final Map<String, TwitchChannelBadge> twitchChannelBadges = new HashMap<>();
     private final Map<String, Map<String, StreamEmote>> channelEmotes = new HashMap<>();
     private final Map<String, TwitchGlobalBadge> globalBadges = new HashMap<>();
+    private final Map<String, Map<String, TwitchChannelBadge>> channelBadges = new HashMap<>();
 
     public StreamEmotes(StreamChatMod mod) {
         this.mod = mod;
@@ -92,6 +96,23 @@ public class StreamEmotes {
         return globalBadges.getOrDefault(name + ":" + version, null);
     }
 
+    public TwitchChannelBadge getChannelBadge(String channelId, String nameAndVersion) {
+        return channelBadges.containsKey(channelId) ? channelBadges.get(channelId).getOrDefault(nameAndVersion, null) : null;
+    }
+
+    public TwitchChannelBadge getChannelBadge(String channelId, String name, String version) {
+        return channelBadges.containsKey(channelId) ? channelBadges.get(channelId).getOrDefault(name + ":" + version, null) : null;
+    }
+
+    public TwitchBadge getBadge(String channelId, String nameAndVersion) {
+        TwitchBadge b = getChannelBadge(channelId, nameAndVersion);
+        return b != null ? b : getGlobalBadge(nameAndVersion);
+    }
+
+    public TwitchBadge getBadge(String channelId, String name, String version) {
+        return getBadge(channelId, name + ":" + version);
+    }
+
     public void syncGlobalBadges(ProgressManager.ProgressBar progress, boolean indexInMainThread) {
         // Twitch
         if (progress != null) progress.step("Twitch global badges");
@@ -101,11 +122,11 @@ public class StreamEmotes {
                 .map(name -> name.endsWith("_3x.png") ? name.substring(0, name.length() - 7) : name)
                 .collect(Collectors.toList());
         List<ChatBadgeSet> twitchBadgeSets = mod.queryGlobalTwitchBadges();
-        List<TwitchBadge> twitchBadges = twitchBadgeSets.stream().flatMap(set -> set.getVersions().stream().map(badge -> new TwitchBadge(set, badge))).collect(Collectors.toList());
-        List<TwitchBadge> twitchBadgesToDownload = twitchBadges.stream()
+        List<TwitchBadgeGlobal> twitchBadges = twitchBadgeSets.stream().flatMap(set -> set.getVersions().stream().map(badge -> new TwitchBadgeGlobal(set, badge))).collect(Collectors.toList());
+        List<TwitchBadgeGlobal> twitchBadgesToDownload = twitchBadges.stream()
                 .filter(badge -> !cachedTwitchBadges.contains(badge.id))
                 .collect(Collectors.toList());
-        threadedDownload(progress != null, twitchBadgesToDownload.stream().map((Function<TwitchBadge, Function<ProgressManager.ProgressBar, Callable<Void>>>) badge -> downloadProgress -> () -> {
+        threadedDownload(progress != null, twitchBadgesToDownload.stream().map((Function<TwitchBadgeGlobal, Function<ProgressManager.ProgressBar, Callable<Void>>>) badge -> downloadProgress -> () -> {
             try {
                 FileUtils.copyURLToFile(
                         new URL(badge.badge.getLargeImageUrl()),
@@ -124,11 +145,11 @@ public class StreamEmotes {
         // Indexing
         if (progress != null) progress.step("Indexing global badges");
         Callable<Void> doIndex = () -> {
-            java.util.stream.Stream<StreamEmote> stream1 = twitchBadges.stream().map(badge -> {
-                if (twitchEmotes.containsKey(badge.id)) return twitchEmotes.get(badge.id);
+            java.util.stream.Stream<TwitchGlobalBadge> stream1 = twitchBadges.stream().map(badge -> {
+                if (twitchGlobalBadges.containsKey(badge.id)) return twitchGlobalBadges.get(badge.id);
                 try {
                     TwitchGlobalBadge wrappedBadge = new TwitchGlobalBadge(badge.badge, badge.set);
-                    globalBadges.put(badge.id, wrappedBadge);
+                    twitchGlobalBadges.put(badge.id, wrappedBadge);
                     return wrappedBadge;
                 } catch (IOException e) {
                     LOGGER.warn("Failed to wrap global twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
@@ -139,9 +160,140 @@ public class StreamEmotes {
             globalBadges.clear();
             stream1.forEach(badge -> {
                 if (badge == null) return;
-                if (badge instanceof TwitchGlobalBadge && !namesToGlobalEmotes.containsKey(badge.name))
-                    globalBadges.put(badge.name, (TwitchGlobalBadge) badge);
+                if (!globalBadges.containsKey(badge.name))
+                    globalBadges.put(badge.name, badge);
                 else LOGGER.warn("Duplicate badge name: " + badge.name);
+            });
+            return null;
+        };
+        try {
+            if (indexInMainThread) Minecraft.getMinecraft().addScheduledTask(doIndex).get();
+            else doIndex.call();
+        } catch (InterruptedException ignored) {
+        } catch (Exception e) {
+            LOGGER.error("Got error while indexing global badges");
+            e.printStackTrace();
+        }
+    }
+
+    public void syncAllChannelBadges(ProgressManager.ProgressBar progress, List<String> channelIds, boolean indexInMainThread) {
+        // Twitch
+        if (progress != null) progress.step("Twitch channel badges");
+        File twitchBadgesDir = new File("streamchatmod/emotes/twitch_channel_badges");
+        twitchBadgesDir.mkdirs();
+        List<String> cachedTwitchBadges = Arrays.stream(twitchBadgesDir.list())
+                .map(name -> name.endsWith("_3x.png") ? name.substring(0, name.length() - 7) : name)
+                .collect(Collectors.toList());
+        Map<String, List<ChatBadgeSet>> twitchBadgeSets = channelIds.stream()
+                .map(c -> new Tuple<>(c, mod.queryChannelTwitchBadges(c)))
+                .collect(Collectors.toMap(Tuple::getFirst, Tuple::getSecond));
+        List<TwitchBadgeChannel> twitchBadges = twitchBadgeSets.keySet().stream()
+                .flatMap(k -> twitchBadgeSets.get(k).stream().map(s -> new Tuple<>(k, s)))
+                .flatMap(set -> set.getSecond().getVersions().stream().map(badge -> new TwitchBadgeChannel(set.getSecond(), badge, set.getFirst())))
+                .collect(Collectors.toList());
+        List<TwitchBadgeChannel> twitchBadgesToDownload = twitchBadges.stream()
+                .filter(badge -> !cachedTwitchBadges.contains(badge.id))
+                .collect(Collectors.toList());
+        threadedDownload(progress != null, twitchBadgesToDownload.stream().map((Function<TwitchBadgeChannel, Function<ProgressManager.ProgressBar, Callable<Void>>>) badge -> downloadProgress -> () -> {
+            try {
+                FileUtils.copyURLToFile(
+                        new URL(badge.badge.getLargeImageUrl()),
+                        new File("streamchatmod/emotes/twitch_channel_badges/" + badge.id + "_3x.png")
+                );
+            } catch (Exception e) {
+                LOGGER.warn("Failed to download Twitch channel badge " + badge.set.getSetId() + ":" + badge.badge.getId());
+                e.printStackTrace();
+            }
+            if (downloadProgress != null) synchronized (downloadProgress) {
+                downloadProgress.step("Downloaded " + badge.set.getSetId() + ":" + badge.badge.getId());
+            }
+            return null;
+        }).collect(Collectors.toList()));
+
+        // Indexing
+        if (progress != null) progress.step("Indexing channel badges");
+        Callable<Void> doIndex = () -> {
+            java.util.stream.Stream<TwitchChannelBadge> stream1 = twitchBadges.stream().map(badge -> {
+                if (twitchChannelBadges.containsKey(badge.id)) return twitchChannelBadges.get(badge.id);
+                try {
+                    TwitchChannelBadge wrappedBadge = new TwitchChannelBadge(badge.badge, badge.set, badge.channelId, mod.getTwitchUserById(badge.channelId).getDisplayName());
+                    twitchChannelBadges.put(badge.id, wrappedBadge);
+                    return wrappedBadge;
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
+                    e.printStackTrace();
+                    return null;
+                }
+            });
+            channelBadges.clear();
+            for (String channelId : channelIds) channelBadges.put(channelId, new HashMap<>());
+            stream1.forEach(badge -> {
+                if (badge == null) return;
+                Map<String, TwitchChannelBadge> badgeMap = channelBadges.get(badge.channelId);
+                if (!badgeMap.containsKey(badge.name))
+                    badgeMap.put(badge.name, badge);
+                else LOGGER.warn("Duplicate badge name: " + badge.name + " for channel: " + badge.channelName);
+            });
+            return null;
+        };
+        try {
+            if (indexInMainThread) Minecraft.getMinecraft().addScheduledTask(doIndex).get();
+            else doIndex.call();
+        } catch (InterruptedException ignored) {
+        } catch (Exception e) {
+            LOGGER.error("Got error while indexing global badges");
+            e.printStackTrace();
+        }
+    }
+
+    public void syncChannelBadges(String channelId, boolean indexInMainThread) {
+        // Twitch
+        File twitchBadgesDir = new File("streamchatmod/emotes/twitch_channel_badges");
+        twitchBadgesDir.mkdirs();
+        List<String> cachedTwitchBadges = Arrays.stream(twitchBadgesDir.list())
+                .map(name -> name.endsWith("_3x.png") ? name.substring(0, name.length() - 7) : name)
+                .collect(Collectors.toList());
+        List<ChatBadgeSet> twitchBadgeSets = mod.queryChannelTwitchBadges(channelId);
+        List<TwitchBadgeChannel> twitchBadges = twitchBadgeSets.stream()
+                .flatMap(set -> set.getVersions().stream().map(badge -> new TwitchBadgeChannel(set, badge, channelId)))
+                .collect(Collectors.toList());
+        List<TwitchBadgeChannel> twitchBadgesToDownload = twitchBadges.stream()
+                .filter(badge -> !cachedTwitchBadges.contains(badge.id))
+                .collect(Collectors.toList());
+        threadedDownload(twitchBadgesToDownload.stream().map((Function<TwitchBadgeChannel, Callable<Void>>) badge -> () -> {
+            try {
+                FileUtils.copyURLToFile(
+                        new URL(badge.badge.getLargeImageUrl()),
+                        new File("streamchatmod/emotes/twitch_channel_badges/" + badge.id + "_3x.png")
+                );
+            } catch (Exception e) {
+                LOGGER.warn("Failed to download Twitch channel badge " + badge.set.getSetId() + ":" + badge.badge.getId());
+                e.printStackTrace();
+            }
+            return null;
+        }).collect(Collectors.toList()));
+
+        // Indexing
+        Callable<Void> doIndex = () -> {
+            java.util.stream.Stream<TwitchChannelBadge> stream1 = twitchBadges.stream().map(badge -> {
+                if (twitchChannelBadges.containsKey(badge.id)) return twitchChannelBadges.get(badge.id);
+                try {
+                    TwitchChannelBadge wrappedBadge = new TwitchChannelBadge(badge.badge, badge.set, badge.channelId, mod.getTwitchUserById(badge.channelId).getDisplayName());
+                    twitchChannelBadges.put(badge.id, wrappedBadge);
+                    return wrappedBadge;
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
+                    e.printStackTrace();
+                    return null;
+                }
+            });
+            Map<String, TwitchChannelBadge> badgeMap = new HashMap<>();
+            channelBadges.put(channelId, badgeMap);
+            stream1.forEach(badge -> {
+                if (badge == null) return;
+                if (!badgeMap.containsKey(badge.name))
+                    badgeMap.put(badge.name, badge);
+                else LOGGER.warn("Duplicate badge name: " + badge.name + " for channel: " + badge.channelName);
             });
             return null;
         };
@@ -528,15 +680,29 @@ public class StreamEmotes {
         }
     }
 
-    private static class TwitchBadge {
+    private static class TwitchBadgeGlobal {
         public final ChatBadgeSet set;
         public final ChatBadge badge;
         public final String id;
 
-        private TwitchBadge(ChatBadgeSet set, ChatBadge badge) {
+        private TwitchBadgeGlobal(ChatBadgeSet set, ChatBadge badge) {
             this.set = set;
             this.badge = badge;
             this.id = TwitchGlobalBadge.getBadgeId(badge);
+        }
+    }
+
+    private static class TwitchBadgeChannel {
+        public final ChatBadgeSet set;
+        public final ChatBadge badge;
+        public final String id;
+        public final String channelId;
+
+        private TwitchBadgeChannel(ChatBadgeSet set, ChatBadge badge, String channelId) {
+            this.set = set;
+            this.badge = badge;
+            this.id = TwitchGlobalBadge.getBadgeId(badge);
+            this.channelId = channelId;
         }
     }
 }

@@ -18,10 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,9 +94,13 @@ public class TwitchMessageHandler implements Runnable {
         boolean showChannel = mod.config.forceShowChannelName.getBoolean() || (mod.twitch != null && mod.twitch.getChat().getChannels().size() > 1);
         Set<CommandPermission> perms = event.getPermissions();
         IChatComponent badges = new ChatComponentText("");
-        if (mod.config.showTwitchGlobalBadges.getBoolean())
-            event.getMessageEvent().getBadges().forEach((name, version) -> badges.appendSibling(new ChatComponentStreamEmote(mod, mod.emotes.getGlobalBadge(name, version))));
-        else {
+        if (mod.config.showTwitchGlobalBadges.getBoolean()) {
+            boolean showChannelBadges = mod.config.showTwitchChannelBadges.getBoolean();
+            event.getMessageEvent().getBadges().entrySet().stream()
+                    .map(entry -> showChannelBadges ? mod.emotes.getBadge(event.getChannel().getId(), entry.getKey(), entry.getValue()) : mod.emotes.getGlobalBadge(entry.getKey(), entry.getValue()))
+                    .filter(Objects::nonNull)
+                    .forEach(badge -> badges.appendSibling(new ChatComponentStreamEmote(mod, badge)));
+        } else {
             ArrayList<String> badgesTexts = new ArrayList<>();
             if (perms.contains(CommandPermission.BROADCASTER))
                 badgesTexts.add(EnumChatFormatting.RED + "STREAMER");

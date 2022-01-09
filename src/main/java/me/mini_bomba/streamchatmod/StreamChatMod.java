@@ -131,10 +131,12 @@ public class StreamChatMod {
         if (config.updateCheckerEnabled.getBoolean()) startUpdateChecker();
         progress.step("Syncing emote cache");
         if (twitch != null) {
-            ProgressManager.ProgressBar emoteProgress = ProgressManager.push("Syncing emotes", 9);
+            ProgressManager.ProgressBar emoteProgress = ProgressManager.push("Syncing emotes", 11);
+            List<String> channelIds = Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).map(User::getId).collect(Collectors.toList());
             emotes.syncGlobalBadges(emoteProgress, false);
+            emotes.syncAllChannelBadges(emoteProgress, channelIds, false);
             emotes.syncGlobalEmotes(emoteProgress, false);
-            emotes.syncAllChannelEmotes(emoteProgress, Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).map(User::getId).collect(Collectors.toList()), false);
+            emotes.syncAllChannelEmotes(emoteProgress, channelIds, false);
             ProgressManager.pop(emoteProgress);
         }
         ProgressManager.pop(progress);
@@ -254,6 +256,14 @@ public class StreamChatMod {
         return twitch.getHelix().getGlobalChatBadges(null).execute().getBadgeSets();
     }
 
+    protected List<ChatBadgeSet> queryChannelTwitchBadges(String channelId) {
+        if (twitch == null) {
+            LOGGER.warn("Could not get channel Twitch badges: Twitch client is disabled");
+            return Collections.emptyList();
+        }
+        return twitch.getHelix().getChannelChatBadges(null, channelId).execute().getBadgeSets();
+    }
+
     /**
      * Schedules an action to be run in another thread.<br>
      * <b>This will throw a ConcurrentModificationException if an important action is scheduled</b> (such as Twitch client stopping)<br>
@@ -351,6 +361,8 @@ public class StreamChatMod {
             if (config.followEventEnabled.getBoolean()) twitch.getClientHelper().enableFollowEventListener(channel);
             config.twitchChannels.set(java.util.stream.Stream.concat(Arrays.stream(config.twitchChannels.getStringList()), java.util.stream.Stream.of(channel)).map(String::toLowerCase).distinct().toArray(String[]::new));
             config.saveIfChanged();
+            StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Syncing " + channel + "'s channel badges...");
+            emotes.syncChannelBadges(getTwitchUserByName(channel).getId(), true);
             StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Syncing " + channel + "'s channel emotes...");
             emotes.syncChannelEmotes(getTwitchUserByName(channel).getId(), true);
             StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "Joined " + channel + "'s chat!");
@@ -572,12 +584,15 @@ public class StreamChatMod {
                     .withEnableTMI(true)
                     .build();
             if (syncEmotes) {
+                List<String> channelIds = Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).map(User::getId).collect(Collectors.toList());
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising global badge cache...");
                 emotes.syncGlobalBadges(null, true);
+                StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising channel badge cache...");
+                emotes.syncAllChannelBadges(null, channelIds, true);
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising global emote cache...");
                 emotes.syncGlobalEmotes(null, true);
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising channel emote cache...");
-                emotes.syncAllChannelEmotes(null, Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).map(User::getId).collect(Collectors.toList()), true);
+                emotes.syncAllChannelEmotes(null, channelIds, true);
             }
             twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
             twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);

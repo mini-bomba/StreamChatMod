@@ -136,6 +136,7 @@ public abstract class StreamEmote {
         TWITCH_GLOBAL("Twitch global emote"),
         TWITCH_CHANNEL("Twitch channel emote"),
         TWITCH_GLOBAL_BADGE("Twitch global badge"),
+        TWITCH_CHANNEL_BADGE("Twitch channel badge"),
         BTTV_GLOBAL("BetterTTV global emote"),
         BTTV_CHANNEL("BetterTTV channel emote"),
         FFZ_GLOBAL("FrankerFaceZ global emote"),
@@ -155,6 +156,8 @@ public abstract class StreamEmote {
                     return config.showTwitchChannelEmotes;
                 case TWITCH_GLOBAL_BADGE:
                     return config.showTwitchGlobalBadges;
+                case TWITCH_CHANNEL_BADGE:
+                    return config.showTwitchChannelBadges;
                 case BTTV_GLOBAL:
                     return config.showBTTVGlobalEmotes;
                 case BTTV_CHANNEL:
