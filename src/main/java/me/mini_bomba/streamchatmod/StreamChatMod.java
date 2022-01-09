@@ -12,6 +12,7 @@ import com.github.twitch4j.chat.events.channel.*;
 import com.github.twitch4j.helix.domain.*;
 import com.github.twitch4j.tmi.domain.Chatters;
 import com.sun.net.httpserver.HttpServer;
+import lombok.Getter;
 import me.mini_bomba.streamchatmod.asm.hooks.FontRendererHook;
 import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
@@ -73,6 +74,7 @@ public class StreamChatMod {
     @Nullable
     private CredentialManager twitchCredentialManager = null;
     @Nullable
+    @Getter
     private String twitchUsername = null;
     @Nullable
     private List<String> twitchScopes = null;

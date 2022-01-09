@@ -1,11 +1,18 @@
 package me.mini_bomba.streamchatmod;
 
+import com.github.twitch4j.helix.domain.User;
 import me.mini_bomba.streamchatmod.commands.IDrawsChatOutline;
 import me.mini_bomba.streamchatmod.events.LocalMessageEvent;
+import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
 import me.mini_bomba.streamchatmod.tweaker.TransformerField;
+import me.mini_bomba.streamchatmod.utils.ChatComponentStreamEmote;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -15,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.List;
 
 public class StreamEvents {
 
@@ -96,13 +104,50 @@ public class StreamEvents {
         }
         event.setCanceled(true);
         if (mod.twitch == null || mod.twitchSender == null || !mod.config.twitchEnabled.getBoolean() || mod.twitchSender.getChat() == null) {
-            StreamUtils.addMessage(EnumChatFormatting.RED+"The message was not sent anywhere: Chat mode is set to 'Redirect to Twitch', but Twitch chat (or part of it) is disabled!");
+            StreamUtils.addMessage(EnumChatFormatting.RED + "The message was not sent anywhere: Chat mode is set to 'Redirect to Twitch', but Twitch chat (or part of it) is disabled!");
             return;
         }
         if (mod.config.twitchSelectedChannel.getString().length() == 0) {
-            StreamUtils.addMessage(EnumChatFormatting.RED+"The message was not sent anywhere: Chat mode is set to 'Redirect to Twitch', but no channel is selected!");
+            StreamUtils.addMessage(EnumChatFormatting.RED + "The message was not sent anywhere: Chat mode is set to 'Redirect to Twitch', but no channel is selected!");
             return;
         }
         mod.twitchSender.getChat().sendMessage(mod.config.twitchSelectedChannel.getString(), event.message);
+    }
+
+    @SubscribeEvent
+    public void onMessage(ClientChatReceivedEvent event) {
+        String channel = mod.config.twitchSelectedChannel.getString();
+        if (channel.length() == 0) channel = mod.getTwitchUsername();
+        if (mod.config.showEmotesEverywhere.getBoolean()) {
+            User user = channel == null ? null : mod.getTwitchUserByName(channel);
+            event.message = transformComponent(event.message, user == null ? null : user.getId());
+        }
+    }
+
+    public IChatComponent transformComponent(IChatComponent component, String channelId) {
+        IChatComponent newComponent;
+        if (component instanceof ChatComponentText) {
+            List<IChatComponent> components = TwitchMessageHandler.processEmotes(mod, component.getUnformattedTextForChat(), channelId);
+            components.stream().filter(c -> !(c instanceof ChatComponentStreamEmote)).forEach(c -> c.setChatStyle(component.getChatStyle().createShallowCopy()));
+            if (components.size() > 0) {
+                newComponent = components.get(0);
+                components.remove(0);
+                for (IChatComponent c : components) newComponent.appendSibling(c);
+            } else {
+                newComponent = new ChatComponentText("");
+                newComponent.setChatStyle(component.getChatStyle().createShallowCopy());
+            }
+        } else if (component instanceof ChatComponentTranslation) {
+            ChatComponentTranslation castedComponent = (ChatComponentTranslation) component;
+            newComponent = new ChatComponentTranslation(castedComponent.getKey(), Arrays.stream(castedComponent.getFormatArgs()).map(c -> c instanceof IChatComponent ? transformComponent((IChatComponent) c, channelId) : c).toArray());
+            newComponent.setChatStyle(castedComponent.getChatStyle().createShallowCopy());
+        } else {
+            newComponent = component.createCopy();
+            newComponent.getSiblings().clear();
+        }
+        for (IChatComponent sibling : component.getSiblings()) {
+            newComponent.appendSibling(transformComponent(sibling, channelId));
+        }
+        return newComponent;
     }
 }

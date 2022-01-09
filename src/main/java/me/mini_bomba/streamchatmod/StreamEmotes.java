@@ -65,6 +65,7 @@ public class StreamEmotes {
     }
 
     public boolean isChannelEmote(String channelId, String name) {
+        if (channelId == null) return false;
         return channelEmotes.containsKey(channelId) && channelEmotes.get(channelId).containsKey(name);
     }
 
@@ -691,7 +692,6 @@ public class StreamEmotes {
             this.id = TwitchGlobalBadge.getBadgeId(badge);
         }
     }
-
     private static class TwitchBadgeChannel {
         public final ChatBadgeSet set;
         public final ChatBadge badge;

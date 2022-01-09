@@ -67,12 +67,14 @@ public class TwitchEmotesSubcommand extends TwitchSubcommand implements IHasAuto
                     .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch emotes " + type.name().toLowerCase())))).collect(Collectors.toList()));
             components.add(new ChatComponentText(EnumChatFormatting.AQUA + "Animated emotes: " + (mod.config.allowAnimatedEmotes.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"))
                     .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch emotes animated"))));
+            components.add(new ChatComponentText(EnumChatFormatting.AQUA + "Render emotes everywhere: " + (mod.config.showEmotesEverywhere.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"))
+                    .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch emotes renderEverywhere"))));
             components.add(new ChatComponentText(EnumChatFormatting.GRAY + "Used internal emote slots: " + EnumChatFormatting.AQUA + StreamEmote.getEmoteCount() + EnumChatFormatting.GRAY + "/2048"));
             StreamUtils.addMessages(sender, components.toArray(new IChatComponent[0]));
         } else {
             if (args[0].equalsIgnoreCase("animated")) {
                 if (args.length == 1)
-                    StreamUtils.addMessage(EnumChatFormatting.AQUA + "Animated emotes are currently " + (mod.config.allowAnimatedEmotes.getBoolean() ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "eisabled"));
+                    StreamUtils.addMessage(EnumChatFormatting.AQUA + "Animated emotes are currently " + (mod.config.allowAnimatedEmotes.getBoolean() ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled"));
                 else {
                     Boolean newState = StreamUtils.readStringAsBoolean(args[1]);
                     if (newState == null)
@@ -80,7 +82,21 @@ public class TwitchEmotesSubcommand extends TwitchSubcommand implements IHasAuto
                     else {
                         mod.config.allowAnimatedEmotes.set(newState);
                         FontRendererHook.setAllowAnimated(newState);
-                        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Animated emotes have been " + (newState ? "enabled" : "eisabled"));
+                        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Animated emotes have been " + (newState ? "enabled" : "disabled"));
+                    }
+                }
+                return;
+            }
+            if (args[0].equalsIgnoreCase("renderEverywhere")) {
+                if (args.length == 1)
+                    StreamUtils.addMessage(EnumChatFormatting.AQUA + "Twitch emotes are currently rendered " + (mod.config.showEmotesEverywhere.getBoolean() ? EnumChatFormatting.GREEN + "everywhere" : EnumChatFormatting.LIGHT_PURPLE + "only in Twitch chat"));
+                else {
+                    Boolean newState = StreamUtils.readStringAsBoolean(args[1]);
+                    if (newState == null)
+                        throw new CommandException("Invalid boolean value: " + args[1]);
+                    else {
+                        mod.config.showEmotesEverywhere.set(newState);
+                        StreamUtils.addMessage(EnumChatFormatting.GREEN + "Twitch emotes are now rendered " + (newState ? "everywhere" : "only in Twitch chat"));
                     }
                 }
                 return;
@@ -108,7 +124,7 @@ public class TwitchEmotesSubcommand extends TwitchSubcommand implements IHasAuto
     @Override
     public List<String> getAutocompletions(String[] args) {
         if (args.length == 1) {
-            List<String> matchingTypes = Stream.concat(Arrays.stream(StreamEmote.Type.values()).map(type -> type.name().toLowerCase()), Stream.of("animated")).filter(name -> name.startsWith(args[0].toLowerCase())).collect(Collectors.toList());
+            List<String> matchingTypes = Stream.concat(Arrays.stream(StreamEmote.Type.values()).map(type -> type.name().toLowerCase()), Stream.of("animated", "rendereverywhere")).filter(name -> name.startsWith(args[0].toLowerCase())).collect(Collectors.toList());
             if (matchingTypes.size() == 1 && matchingTypes.get(0).equals(args[0]))
                 matchingTypes = StreamUtils.singletonModifiableList(matchingTypes.get(0) + " ");
             return matchingTypes;

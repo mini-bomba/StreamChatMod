@@ -22,6 +22,7 @@ public class StreamConfig {
     public final Property subOnlyFormatting;
     public final Property minecraftChatPrefix;
     public final Property allowMessageDeletion;
+    public final Property showEmotesEverywhere;
     // tokens
     protected final Property twitchToken;
     // twitch
@@ -62,6 +63,7 @@ public class StreamConfig {
         subOnlyFormatting = config.get("common", "subOnlyFormatting", false);
         minecraftChatPrefix = config.get("common", "minecraftChatPrefix", "!!");
         allowMessageDeletion = config.get("common", "allowMessageDeletion", true);
+        showEmotesEverywhere = config.get("common", "showEmotesEverywhere", false);
         // tokens
         twitchToken = config.get("tokens", "twitch", "");
         // twitch

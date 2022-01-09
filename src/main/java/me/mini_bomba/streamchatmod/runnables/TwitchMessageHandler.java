@@ -29,6 +29,7 @@ public class TwitchMessageHandler implements Runnable {
     private static final char formatChar = '\u00a7';
     private static final String validFormats = "0123456789abcdefklmnorABCDEFKLMNORzZ";
     public static final Pattern urlPattern = Pattern.compile("https?://[^.\\s/]+(?:\\.[^.\\s/]+)+\\S*");
+    public static final Pattern whitespacePattern = Pattern.compile("\\s+");
     private static final Pattern formatCodePattern = Pattern.compile(formatChar + "[0-9a-fA-Fk-rK-RzZ]");
     private static final String clipsDomain = "https://clips.twitch.tv/";
 
@@ -52,21 +53,25 @@ public class TwitchMessageHandler implements Runnable {
         return message;
     }
 
-    private List<IChatComponent> processEmotes(String message) {
+    public static List<IChatComponent> processEmotes(StreamChatMod mod, String message, String channelId) {
         List<IChatComponent> result = new LinkedList<>();
         List<String> nextComponent = new LinkedList<>();
         char color = 0;
         char format = 0;
         char nextColor = 0;
         char nextFormat = 0;
+        Matcher whitespace = whitespacePattern.matcher(message);
+        if (message.length() > 0 && whitespacePattern.matcher(message.substring(0, 1)).find() && whitespace.find())
+            nextComponent.add(whitespace.group());
         for (String word : StringUtils.split(message, " \n\t")) {
-            if (mod.emotes.isEmote(event.getChannel().getId(), word)) {
+            if (mod.emotes.isEmote(channelId, word)) {
                 if (nextComponent.size() > 0)
-                    result.add(new ChatComponentText((color != 0 ? "" + formatChar + color : "") + (format != 0 ? "" + formatChar + format : "") + (result.size() == 0 ? "" : " ") + String.join(" ", nextComponent) + " "));
+                    result.add(new ChatComponentText((color != 0 ? "" + formatChar + color : "") + (format != 0 ? "" + formatChar + format : "") + String.join("", nextComponent)));
                 nextComponent.clear();
+                if (whitespace.find()) nextComponent.add(whitespace.group());
                 color = nextColor;
                 format = nextFormat;
-                result.add(new ChatComponentStreamEmote(mod, mod.emotes.getEmote(event.getChannel().getId(), word)));
+                result.add(new ChatComponentStreamEmote(mod, mod.emotes.getEmote(channelId, word)));
             } else {
                 Matcher formatMatcher = formatCodePattern.matcher(word);
                 while (formatMatcher.find()) {
@@ -82,11 +87,16 @@ public class TwitchMessageHandler implements Runnable {
                     }
                 }
                 nextComponent.add(word);
+                if (whitespace.find()) nextComponent.add(whitespace.group());
             }
         }
         if (nextComponent.size() > 0)
-            result.add(new ChatComponentText((color != 0 ? "" + formatChar + color : "") + (format != 0 ? "" + formatChar + format : "") + (result.size() == 0 ? "" : " ") + String.join(" ", nextComponent)));
+            result.add(new ChatComponentText((color != 0 ? "" + formatChar + color : "") + (format != 0 ? "" + formatChar + format : "") + String.join("", nextComponent)));
         return result;
+    }
+
+    private List<IChatComponent> processEmotes(String message) {
+        return processEmotes(mod, message, event.getChannel().getId());
     }
 
     @Override
