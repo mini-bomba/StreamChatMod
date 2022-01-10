@@ -281,8 +281,11 @@ public class StreamChatMod {
             importantActionScheduled.set(true);
             Runnable oldAction = action;
             action = () -> {
-                oldAction.run();
-                importantActionScheduled.set(false);
+                try {
+                    oldAction.run();
+                } finally {
+                    importantActionScheduled.set(false);
+                }
             };
         }
         asyncExecutor.execute(action);
