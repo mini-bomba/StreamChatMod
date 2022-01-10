@@ -8,6 +8,7 @@ import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.utils.ChatComponentStreamEmote;
 import me.mini_bomba.streamchatmod.utils.ChatComponentTwitchMessage;
+import me.mini_bomba.streamchatmod.utils.ColorUtil;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
@@ -21,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class TwitchMessageHandler implements Runnable {
     private final ChannelMessageEvent event;
@@ -132,7 +134,8 @@ public class TwitchMessageHandler implements Runnable {
         List<ClipComponentMapping> clips = new ArrayList<>();
         IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), (showChannel ? mod.config.getTwitchPrefixWithChannel(event.getChannel().getName()) : mod.config.getFullTwitchPrefix()) + " ");
         if (badges.getSiblings().size() > 0) component.appendSibling(badges);
-        component.appendSibling(new ChatComponentText((badges.getSiblings().size() > 0 ? " " : "") + EnumChatFormatting.WHITE + event.getUser().getName() + " " + mod.config.getTwitchUserMessageSeparator() + " "));
+
+        component.appendSibling(new ChatComponentText((badges.getSiblings().size() > 0 ? " " : "") + ColorUtil.getColorFromHex(event.getMessageEvent().getTagValue("color").orElse("#FFFFFF")) + event.getUser().getName() + " " + mod.config.getTwitchUserMessageSeparator() + " "));
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)
@@ -233,4 +236,6 @@ public class TwitchMessageHandler implements Runnable {
         }
         return component;
     }
+
+
 }
