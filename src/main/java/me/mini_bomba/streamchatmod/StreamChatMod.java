@@ -277,13 +277,20 @@ public class StreamChatMod {
     private void asyncTwitchAction(Runnable action, boolean isImportant) throws ConcurrentModificationException {
         if (importantActionScheduled.get())
             throw new ConcurrentModificationException("An important async action is currently scheduled!");
+        Runnable oldAction = action;
+        action = () -> {
+            try {
+                oldAction.run();
+            } catch (Exception e) {
+                LOGGER.error("An async action has failed!");
+                e.printStackTrace();
+                StreamUtils.addMessage(EnumChatFormatting.RED + "An async action has failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            } finally {
+                if (isImportant) importantActionScheduled.set(false);
+            }
+        };
         if (isImportant) {
             importantActionScheduled.set(true);
-            Runnable oldAction = action;
-            action = () -> {
-                oldAction.run();
-                importantActionScheduled.set(false);
-            };
         }
         asyncExecutor.execute(action);
     }
