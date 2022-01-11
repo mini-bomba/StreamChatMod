@@ -135,7 +135,9 @@ public class TwitchMessageHandler implements Runnable {
         IChatComponent component = new ChatComponentTwitchMessage(event.getMessageEvent().getMessageId().orElse(""), event.getChannel().getId(), event.getUser().getId(), (showChannel ? mod.config.getTwitchPrefixWithChannel(event.getChannel().getName()) : mod.config.getFullTwitchPrefix()) + " ");
         if (badges.getSiblings().size() > 0) component.appendSibling(badges);
 
-        component.appendSibling(new ChatComponentText((badges.getSiblings().size() > 0 ? " " : "") + ColorUtil.getColorFromHex(event.getMessageEvent().getTagValue("color").orElse("#FFFFFF")) + event.getUser().getName() + " " + mod.config.getTwitchUserMessageSeparator() + " "));
+        String username = event.getMessageEvent().getTagValue("display-name").orElse(event.getUser().getName());
+
+        component.appendSibling(new ChatComponentText((badges.getSiblings().size() > 0 ? " " : "") + ColorUtil.getColorFromHex(event.getMessageEvent().getTagValue("color").orElse("#FFFFFF")) + username + " " + mod.config.getTwitchUserMessageSeparator() + " "));
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)
