@@ -13,6 +13,7 @@ public class ColorUtil {
 
 	static {
 		for (EnumChatFormatting value : EnumChatFormatting.values()) {
+			if (!value.isColor()) continue;
 			int i = value.getColorIndex();
 			int j = (i >> 3 & 1) * 85;
 			int k = (i >> 2 & 1) * 170 + j;
