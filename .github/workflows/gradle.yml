@@ -50,7 +50,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
       - name: Publish prerelease if build passed
         if: success() && github.ref == 'refs/heads/master'
-        uses: "mini-bomba/create-github-release@v1.0.0"
+        uses: "mini-bomba/create-github-release@main"
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: latest
