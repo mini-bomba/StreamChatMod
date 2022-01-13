@@ -3,13 +3,15 @@ package me.mini_bomba.streamchatmod.utils;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.Vec3i;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ColorUtil {
 
-	private static final Map<EnumChatFormatting, Vec3i> chatFormattingColors = new HashMap<>();
-	private static final Map<Integer, EnumChatFormatting> colors = new HashMap<>();
+	private static final Random RANDOM = new Random();
+	private static final Map<EnumChatFormatting, Vec3i> ENUM_TO_RGB = new HashMap<>();
+	private static final List<EnumChatFormatting> RANDOM_COLORS = new ArrayList<>();
+	private static final Map<Integer, EnumChatFormatting> NEAREST_COLOR_CACHE = new HashMap<>();
+	private static final Map<String, EnumChatFormatting> RANDOM_COLOR_CACHE = new HashMap<>();
 
 	static {
 		for (EnumChatFormatting value : EnumChatFormatting.values()) {
@@ -28,36 +30,53 @@ public class ColorUtil {
 				i1 /= 4;
 			}
 			int color = (k & 255) << 16 | (l & 255) << 8 | i1 & 255;
-			chatFormattingColors.put(value, colorToRGB(color));
-			colors.put(color, value);
+			ENUM_TO_RGB.put(value, colorToRGB(color));
+			NEAREST_COLOR_CACHE.put(color, value);
 		}
+		//We generate this list ourselves because colors such as black is very hard to see in chat.
+		RANDOM_COLORS.add(EnumChatFormatting.BLUE);
+		RANDOM_COLORS.add(EnumChatFormatting.AQUA);
+		RANDOM_COLORS.add(EnumChatFormatting.DARK_AQUA);
+		RANDOM_COLORS.add(EnumChatFormatting.RED);
+		RANDOM_COLORS.add(EnumChatFormatting.DARK_RED);
+		RANDOM_COLORS.add(EnumChatFormatting.GREEN);
+		RANDOM_COLORS.add(EnumChatFormatting.DARK_GREEN);
+		RANDOM_COLORS.add(EnumChatFormatting.YELLOW);
+		RANDOM_COLORS.add(EnumChatFormatting.GOLD);
+		RANDOM_COLORS.add(EnumChatFormatting.LIGHT_PURPLE);
+		RANDOM_COLORS.add(EnumChatFormatting.DARK_PURPLE);
 	}
 
 	//Calculate nearest color using Euclidean Distance
-	public static EnumChatFormatting getColorFromHex(String hex) {
-		int color = Integer.decode(hex);
-		if (colors.containsKey(color)) return colors.get(color);
-		Vec3i colorObj = colorToRGB(color);
-		double lowest = -1;
-		EnumChatFormatting closestColor = EnumChatFormatting.WHITE;
+	public static EnumChatFormatting getColorFromHex(String userID, String hex) {
+		if (hex == null) return getOrSetRandomColor(userID);
 
-		for (Map.Entry<EnumChatFormatting, Vec3i> entry : chatFormattingColors.entrySet()) {
-			Vec3i enumColor = entry.getValue();
+		return NEAREST_COLOR_CACHE.computeIfAbsent(Integer.decode(hex), key -> {
+			Vec3i colorObj = colorToRGB(key);
+			double lowest = -1;
+			EnumChatFormatting closestColor = EnumChatFormatting.WHITE;
 
-			//Colors are stored as a vec3i to save on bitwise operations.
-			//Therefore, x = red, y = green, z = blue
-			float rDiff = colorObj.getX() - enumColor.getX();
-			float gDiff = colorObj.getY() - enumColor.getY();
-			float bDiff = colorObj.getZ() - enumColor.getZ();
+			for (Map.Entry<EnumChatFormatting, Vec3i> entry : ENUM_TO_RGB.entrySet()) {
+				Vec3i enumColor = entry.getValue();
 
-			double dist = Math.pow(rDiff, 2) + Math.pow(gDiff, 2) + Math.pow(bDiff, 2);
-			if (lowest == -1 || dist < lowest) {
-				lowest = dist;
-				closestColor = entry.getKey();
+				//Colors are stored as a vec3i to save on bitwise operations.
+				//Therefore, x = red, y = green, z = blue
+				float rDiff = colorObj.getX() - enumColor.getX();
+				float gDiff = colorObj.getY() - enumColor.getY();
+				float bDiff = colorObj.getZ() - enumColor.getZ();
+
+				double dist = Math.pow(rDiff, 2) + Math.pow(gDiff, 2) + Math.pow(bDiff, 2);
+				if (lowest == -1 || dist < lowest) {
+					lowest = dist;
+					closestColor = entry.getKey();
+				}
 			}
-		}
-		colors.put(color, closestColor);
-		return closestColor;
+			return closestColor;
+		});
+	}
+
+	private static EnumChatFormatting getOrSetRandomColor(String userID) {
+		return RANDOM_COLOR_CACHE.computeIfAbsent(userID, key -> RANDOM_COLORS.get(RANDOM.nextInt(RANDOM_COLORS.size())));
 	}
 
 	private static Vec3i colorToRGB(int color) {

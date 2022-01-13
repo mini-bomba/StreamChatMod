@@ -22,7 +22,6 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 public class TwitchMessageHandler implements Runnable {
     private final ChannelMessageEvent event;
@@ -137,7 +136,9 @@ public class TwitchMessageHandler implements Runnable {
 
         String username = event.getMessageEvent().getTagValue("display-name").orElse(event.getUser().getName());
 
-        component.appendSibling(new ChatComponentText((badges.getSiblings().size() > 0 ? " " : "") + ColorUtil.getColorFromHex(event.getMessageEvent().getTagValue("color").orElse("#FFFFFF")) + username + " " + mod.config.getTwitchUserMessageSeparator() + " "));
+        EnumChatFormatting nameColor = ColorUtil.getColorFromHex(event.getUser().getId(), event.getMessageEvent().getTagValue("color").orElse(null));
+
+        component.appendSibling(new ChatComponentText((badges.getSiblings().size() > 0 ? " " : "") + nameColor + username + " " + mod.config.getTwitchUserMessageSeparator() + " "));
         int lastEnd = 0;
         while (matcher.find()) {
             if (matcher.start() > lastEnd)
