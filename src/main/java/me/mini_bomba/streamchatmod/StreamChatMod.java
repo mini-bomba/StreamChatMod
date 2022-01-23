@@ -135,10 +135,10 @@ public class StreamChatMod {
         if (twitch != null) {
             ProgressManager.ProgressBar emoteProgress = ProgressManager.push("Syncing emotes", 11);
             List<String> channelIds = Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).filter(Objects::nonNull).map(User::getId).collect(Collectors.toList());
-            emotes.syncGlobalBadges(emoteProgress, false);
-            emotes.syncAllChannelBadges(emoteProgress, channelIds, false);
-            emotes.syncGlobalEmotes(emoteProgress, false);
-            emotes.syncAllChannelEmotes(emoteProgress, channelIds, false);
+            emotes.syncGlobalBadges(emoteProgress);
+            emotes.syncAllChannelBadges(emoteProgress, channelIds);
+            emotes.syncGlobalEmotes(emoteProgress);
+            emotes.syncAllChannelEmotes(emoteProgress, channelIds);
             ProgressManager.pop(emoteProgress);
         }
         ProgressManager.pop(progress);
@@ -371,9 +371,9 @@ public class StreamChatMod {
             config.twitchChannels.set(java.util.stream.Stream.concat(Arrays.stream(config.twitchChannels.getStringList()), java.util.stream.Stream.of(channel)).map(String::toLowerCase).distinct().toArray(String[]::new));
             config.saveIfChanged();
             StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Syncing " + channel + "'s channel badges...");
-            emotes.syncChannelBadges(getTwitchUserByName(channel).getId(), true);
+            emotes.syncChannelBadges(getTwitchUserByName(channel).getId());
             StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Syncing " + channel + "'s channel emotes...");
-            emotes.syncChannelEmotes(getTwitchUserByName(channel).getId(), true);
+            emotes.syncChannelEmotes(getTwitchUserByName(channel).getId());
             StreamUtils.queueAddMessage(EnumChatFormatting.GREEN + "Joined " + channel + "'s chat!");
         });
     }
@@ -595,13 +595,13 @@ public class StreamChatMod {
             if (syncEmotes) {
                 List<String> channelIds = Arrays.stream(config.twitchChannels.getStringList()).map(this::getTwitchUserByName).filter(Objects::nonNull).map(User::getId).collect(Collectors.toList());
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising global badge cache...");
-                emotes.syncGlobalBadges(null, true);
+                emotes.syncGlobalBadges(null);
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising channel badge cache...");
-                emotes.syncAllChannelBadges(null, channelIds, true);
+                emotes.syncAllChannelBadges(null, channelIds);
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising global emote cache...");
-                emotes.syncGlobalEmotes(null, true);
+                emotes.syncGlobalEmotes(null);
                 StreamUtils.queueAddMessage(EnumChatFormatting.GRAY + "Synchronising channel emote cache...");
-                emotes.syncAllChannelEmotes(null, channelIds, true);
+                emotes.syncAllChannelEmotes(null, channelIds);
             }
             twitch.getEventManager().onEvent(ChannelMessageEvent.class, this::onTwitchMessage);
             twitch.getEventManager().onEvent(FollowEvent.class, this::onTwitchFollow);

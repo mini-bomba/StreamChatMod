@@ -1,10 +1,13 @@
 package me.mini_bomba.streamchatmod.utils;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import me.mini_bomba.streamchatmod.StreamConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Property;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -19,8 +22,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public abstract class StreamEmote {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final List<StreamEmote> registeredEmotes = new ArrayList<>(2048);
     public final Type type;
     public final String id;
@@ -45,7 +50,7 @@ public abstract class StreamEmote {
             BufferedImage image = ImageIO.read(new File(path));
             width = image.getWidth();
             height = image.getHeight();
-            this.frames = Collections.singletonList(Minecraft.getMinecraft().renderEngine.getDynamicTextureLocation("SCM_EMOTE_" + type.name() + "_" + id, new DynamicTexture(image)));
+            this.frames = Collections.singletonList(new Frame("SCM_EMOTE_" + type.name() + "_" + id, image).safeRegister());
             this.frameTimes = Collections.singletonList(0L);
             this.animationDuration = 0;
         } else {
@@ -94,7 +99,7 @@ public abstract class StreamEmote {
                 combinedFrame.getGraphics().drawImage(frame, frameX, frameY, null);
                 frameTimes.add(lastFrameTime);
                 lastFrameTime += frameTime;
-                frames.add(Minecraft.getMinecraft().renderEngine.getDynamicTextureLocation("SCM_EMOTE_" + type.name() + "_" + id + "_FRAME_" + frameIndex, new DynamicTexture(combinedFrame)));
+                frames.add(new Frame("SCM_EMOTE_" + type.name() + "_" + id + "_FRAME_" + frameIndex, combinedFrame).safeRegister());
                 if (clearBuffer)
                     combinedFrame = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
             }
@@ -130,6 +135,51 @@ public abstract class StreamEmote {
 
     public char getCharacter() {
         return (char) (0xe800 + characterId);
+    }
+
+    private static class Frame {
+        private final String name;
+        private final BufferedImage texture;
+
+        public Frame(String name, BufferedImage texture) {
+            this.name = name;
+            this.texture = texture;
+        }
+
+        /**
+         * Registers the frame as Minecraft's DynamicTexture and returns the ResourceLocation<br>
+         * <b>NOTE: This function M U S T be called from the main thread</b> otherwise a RuntimeException is thrown by LWJGL
+         *
+         * @return the ResourceLocation of the registered frame
+         */
+        public ResourceLocation register() {
+            return Minecraft.getMinecraft().renderEngine.getDynamicTextureLocation(name, new DynamicTexture(texture));
+        }
+
+        /**
+         * Same as register(), but can be called from any thread and will automatically move into the main thread to register the frame
+         *
+         * @return the ResourceLocation of the registered frame
+         */
+        public ResourceLocation safeRegister() {
+            if (Thread.currentThread().getId() == 1)
+                return register();
+            else {
+                ListenableFuture<ResourceLocation> resultFuture = Minecraft.getMinecraft().addScheduledTask(this::register);
+                while (true) {
+                    try {
+                        return resultFuture.get();
+                    } catch (InterruptedException e) {
+                        LOGGER.warn("Interrupted while waiting for frame '" + name + "' to register");
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        LOGGER.error("Failed to register frame '" + name + "'");
+                        e.printStackTrace();
+                        return null;
+                    }
+                }
+            }
+        }
     }
 
     public enum Type {

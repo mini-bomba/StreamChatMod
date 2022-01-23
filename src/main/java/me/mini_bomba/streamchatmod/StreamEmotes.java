@@ -4,7 +4,6 @@ import com.github.twitch4j.helix.domain.ChatBadge;
 import com.github.twitch4j.helix.domain.ChatBadgeSet;
 import com.github.twitch4j.helix.domain.Emote;
 import me.mini_bomba.streamchatmod.utils.*;
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.Tuple;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.apache.commons.io.FileUtils;
@@ -114,7 +113,7 @@ public class StreamEmotes {
         return getBadge(channelId, name + ":" + version);
     }
 
-    public void syncGlobalBadges(ProgressManager.ProgressBar progress, boolean indexInMainThread) {
+    public void syncGlobalBadges(ProgressManager.ProgressBar progress) {
         // Twitch
         if (progress != null) progress.step("Twitch global badges");
         File twitchBadgesDir = new File("streamchatmod/emotes/twitch_global_badges");
@@ -145,39 +144,28 @@ public class StreamEmotes {
 
         // Indexing
         if (progress != null) progress.step("Indexing global badges");
-        Callable<Void> doIndex = () -> {
-            java.util.stream.Stream<TwitchGlobalBadge> stream1 = twitchBadges.stream().map(badge -> {
-                if (twitchGlobalBadges.containsKey(badge.id)) return twitchGlobalBadges.get(badge.id);
-                try {
-                    TwitchGlobalBadge wrappedBadge = new TwitchGlobalBadge(badge.badge, badge.set);
-                    twitchGlobalBadges.put(badge.id, wrappedBadge);
-                    return wrappedBadge;
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap global twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
-                    e.printStackTrace();
-                    return null;
-                }
-            });
-            globalBadges.clear();
-            stream1.forEach(badge -> {
-                if (badge == null) return;
-                if (!globalBadges.containsKey(badge.name))
-                    globalBadges.put(badge.name, badge);
-                else LOGGER.warn("Duplicate badge name: " + badge.name);
-            });
-            return null;
-        };
-        try {
-            if (indexInMainThread) Minecraft.getMinecraft().addScheduledTask(doIndex).get();
-            else doIndex.call();
-        } catch (InterruptedException ignored) {
-        } catch (Exception e) {
-            LOGGER.error("Got error while indexing global badges");
-            e.printStackTrace();
-        }
+        java.util.stream.Stream<TwitchGlobalBadge> stream1 = twitchBadges.stream().map(badge -> {
+            if (twitchGlobalBadges.containsKey(badge.id)) return twitchGlobalBadges.get(badge.id);
+            try {
+                TwitchGlobalBadge wrappedBadge = new TwitchGlobalBadge(badge.badge, badge.set);
+                twitchGlobalBadges.put(badge.id, wrappedBadge);
+                return wrappedBadge;
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap global twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
+                e.printStackTrace();
+                return null;
+            }
+        });
+        globalBadges.clear();
+        stream1.forEach(badge -> {
+            if (badge == null) return;
+            if (!globalBadges.containsKey(badge.name))
+                globalBadges.put(badge.name, badge);
+            else LOGGER.warn("Duplicate badge name: " + badge.name);
+        });
     }
 
-    public void syncAllChannelBadges(ProgressManager.ProgressBar progress, List<String> channelIds, boolean indexInMainThread) {
+    public void syncAllChannelBadges(ProgressManager.ProgressBar progress, List<String> channelIds) {
         // Twitch
         if (progress != null) progress.step("Twitch channel badges");
         File twitchBadgesDir = new File("streamchatmod/emotes/twitch_channel_badges");
@@ -213,41 +201,30 @@ public class StreamEmotes {
 
         // Indexing
         if (progress != null) progress.step("Indexing channel badges");
-        Callable<Void> doIndex = () -> {
-            java.util.stream.Stream<TwitchChannelBadge> stream1 = twitchBadges.stream().map(badge -> {
-                if (twitchChannelBadges.containsKey(badge.id)) return twitchChannelBadges.get(badge.id);
-                try {
-                    TwitchChannelBadge wrappedBadge = new TwitchChannelBadge(badge.badge, badge.set, badge.channelId, mod.getTwitchUserById(badge.channelId).getDisplayName());
-                    twitchChannelBadges.put(badge.id, wrappedBadge);
-                    return wrappedBadge;
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
-                    e.printStackTrace();
-                    return null;
-                }
-            });
-            channelBadges.clear();
-            for (String channelId : channelIds) channelBadges.put(channelId, new HashMap<>());
-            stream1.forEach(badge -> {
-                if (badge == null) return;
-                Map<String, TwitchChannelBadge> badgeMap = channelBadges.get(badge.channelId);
-                if (!badgeMap.containsKey(badge.name))
-                    badgeMap.put(badge.name, badge);
-                else LOGGER.warn("Duplicate badge name: " + badge.name + " for channel: " + badge.channelName);
-            });
-            return null;
-        };
-        try {
-            if (indexInMainThread) Minecraft.getMinecraft().addScheduledTask(doIndex).get();
-            else doIndex.call();
-        } catch (InterruptedException ignored) {
-        } catch (Exception e) {
-            LOGGER.error("Got error while indexing global badges");
-            e.printStackTrace();
-        }
+        java.util.stream.Stream<TwitchChannelBadge> stream1 = twitchBadges.stream().map(badge -> {
+            if (twitchChannelBadges.containsKey(badge.id)) return twitchChannelBadges.get(badge.id);
+            try {
+                TwitchChannelBadge wrappedBadge = new TwitchChannelBadge(badge.badge, badge.set, badge.channelId, mod.getTwitchUserById(badge.channelId).getDisplayName());
+                twitchChannelBadges.put(badge.id, wrappedBadge);
+                return wrappedBadge;
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
+                e.printStackTrace();
+                return null;
+            }
+        });
+        channelBadges.clear();
+        for (String channelId : channelIds) channelBadges.put(channelId, new HashMap<>());
+        stream1.forEach(badge -> {
+            if (badge == null) return;
+            Map<String, TwitchChannelBadge> badgeMap = channelBadges.get(badge.channelId);
+            if (!badgeMap.containsKey(badge.name))
+                badgeMap.put(badge.name, badge);
+            else LOGGER.warn("Duplicate badge name: " + badge.name + " for channel: " + badge.channelName);
+        });
     }
 
-    public void syncChannelBadges(String channelId, boolean indexInMainThread) {
+    public void syncChannelBadges(String channelId) {
         // Twitch
         File twitchBadgesDir = new File("streamchatmod/emotes/twitch_channel_badges");
         twitchBadgesDir.mkdirs();
@@ -275,40 +252,29 @@ public class StreamEmotes {
         }).collect(Collectors.toList()));
 
         // Indexing
-        Callable<Void> doIndex = () -> {
-            java.util.stream.Stream<TwitchChannelBadge> stream1 = twitchBadges.stream().map(badge -> {
-                if (twitchChannelBadges.containsKey(badge.id)) return twitchChannelBadges.get(badge.id);
-                try {
-                    TwitchChannelBadge wrappedBadge = new TwitchChannelBadge(badge.badge, badge.set, badge.channelId, mod.getTwitchUserById(badge.channelId).getDisplayName());
-                    twitchChannelBadges.put(badge.id, wrappedBadge);
-                    return wrappedBadge;
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
-                    e.printStackTrace();
-                    return null;
-                }
-            });
-            Map<String, TwitchChannelBadge> badgeMap = new HashMap<>();
-            channelBadges.put(channelId, badgeMap);
-            stream1.forEach(badge -> {
-                if (badge == null) return;
-                if (!badgeMap.containsKey(badge.name))
-                    badgeMap.put(badge.name, badge);
-                else LOGGER.warn("Duplicate badge name: " + badge.name + " for channel: " + badge.channelName);
-            });
-            return null;
-        };
-        try {
-            if (indexInMainThread) Minecraft.getMinecraft().addScheduledTask(doIndex).get();
-            else doIndex.call();
-        } catch (InterruptedException ignored) {
-        } catch (Exception e) {
-            LOGGER.error("Got error while indexing global badges");
-            e.printStackTrace();
-        }
+        java.util.stream.Stream<TwitchChannelBadge> stream1 = twitchBadges.stream().map(badge -> {
+            if (twitchChannelBadges.containsKey(badge.id)) return twitchChannelBadges.get(badge.id);
+            try {
+                TwitchChannelBadge wrappedBadge = new TwitchChannelBadge(badge.badge, badge.set, badge.channelId, mod.getTwitchUserById(badge.channelId).getDisplayName());
+                twitchChannelBadges.put(badge.id, wrappedBadge);
+                return wrappedBadge;
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
+                e.printStackTrace();
+                return null;
+            }
+        });
+        Map<String, TwitchChannelBadge> badgeMap = new HashMap<>();
+        channelBadges.put(channelId, badgeMap);
+        stream1.forEach(badge -> {
+            if (badge == null) return;
+            if (!badgeMap.containsKey(badge.name))
+                badgeMap.put(badge.name, badge);
+            else LOGGER.warn("Duplicate badge name: " + badge.name + " for channel: " + badge.channelName);
+        });
     }
 
-    public void syncGlobalEmotes(ProgressManager.ProgressBar progress, boolean indexInMainThread) {
+    public void syncGlobalEmotes(ProgressManager.ProgressBar progress) {
         // Twitch
         if (progress != null) progress.step("Twitch global emotes");
         File twitchGlobalsDir = new File("streamchatmod/emotes/twitch_global");
@@ -392,69 +358,58 @@ public class StreamEmotes {
 
         // Indexing
         if (progress != null) progress.step("Indexing global emotes");
-        Callable<Void> doIndex = () -> {
-            java.util.stream.Stream<StreamEmote> stream1 = twitchGlobals.stream().map(emote -> {
-                if (twitchEmotes.containsKey(emote.getId())) return twitchEmotes.get(emote.getId());
-                try {
-                    TwitchEmote wrappedEmote = new TwitchEmote(emote);
-                    twitchEmotes.put(emote.getId(), wrappedEmote);
-                    return wrappedEmote;
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap global twitch emote " + emote.getName() + " in TwitchEmote class");
-                    e.printStackTrace();
-                    return null;
-                }
-            });
-            java.util.stream.Stream<StreamEmote> stream2 = bttvGlobals.stream().map(emote -> {
-                if (bttvEmotes.containsKey(emote.id)) return bttvEmotes.get(emote.id);
-                try {
-                    BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(emote, true);
-                    bttvEmotes.put(emote.id, wrappedEmote);
-                    return wrappedEmote;
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap global BTTV emote " + emote.name + " in BTTVStreamEmote class");
-                    e.printStackTrace();
-                    return null;
-                }
-            });
-            java.util.stream.Stream<StreamEmote> stream3 = ffzGlobals.stream().map(emote -> {
-                String id = String.valueOf(emote.id);
-                if (ffzEmotes.containsKey(id)) return ffzEmotes.get(id);
-                try {
-                    FFZStreamEmote wrappedEmote = new FFZStreamEmote(emote, true);
-                    ffzEmotes.put(id, wrappedEmote);
-                    return wrappedEmote;
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap global FFZ emote " + emote.name + " in FFZStreamEmote class");
-                    e.printStackTrace();
-                    return null;
-                }
-            });
-            twitchGlobalEmotes.clear();
-            bttvGlobalEmotes.clear();
-            ffzGlobalEmotes.clear();
-            namesToGlobalEmotes.clear();
-            java.util.stream.Stream.of(stream1, stream2, stream3).flatMap(s -> s).forEach(emote -> {
-                if (emote == null) return;
-                if (emote instanceof TwitchEmote) twitchGlobalEmotes.add((TwitchEmote) emote);
-                else if (emote instanceof BTTVStreamEmote) bttvGlobalEmotes.add((BTTVStreamEmote) emote);
-                else if (emote instanceof FFZStreamEmote) ffzGlobalEmotes.add((FFZStreamEmote) emote);
-                if (!namesToGlobalEmotes.containsKey(emote.name)) namesToGlobalEmotes.put(emote.name, emote);
-                else LOGGER.warn("Duplicate emote name: " + emote.name);
-            });
-            return null;
-        };
-        try {
-            if (indexInMainThread) Minecraft.getMinecraft().addScheduledTask(doIndex).get();
-            else doIndex.call();
-        } catch (InterruptedException ignored) {
-        } catch (Exception e) {
-            LOGGER.error("Got error while indexing global emotes");
-            e.printStackTrace();
-        }
+        java.util.stream.Stream<StreamEmote> stream1 = twitchGlobals.stream().map(emote -> {
+            if (twitchEmotes.containsKey(emote.getId())) return twitchEmotes.get(emote.getId());
+            try {
+                TwitchEmote wrappedEmote = new TwitchEmote(emote);
+                twitchEmotes.put(emote.getId(), wrappedEmote);
+                return wrappedEmote;
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap global twitch emote " + emote.getName() + " in TwitchEmote class");
+                e.printStackTrace();
+                return null;
+            }
+        });
+        java.util.stream.Stream<StreamEmote> stream2 = bttvGlobals.stream().map(emote -> {
+            if (bttvEmotes.containsKey(emote.id)) return bttvEmotes.get(emote.id);
+            try {
+                BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(emote, true);
+                bttvEmotes.put(emote.id, wrappedEmote);
+                return wrappedEmote;
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap global BTTV emote " + emote.name + " in BTTVStreamEmote class");
+                e.printStackTrace();
+                return null;
+            }
+        });
+        java.util.stream.Stream<StreamEmote> stream3 = ffzGlobals.stream().map(emote -> {
+            String id = String.valueOf(emote.id);
+            if (ffzEmotes.containsKey(id)) return ffzEmotes.get(id);
+            try {
+                FFZStreamEmote wrappedEmote = new FFZStreamEmote(emote, true);
+                ffzEmotes.put(id, wrappedEmote);
+                return wrappedEmote;
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap global FFZ emote " + emote.name + " in FFZStreamEmote class");
+                e.printStackTrace();
+                return null;
+            }
+        });
+        twitchGlobalEmotes.clear();
+        bttvGlobalEmotes.clear();
+        ffzGlobalEmotes.clear();
+        namesToGlobalEmotes.clear();
+        java.util.stream.Stream.of(stream1, stream2, stream3).flatMap(s -> s).forEach(emote -> {
+            if (emote == null) return;
+            if (emote instanceof TwitchEmote) twitchGlobalEmotes.add((TwitchEmote) emote);
+            else if (emote instanceof BTTVStreamEmote) bttvGlobalEmotes.add((BTTVStreamEmote) emote);
+            else if (emote instanceof FFZStreamEmote) ffzGlobalEmotes.add((FFZStreamEmote) emote);
+            if (!namesToGlobalEmotes.containsKey(emote.name)) namesToGlobalEmotes.put(emote.name, emote);
+            else LOGGER.warn("Duplicate emote name: " + emote.name);
+        });
     }
 
-    public void syncAllChannelEmotes(ProgressManager.ProgressBar progress, List<String> channelIds, boolean indexInMainThread) {
+    public void syncAllChannelEmotes(ProgressManager.ProgressBar progress, List<String> channelIds) {
         // BTTV
         if (progress != null) progress.step("BetterTTV channel emotes");
         File bttvChannelDir = new File("streamchatmod/emotes/bttv_channel");
@@ -513,57 +468,46 @@ public class StreamEmotes {
         }).collect(Collectors.toList()));
 
         // Indexing
-        Callable<Void> doIndex = () -> {
-            if (progress != null) progress.step("Indexing channel emotes");
-            for (BTTVEmote channelEmote : bttvChannelEmotes) {
-                if (channelEmote == null || bttvEmotes.containsKey(channelEmote.id)) continue;
-                try {
-                    BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(channelEmote, false);
-                    bttvEmotes.put(channelEmote.id, wrappedEmote);
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap channel BTTV emote " + channelEmote.name + " in BTTVStreamEmote class");
-                    e.printStackTrace();
-                }
+        if (progress != null) progress.step("Indexing channel emotes");
+        for (BTTVEmote channelEmote : bttvChannelEmotes) {
+            if (channelEmote == null || bttvEmotes.containsKey(channelEmote.id)) continue;
+            try {
+                BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(channelEmote, false);
+                bttvEmotes.put(channelEmote.id, wrappedEmote);
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap channel BTTV emote " + channelEmote.name + " in BTTVStreamEmote class");
+                e.printStackTrace();
             }
-            for (FFZEmote channelEmote : ffzChannelEmotes) {
-                if (channelEmote == null || ffzEmotes.containsKey(String.valueOf(channelEmote.id))) continue;
-                try {
-                    FFZStreamEmote wrappedEmote = new FFZStreamEmote(channelEmote, false);
-                    ffzEmotes.put(String.valueOf(channelEmote.id), wrappedEmote);
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap channel FFZ emote " + channelEmote.name + " in FFZStreamEmote class");
-                    e.printStackTrace();
-                }
+        }
+        for (FFZEmote channelEmote : ffzChannelEmotes) {
+            if (channelEmote == null || ffzEmotes.containsKey(String.valueOf(channelEmote.id))) continue;
+            try {
+                FFZStreamEmote wrappedEmote = new FFZStreamEmote(channelEmote, false);
+                ffzEmotes.put(String.valueOf(channelEmote.id), wrappedEmote);
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap channel FFZ emote " + channelEmote.name + " in FFZStreamEmote class");
+                e.printStackTrace();
             }
-            channelEmotes.clear();
-            for (String channelId : channelIds) {
-                Map<String, StreamEmote> wrappedChannelEmotes = new HashMap<>();
-                for (BTTVEmote emote : bttvChannels.get(channelId))
-                    if (wrappedChannelEmotes.containsKey(emote.name))
-                        LOGGER.warn("Duplicate emote name for channel " + channelId + ": " + emote.name);
-                    else if (!bttvEmotes.containsKey(emote.id)) LOGGER.warn("Missing BTTV emote with id " + emote.id);
-                    else wrappedChannelEmotes.put(emote.name, bttvEmotes.get(emote.id));
-                for (FFZEmote emote : ffzChannels.get(channelId))
-                    if (wrappedChannelEmotes.containsKey(emote.name))
-                        LOGGER.warn("Duplicate emote name for channel " + channelId + ": " + emote.name);
-                    else if (!ffzEmotes.containsKey(String.valueOf(emote.id)))
-                        LOGGER.warn("Missing FFZ emote with id " + emote.id);
-                    else wrappedChannelEmotes.put(emote.name, ffzEmotes.get(String.valueOf(emote.id)));
-                channelEmotes.put(channelId, wrappedChannelEmotes);
-            }
-            return null;
-        };
-        try {
-            if (indexInMainThread) Minecraft.getMinecraft().addScheduledTask(doIndex).get();
-            else doIndex.call();
-        } catch (InterruptedException ignored) {
-        } catch (Exception e) {
-            LOGGER.error("Got error while indexing channel emotes");
-            e.printStackTrace();
+        }
+        channelEmotes.clear();
+        for (String channelId : channelIds) {
+            Map<String, StreamEmote> wrappedChannelEmotes = new HashMap<>();
+            for (BTTVEmote emote : bttvChannels.get(channelId))
+                if (wrappedChannelEmotes.containsKey(emote.name))
+                    LOGGER.warn("Duplicate emote name for channel " + channelId + ": " + emote.name);
+                else if (!bttvEmotes.containsKey(emote.id)) LOGGER.warn("Missing BTTV emote with id " + emote.id);
+                else wrappedChannelEmotes.put(emote.name, bttvEmotes.get(emote.id));
+            for (FFZEmote emote : ffzChannels.get(channelId))
+                if (wrappedChannelEmotes.containsKey(emote.name))
+                    LOGGER.warn("Duplicate emote name for channel " + channelId + ": " + emote.name);
+                else if (!ffzEmotes.containsKey(String.valueOf(emote.id)))
+                    LOGGER.warn("Missing FFZ emote with id " + emote.id);
+                else wrappedChannelEmotes.put(emote.name, ffzEmotes.get(String.valueOf(emote.id)));
+            channelEmotes.put(channelId, wrappedChannelEmotes);
         }
     }
 
-    public void syncChannelEmotes(String channelId, boolean indexInMainThread) {
+    public void syncChannelEmotes(String channelId) {
         // BTTV
         File bttvChannelDir = new File("streamchatmod/emotes/bttv_channel");
         bttvChannelDir.mkdirs();
@@ -611,50 +555,39 @@ public class StreamEmotes {
         }).collect(Collectors.toList()));
 
         // Indexing
-        Callable<Void> doIndex = () -> {
-            for (BTTVEmote channelEmote : bttvChannelEmotes) {
-                if (channelEmote == null || bttvEmotes.containsKey(channelEmote.id)) continue;
-                try {
-                    BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(channelEmote, false);
-                    bttvEmotes.put(channelEmote.id, wrappedEmote);
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap channel BTTV emote " + channelEmote.name + " in BTTVStreamEmote class");
-                    e.printStackTrace();
-                }
+        for (BTTVEmote channelEmote : bttvChannelEmotes) {
+            if (channelEmote == null || bttvEmotes.containsKey(channelEmote.id)) continue;
+            try {
+                BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(channelEmote, false);
+                bttvEmotes.put(channelEmote.id, wrappedEmote);
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap channel BTTV emote " + channelEmote.name + " in BTTVStreamEmote class");
+                e.printStackTrace();
             }
-            for (FFZEmote channelEmote : ffzChannelEmotes) {
-                if (channelEmote == null || ffzEmotes.containsKey(String.valueOf(channelEmote.id))) continue;
-                try {
-                    FFZStreamEmote wrappedEmote = new FFZStreamEmote(channelEmote, false);
-                    ffzEmotes.put(String.valueOf(channelEmote.id), wrappedEmote);
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to wrap channel FFZ emote " + channelEmote.name + " in FFZStreamEmote class");
-                    e.printStackTrace();
-                }
-            }
-            Map<String, StreamEmote> wrappedChannelEmotes = new HashMap<>();
-            for (BTTVEmote emote : bttvChannelEmotes)
-                if (wrappedChannelEmotes.containsKey(emote.name))
-                    LOGGER.warn("Duplicate emote name for channel " + channelId + ": " + emote.name);
-                else if (!bttvEmotes.containsKey(emote.id)) LOGGER.warn("Missing BTTV emote with id " + emote.id);
-                else wrappedChannelEmotes.put(emote.name, bttvEmotes.get(emote.id));
-            for (FFZEmote emote : ffzChannelEmotes)
-                if (wrappedChannelEmotes.containsKey(emote.name))
-                    LOGGER.warn("Duplicate emote name for channel " + channelId + ": " + emote.name);
-                else if (!ffzEmotes.containsKey(String.valueOf(emote.id)))
-                    LOGGER.warn("Missing FFZ emote with id " + emote.id);
-                else wrappedChannelEmotes.put(emote.name, ffzEmotes.get(String.valueOf(emote.id)));
-            channelEmotes.put(channelId, wrappedChannelEmotes);
-            return null;
-        };
-        try {
-            if (indexInMainThread) Minecraft.getMinecraft().addScheduledTask(doIndex).get();
-            else doIndex.call();
-        } catch (InterruptedException ignored) {
-        } catch (Exception e) {
-            LOGGER.error("Got error while indexing " + channelId + "'s emotes");
-            e.printStackTrace();
         }
+        for (FFZEmote channelEmote : ffzChannelEmotes) {
+            if (channelEmote == null || ffzEmotes.containsKey(String.valueOf(channelEmote.id))) continue;
+            try {
+                FFZStreamEmote wrappedEmote = new FFZStreamEmote(channelEmote, false);
+                ffzEmotes.put(String.valueOf(channelEmote.id), wrappedEmote);
+            } catch (IOException e) {
+                LOGGER.warn("Failed to wrap channel FFZ emote " + channelEmote.name + " in FFZStreamEmote class");
+                e.printStackTrace();
+            }
+        }
+        Map<String, StreamEmote> wrappedChannelEmotes = new HashMap<>();
+        for (BTTVEmote emote : bttvChannelEmotes)
+            if (wrappedChannelEmotes.containsKey(emote.name))
+                LOGGER.warn("Duplicate emote name for channel " + channelId + ": " + emote.name);
+            else if (!bttvEmotes.containsKey(emote.id)) LOGGER.warn("Missing BTTV emote with id " + emote.id);
+            else wrappedChannelEmotes.put(emote.name, bttvEmotes.get(emote.id));
+        for (FFZEmote emote : ffzChannelEmotes)
+            if (wrappedChannelEmotes.containsKey(emote.name))
+                LOGGER.warn("Duplicate emote name for channel " + channelId + ": " + emote.name);
+            else if (!ffzEmotes.containsKey(String.valueOf(emote.id)))
+                LOGGER.warn("Missing FFZ emote with id " + emote.id);
+            else wrappedChannelEmotes.put(emote.name, ffzEmotes.get(String.valueOf(emote.id)));
+        channelEmotes.put(channelId, wrappedChannelEmotes);
     }
 
     private static void threadedDownload(boolean showProgress, List<Function<ProgressManager.ProgressBar, Callable<Void>>> downloads) {
