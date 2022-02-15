@@ -4,6 +4,7 @@ import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
 import com.github.twitch4j.helix.domain.Clip;
 import com.github.twitch4j.helix.domain.Game;
+import com.google.common.primitives.Chars;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
 import me.mini_bomba.streamchatmod.utils.ChatComponentStreamEmote;
@@ -22,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class TwitchMessageHandler implements Runnable {
     private final ChannelMessageEvent event;
@@ -43,13 +45,15 @@ public class TwitchMessageHandler implements Runnable {
         message = message.replace(formatChar, '&');
         if (allowFormatting) {
             char[] msg = message.toCharArray();
-            for (int i = 0; i < msg.length; i++) {
+            for (int i = 0; i < msg.length - 1; i++) {
                 if (msg[i] == '&') {
-                    if (validFormats.contains(String.valueOf(msg[i + 1])))
-                        msg[i] = formatChar;
+                    if (msg[i + 1] == '&')
+                        msg[i++] = 0;
+                    else if (validFormats.contains(String.valueOf(msg[i + 1])))
+                        msg[i++] = formatChar;
                 }
             }
-            message = String.valueOf(msg);
+            message = Chars.asList(msg).stream().filter(c -> c != 0).map(Object::toString).collect(Collectors.joining());
         }
         return message;
     }
