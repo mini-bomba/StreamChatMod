@@ -1,4 +1,4 @@
-package me.mini_bomba.streamchatmod.tweaker;
+package me.mini_bomba.streamchatmod.asm;
 
 import org.objectweb.asm.tree.ClassNode;
 

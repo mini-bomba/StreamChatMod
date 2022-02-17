@@ -1,4 +1,4 @@
-package me.mini_bomba.streamchatmod.tweaker;
+package me.mini_bomba.streamchatmod.asm;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -19,14 +19,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collection;
 
-public class StreamChatModTransformer implements IClassTransformer {
+public class MainTransformer implements IClassTransformer {
 
     @Getter
     private static final boolean deobfuscated = (boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
 
     private final Multimap<String, IStreamTransformer> transformerMap = ArrayListMultimap.create();
 
-    public StreamChatModTransformer() {
+    public MainTransformer() {
         registerTransformer(new GuiScreenTransformer());
         registerTransformer(new VE_GuiChatExtendedTransformer());
         registerTransformer(new FontRendererTransformer());
@@ -93,6 +93,6 @@ public class StreamChatModTransformer implements IClassTransformer {
 
     public void log(Level level, String message) {
         String name = "StreamChatMod/"+this.getClass().getSimpleName();
-        FMLRelaunchLog.log(name, level, (StreamChatModTransformer.isDeobfuscated() ? "" : "[" + name + "] ") + message);
+        FMLRelaunchLog.log(name, level, (MainTransformer.isDeobfuscated() ? "" : "[" + name + "] ") + message);
     }
 }

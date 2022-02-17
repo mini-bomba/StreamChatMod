@@ -69,7 +69,7 @@ public class TwitchEmotesSubcommand extends TwitchSubcommand implements IHasAuto
                     .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch emotes animated"))));
             components.add(new ChatComponentText(EnumChatFormatting.AQUA + "Render emotes everywhere: " + (mod.config.showEmotesEverywhere.getBoolean() ? EnumChatFormatting.GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled"))
                     .setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/twitch emotes renderEverywhere"))));
-            components.add(new ChatComponentText(EnumChatFormatting.GRAY + "Used internal emote slots: " + EnumChatFormatting.AQUA + StreamEmote.getEmoteCount() + EnumChatFormatting.GRAY + "/2048"));
+            components.add(new ChatComponentText(EnumChatFormatting.GRAY + "Used internal emote slots: " + EnumChatFormatting.AQUA + StreamEmote.getEmoteCount() + EnumChatFormatting.GRAY + "/65536"));
             StreamUtils.addMessages(sender, components.toArray(new IChatComponent[0]));
         } else {
             if (args[0].equalsIgnoreCase("animated")) {

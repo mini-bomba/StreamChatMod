@@ -1,4 +1,4 @@
-package me.mini_bomba.streamchatmod.tweaker;
+package me.mini_bomba.streamchatmod.asm;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.FieldInsnNode;
@@ -45,7 +45,7 @@ public enum TransformerField {
 
     TransformerField(String deobfName, String srgName, String notchName, String notchType, String srgType) {
 
-        if (StreamChatModTransformer.isDeobfuscated()) {
+        if (MainTransformer.isDeobfuscated()) {
             transformerName = deobfName;
             reflectorName = deobfName;
             type = srgType;

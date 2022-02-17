@@ -40,7 +40,7 @@ public abstract class StreamEmote {
     public final boolean animated;
 
     protected StreamEmote(Type type, String id, String path, String name, boolean animated) throws IOException {
-        if (registeredEmotes.size() >= 2048) throw new RuntimeException("Emote limit reached");
+        if (registeredEmotes.size() >= 65536) throw new RuntimeException("Emote limit reached");
         this.type = type;
         this.id = id;
         this.path = path;
@@ -133,8 +133,9 @@ public abstract class StreamEmote {
         return Collections.unmodifiableList(registeredEmotes);
     }
 
-    public char getCharacter() {
-        return (char) (0xe800 + characterId);
+    public String getCharacter() {
+        int code = 0xF0000 + characterId; // should be 0x100000+characterId-0x10000
+        return "" + (char) (0xD800 + (code >> 10)) + (char) (0xDC00 + (code & 1023));
     }
 
     private static class Frame {

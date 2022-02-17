@@ -1,9 +1,6 @@
 package me.mini_bomba.streamchatmod.asm.transformers;
 
-import me.mini_bomba.streamchatmod.tweaker.IStreamTransformer;
-import me.mini_bomba.streamchatmod.tweaker.TransformerClass;
-import me.mini_bomba.streamchatmod.tweaker.TransformerField;
-import me.mini_bomba.streamchatmod.tweaker.TransformerMethod;
+import me.mini_bomba.streamchatmod.asm.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
@@ -83,18 +80,20 @@ public class GuiScreenTransformer implements IStreamTransformer {
         // GETFIELD thePlayer
         // ALOAD 1
         // INVOKEVIRTUAL sendChatMessage
-        if (!(node instanceof VarInsnNode && node.getOpcode() == Opcodes.ALOAD && ((VarInsnNode) node).var == 0)) return false;
+        if (!TransformerUtils.verifyNode(node, new VarInsnNode(Opcodes.ALOAD, 0))) return false;
 
         node = node.getNext();
-        if (!(node instanceof FieldInsnNode && node.getOpcode() == Opcodes.GETFIELD && TransformerField.GuiScreen_mc.matches((FieldInsnNode) node))) return false;
+        if (!TransformerUtils.verifyNode(node, TransformerField.GuiScreen_mc.getField(TransformerClass.GuiScreen)))
+            return false;
 
         node = node.getNext();
-        if (!(node instanceof FieldInsnNode && node.getOpcode() == Opcodes.GETFIELD && TransformerField.Minecraft_thePlayer.matches((FieldInsnNode) node))) return false;
+        if (!TransformerUtils.verifyNode(node, TransformerField.Minecraft_thePlayer.getField(TransformerClass.Minecraft)))
+            return false;
 
         node = node.getNext();
-        if (!(node instanceof VarInsnNode && node.getOpcode() == Opcodes.ALOAD && ((VarInsnNode) node).var == 1)) return false;
+        if (!TransformerUtils.verifyNode(node, new VarInsnNode(Opcodes.ALOAD, 1))) return false;
 
         node = node.getNext();
-        return node instanceof MethodInsnNode && node.getOpcode() == Opcodes.INVOKEVIRTUAL && TransformerMethod.EntityPlayerSP_sendChatMessage.matches((MethodInsnNode) node);
+        return TransformerUtils.verifyNode(node, TransformerMethod.EntityPlayerSP_sendChatMessage.invokeVirtual(TransformerClass.EntityPlayerSP, false));
     }
 }

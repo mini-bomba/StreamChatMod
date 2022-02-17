@@ -1,4 +1,4 @@
-package me.mini_bomba.streamchatmod.tweaker;
+package me.mini_bomba.streamchatmod.asm;
 
 import net.minecraftforge.fml.relauncher.IFMLCallHook;
 import org.apache.logging.log4j.LogManager;
@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-public class StreamChatModSetupClass implements IFMLCallHook {
+public class TweakerSetupClass implements IFMLCallHook {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -26,10 +26,10 @@ public class StreamChatModSetupClass implements IFMLCallHook {
 
             nameField.setAccessible(true);
 
-            for (Object coreMod : StreamChatModLoadingPlugin.coremodList) {
+            for (Object coreMod : LoadingPlugin.coremodList) {
                 String name = (String) nameField.get(coreMod);
 
-                if (name.equals(StreamChatModLoadingPlugin.class.getSimpleName())) {
+                if (name.equals(LoadingPlugin.class.getSimpleName())) {
                     if (coreFound)
                         throw new RuntimeException("Launch failed due to a duplicate StreamChatMod installation found. Please remove the duplicate & restart Minecraft!");
                     coreFound = true;

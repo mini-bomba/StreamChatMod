@@ -1,10 +1,10 @@
 package me.mini_bomba.streamchatmod;
 
 import com.github.twitch4j.helix.domain.User;
+import me.mini_bomba.streamchatmod.asm.TransformerField;
 import me.mini_bomba.streamchatmod.commands.IDrawsChatOutline;
 import me.mini_bomba.streamchatmod.events.LocalMessageEvent;
 import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
-import me.mini_bomba.streamchatmod.tweaker.TransformerField;
 import me.mini_bomba.streamchatmod.utils.ChatComponentStreamEmote;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiTextField;

@@ -1,8 +1,8 @@
 package me.mini_bomba.streamchatmod.asm.transformers;
 
-import me.mini_bomba.streamchatmod.tweaker.IStreamTransformer;
-import me.mini_bomba.streamchatmod.tweaker.TransformerClass;
-import me.mini_bomba.streamchatmod.tweaker.TransformerMethod;
+import me.mini_bomba.streamchatmod.asm.IStreamTransformer;
+import me.mini_bomba.streamchatmod.asm.TransformerClass;
+import me.mini_bomba.streamchatmod.asm.TransformerMethod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;

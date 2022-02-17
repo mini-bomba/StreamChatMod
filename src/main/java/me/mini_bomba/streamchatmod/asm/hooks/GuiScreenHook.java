@@ -3,6 +3,7 @@ package me.mini_bomba.streamchatmod.asm.hooks;
 import me.mini_bomba.streamchatmod.events.LocalMessageEvent;
 import net.minecraftforge.common.MinecraftForge;
 
+@SuppressWarnings("unused")
 public class GuiScreenHook {
 
     public static String redirectMessage(String msg) {

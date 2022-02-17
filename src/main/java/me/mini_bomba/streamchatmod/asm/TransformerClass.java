@@ -1,9 +1,15 @@
-package me.mini_bomba.streamchatmod.tweaker;
+package me.mini_bomba.streamchatmod.asm;
 
 public enum TransformerClass {
     // Vanilla
     GuiScreen("net/minecraft/client/gui/GuiScreen", "axu"),
     FontRenderer("net/minecraft/client/gui/FontRenderer", "avn"),
+    Minecraft("net/minecraft/client/Minecraft", "ave"),
+    EntityPlayerSP("net/minecraft/client/entity/EntityPlayerSP", "bew"),
+
+    // StreamChatMod
+    GuiScreenHook("me/mini_bomba/streamchatmod/asm/hooks/GuiScreenHook"),
+    FontRendererHook("me/mini_bomba/streamchatmod/asm/hooks/FontRendererHook"),
 
     // Vanilla Enhancements
     VE_BetterChat("com/orangemarshall/enhancements/modules/chat/BetterChat"),
@@ -20,7 +26,7 @@ public enum TransformerClass {
 
     TransformerClass(String srgClass, String notchClass) {
         this.srgClass = srgClass;
-        name = StreamChatModTransformer.isDeobfuscated() ? srgClass : notchClass;
+        name = MainTransformer.isDeobfuscated() ? srgClass : notchClass;
     }
 
     public String getNameRaw() {

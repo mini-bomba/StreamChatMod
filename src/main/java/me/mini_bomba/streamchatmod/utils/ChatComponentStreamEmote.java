@@ -24,7 +24,7 @@ public class ChatComponentStreamEmote extends ChatComponentStyle {
 
     @Override
     public String getUnformattedTextForChat() {
-        return shouldRender() ? String.valueOf(emote.getCharacter()) : emote.name;
+        return shouldRender() ? emote.getCharacter() : emote.name;
     }
 
     public String getEmoteName() {

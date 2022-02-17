@@ -6,12 +6,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
+@SuppressWarnings("unused")
 public class FontRendererHook {
     private static final Logger LOGGER = LogManager.getLogger();
     private static boolean allowAnimated = true;
 
-    public static float renderEmote(char emoteCharacter, float posX, float posY) {
-        int emoteId = emoteCharacter - 0xe800;
+    public static float renderEmote(char c1, char c2, float posX, float posY) {
+        int emoteId = ((c1 - 0xDBC0) << 10) + c2 & 1023;
         StreamEmote emote = StreamEmote.getEmote(emoteId);
         if (emote == null) return 0.0F;
         Minecraft.getMinecraft().renderEngine.bindTexture(emote.getCurrentFrame(allowAnimated));
@@ -29,8 +30,8 @@ public class FontRendererHook {
         return renderedWidth;
     }
 
-    public static int getEmoteWidth(char emoteCharacter) {
-        int emoteId = emoteCharacter - 0xe800;
+    public static int getEmoteWidth(char c1, char c2) {
+        int emoteId = ((c1 - 0xDBC0) << 10) + c2 & 1023;
         StreamEmote emote = StreamEmote.getEmote(emoteId);
         if (emote == null) return 0;
         return (int) (emote.width / (emote.height / 9.0F));
