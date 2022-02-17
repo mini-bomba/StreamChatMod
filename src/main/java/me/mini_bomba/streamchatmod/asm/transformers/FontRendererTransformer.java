@@ -59,17 +59,18 @@ public class FontRendererTransformer implements IStreamTransformer {
                     }
                 } else if (TransformerMethod.FontRenderer_sizeStringToWidth.matches(methodNode)) {
                     // TODO: Check if sizeStringToWidth() is working properly on emotes
-                    Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
-                    while (iterator.hasNext()) {
-                        AbstractInsnNode node = iterator.next();
-                        if (!(node instanceof LookupSwitchInsnNode)) continue;
-                        LookupSwitchInsnNode castedNode = (LookupSwitchInsnNode) node;
-                        AbstractInsnNode defaultBlockStart = castedNode.dflt.getNext().getNext();
-                        LabelNode skipLabel = new LabelNode();
-                        methodNode.instructions.insert(defaultBlockStart.getNext().getNext().getNext().getNext().getNext().getNext(), skipLabel);
-                        methodNode.instructions.insert(defaultBlockStart, insertGetEmoteWidth_sizeStringToWidth(skipLabel));
-                        LOGGER.info("insertGetEmoteWidth() inserted into sizeStringToWidth()");
-                    }
+                    // TODO: Make it compatible with OptiFine
+//                    Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
+//                    while (iterator.hasNext()) {
+//                        AbstractInsnNode node = iterator.next();
+//                        if (!(node instanceof LookupSwitchInsnNode)) continue;
+//                        LookupSwitchInsnNode castedNode = (LookupSwitchInsnNode) node;
+//                        AbstractInsnNode defaultBlockStart = castedNode.dflt.getNext().getNext();
+//                        LabelNode skipLabel = new LabelNode();
+//                        methodNode.instructions.insert(defaultBlockStart.getNext().getNext().getNext().getNext().getNext().getNext(), skipLabel);
+//                        methodNode.instructions.insert(defaultBlockStart, insertGetEmoteWidth_sizeStringToWidth(skipLabel));
+//                        LOGGER.info("insertGetEmoteWidth() inserted into sizeStringToWidth()");
+//                    }
                 }
                 // TODO: Hook into trimStringToWidth()
             }
