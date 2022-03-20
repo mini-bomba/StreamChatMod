@@ -28,7 +28,7 @@ minecraft {
 }
 
 dependencies {
-    implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.8.0'
+    implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.9.0'
 //    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.3'
 }
 
