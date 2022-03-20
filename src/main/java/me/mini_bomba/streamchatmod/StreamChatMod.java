@@ -1,5 +1,7 @@
 package me.mini_bomba.streamchatmod;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.philippheuer.credentialmanager.CredentialManager;
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
@@ -18,7 +20,6 @@ import me.mini_bomba.streamchatmod.commands.TwitchChatCommand;
 import me.mini_bomba.streamchatmod.commands.TwitchCommand;
 import me.mini_bomba.streamchatmod.runnables.TwitchFollowSoundScheduler;
 import me.mini_bomba.streamchatmod.runnables.TwitchMessageHandler;
-import me.mini_bomba.streamchatmod.utils.Cache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.event.ClickEvent;
@@ -40,14 +41,12 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import rx.schedulers.Timestamped;
 
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"ConstantConditions", "unused"})
@@ -97,11 +96,11 @@ public class StreamChatMod {
     protected final TwitchCommand twitchCommand;
 
     // Caches for Twitch clips, users, etc.
-    public final Cache<String, Game> categoryCache = new Cache<>(8);
-    public final Cache<String, Clip> clipCache = new Cache<>(16);
-    public final Cache<String, User> userCache = new Cache<>(32);
-    public final Cache<String, User> userCacheByNames = new Cache<>(32);
-    public final Cache<String, Timestamped<Chatters>> timestampedChatterCache = new Cache<>(4);
+    public final LoadingCache<String, Game> categoryCache;
+    public final LoadingCache<String, Clip> clipCache;
+    public final LoadingCache<String, User> userCache;
+    public final LoadingCache<String, User> userCacheByNames;
+    public final LoadingCache<String, Chatters> chatterCache;
 
     // Cooldown for /twitch clip
     private long lastClipCreated = 0;
@@ -111,6 +110,73 @@ public class StreamChatMod {
         emotes = new StreamEmotes(this);
         keybinds = new StreamKeybinds(this);
         twitchCommand = new TwitchCommand(this);
+
+        // Set up caches
+        categoryCache = Caffeine.newBuilder().build(categoryId -> {
+            if (twitch == null) {
+                LOGGER.error("Twitch client was disabled during a category lookup!");
+                return null;
+            }
+            List<Game> categories = twitch.getHelix().getGames(null, Collections.singletonList(categoryId), null).execute().getGames();
+            return categories.size() == 0 ? null : categories.get(0);
+        });
+        clipCache = Caffeine.newBuilder()
+                .maximumSize(32)
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .build(clipId -> {
+                    if (twitch == null) {
+                        LOGGER.error("Twitch client was disabled during a clip lookup!");
+                        return null;
+                    }
+                    List<Clip> clips = twitch.getHelix().getClips(null, null, null, clipId, null, null, 1, null, null).execute().getData();
+                    return clips.size() == 0 ? null : clips.get(0);
+                });
+        userCache = Caffeine.newBuilder()
+                .maximumSize(128)
+                .build(this::fetchUserById);
+        userCacheByNames = Caffeine.newBuilder()
+                .maximumSize(128)
+                .build(this::fetchUserByName);
+        chatterCache = Caffeine.newBuilder()
+                .expireAfterWrite(1, TimeUnit.MINUTES)
+                .build(channel -> {
+                    String channelName = channel.toLowerCase();
+                    if (twitch == null) {
+                        LOGGER.error("Twitch client was disabled during a chatter list lookup!");
+                        return null;
+                    }
+                    try {
+                        return twitch.getMessagingInterface().getChatters(channelName).execute();
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to lookup chatters in channel " + channelName);
+                        e.printStackTrace();
+                        return null;
+                    }
+                });
+    }
+
+    // Loader method for the user caches
+    private User fetchUserById(String userId) {
+        if (twitch == null) {
+            LOGGER.error("Twitch client was disabled during an user lookup!");
+            return null;
+        }
+        List<User> users = twitch.getHelix().getUsers(null, Collections.singletonList(userId), null).execute().getUsers();
+        User result = users.size() == 0 ? null : users.get(0);
+        if (result != null) userCacheByNames.put(result.getLogin(), result);
+        return result;
+    }
+
+    // Loader method for the user caches
+    private User fetchUserByName(String userName) {
+        if (twitch == null) {
+            LOGGER.error("Twitch client was disabled during an user lookup!");
+            return null;
+        }
+        List<User> users = twitch.getHelix().getUsers(null, null, Collections.singletonList(userName)).execute().getUsers();
+        User result = users.size() == 0 ? null : users.get(0);
+        if (result != null) userCache.put(result.getId(), result);
+        return result;
     }
 
     @EventHandler
@@ -801,85 +867,22 @@ public class StreamChatMod {
     }
 
     public User getTwitchUserById(String userId) {
-        return userCache.getOptional(userId).orElseGet(() -> {
-            if (twitch == null) {
-                LOGGER.error("Twitch client was disabled during an user lookup!");
-                return Optional.empty();
-            }
-            List<User> users = twitch.getHelix().getUsers(null, Collections.singletonList(userId), null).execute().getUsers();
-            Optional<User> result = users.size() == 0 ? Optional.empty() : Optional.of(users.get(0));
-            userCache.put(userId, result.orElse(null));
-            result.ifPresent(user -> userCacheByNames.put(user.getLogin(), user));
-            return result;
-        }).orElse(null);
+        return userCache.get(userId);
     }
 
     public User getTwitchUserByName(String userName) {
-        return userCacheByNames.getOptional(userName.toLowerCase()).orElseGet(() -> {
-            if (twitch == null) {
-                LOGGER.error("Twitch client was disabled during an user lookup!");
-                return Optional.empty();
-            }
-            List<User> users = twitch.getHelix().getUsers(null, null, Collections.singletonList(userName)).execute().getUsers();
-            Optional<User> result = users.size() == 0 ? Optional.empty() : Optional.of(users.get(0));
-            userCacheByNames.put(userName, result.orElse(null));
-            result.ifPresent(user -> userCache.put(user.getId(), user));
-            return result;
-        }).orElse(null);
+        return userCacheByNames.get(userName);
     }
 
     public Clip getTwitchClip(String clipId) {
-        return clipCache.getOptional(clipId).orElseGet(() -> {
-            if (twitch == null) {
-                LOGGER.error("Twitch client was disabled during a clip lookup!");
-                return Optional.empty();
-            }
-            List<Clip> clips = twitch.getHelix().getClips(null, null, null, clipId, null, null, 1, null, null).execute().getData();
-            Optional<Clip> result = clips.size() == 0 ? Optional.empty() : Optional.of(clips.get(0));
-            clipCache.put(clipId, result.orElse(null));
-            return result;
-        }).orElse(null);
+        return clipCache.get(clipId);
     }
 
     public Game getTwitchCategory(String categoryId) {
-        return categoryCache.getOptional(categoryId).orElseGet(() -> {
-            if (twitch == null) {
-                LOGGER.error("Twitch client was disabled during a category lookup!");
-                return Optional.empty();
-            }
-            List<Game> categories = twitch.getHelix().getGames(null, Collections.singletonList(categoryId), null).execute().getGames();
-            Optional<Game> result = categories.size() == 0 ? Optional.empty() : Optional.of(categories.get(0));
-            categoryCache.put(categoryId, result.orElse(null));
-            return result;
-        }).orElse(null);
+        return categoryCache.get(categoryId);
     }
 
     public Chatters getChatters(String channel) {
-        String channelName = channel.toLowerCase();
-        Timestamped<Chatters> cached = timestampedChatterCache.contains(channelName) ? timestampedChatterCache.get(channelName) : null;
-        if (cached == null || cached.getTimestampMillis() + 60 * 1000 > System.currentTimeMillis()) {
-            if (twitch == null) {
-                LOGGER.error("Twitch client was disabled during a chatter list lookup!");
-                return null;
-            }
-            Supplier<Chatters> lookup = () -> {
-                Chatters chatters;
-                try {
-                    chatters = twitch.getMessagingInterface().getChatters(channelName).execute();
-                } catch (Exception e) {
-                    LOGGER.error("Failed to lookup chatters in channel " + channelName);
-                    e.printStackTrace();
-                    return null;
-                }
-                timestampedChatterCache.put(channelName, new Timestamped<>(System.currentTimeMillis(), chatters));
-                return chatters;
-            };
-            // If no value cached - send request synchronously.
-            // If a value is cached - return old value and start an async request, if there's none running right now.
-            if (cached == null) return lookup.get();
-            if (!isImportantActionScheduled()) asyncTwitchAction(lookup::get);
-            return cached.getValue();
-        }
-        return cached.getValue();
+        return chatterCache.get(channel.toLowerCase());
     }
 }

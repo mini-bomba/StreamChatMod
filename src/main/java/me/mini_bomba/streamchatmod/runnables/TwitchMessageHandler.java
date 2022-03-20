@@ -152,8 +152,9 @@ public class TwitchMessageHandler implements Runnable {
             ChatComponentText comp;
             if (url.startsWith(clipsDomain) && url.length() > clipsDomain.length()) {
                 String clipId = url.substring(clipsDomain.length());
-                if (mod.clipCache.contains(clipId))
-                    comp = twitchClipComponent(null, mod.clipCache.get(clipId), url);
+                Clip cachedClip = mod.clipCache.getIfPresent(clipId);
+                if (cachedClip != null)
+                    comp = twitchClipComponent(null, cachedClip, url);
                 else {
                     comp = new ChatComponentText("Clip: Loading clip...");
                     ChatStyle style = new ChatStyle()
