@@ -134,7 +134,7 @@ public abstract class Subcommand<T extends Subcommand<T>> implements ICommandNod
      * @return map of name/alias -> subcommand that implements IHasAutocomplete
      */
     protected static Map<String, IHasAutocomplete> createAutcompletableMap(Map<String, ? extends Subcommand<?>> subcommandMap) {
-        return Collections.unmodifiableMap(subcommandMap.keySet().stream().filter(name -> subcommandMap.get(name) instanceof IHasAutocomplete).sorted().collect(Collectors.toMap(name -> name, name -> (IHasAutocomplete) subcommandMap.get(name))));
+        return Collections.unmodifiableMap(subcommandMap.keySet().stream().filter(name -> subcommandMap.get(name) instanceof IHasAutocomplete).collect(Collectors.toMap(name -> name, name -> (IHasAutocomplete) subcommandMap.get(name))));
     }
 
     /**
