@@ -14,7 +14,7 @@ pluginManagement {
         eachPlugin {
             if (requested.id.id.startsWith('net.minecraftforge.gradle')) {
                 useModule group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: requested.version
-                useModule group: 'com.github.asbyth', name: 'ForgeGradle', version: requested.version
+                useModule group: 'com.github.sdxqw', name: 'ForgeGradle', version: requested.version
             }
         }
     }
