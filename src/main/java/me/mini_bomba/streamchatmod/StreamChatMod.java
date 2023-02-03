@@ -703,9 +703,9 @@ public class StreamChatMod {
                 senderChat.leaveChannel(channel);
             return true;
         } catch (Exception e) {
-            LOGGER.error("Failed to start Twitch client");
-            e.printStackTrace();
-            twitch = null;
+            LOGGER.error("Failed to start Twitch client", e);
+            // Try stopping it, so we don't end up with a half-initialized client
+            stopTwitch();
             return false;
         }
     }
@@ -848,11 +848,15 @@ public class StreamChatMod {
         if (twitch != null) {
             TwitchClient twitchClient = this.twitch;
             this.twitch = null;
-            TwitchChat chat = twitchClient.getChat();
-            for (String channel : chat.getChannels()) {
-                chat.leaveChannel(channel);
+            try {
+                TwitchChat chat = twitchClient.getChat();
+                for (String channel : chat.getChannels()) {
+                    chat.leaveChannel(channel);
+                }
+                twitchClient.getClientHelper().disableFollowEventListener(Arrays.asList(config.twitchChannels.getStringList()));
+            } catch (Exception e) {
+                LOGGER.error("Failed to properly unregister channels, closing anyway", e);
             }
-            twitchClient.getClientHelper().disableFollowEventListener(Arrays.asList(config.twitchChannels.getStringList()));
             twitchClient.close();
         }
         if (twitchSender != null) {
