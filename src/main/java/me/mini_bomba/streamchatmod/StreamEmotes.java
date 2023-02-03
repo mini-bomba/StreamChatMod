@@ -11,7 +11,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -150,9 +149,8 @@ public class StreamEmotes {
                 TwitchGlobalBadge wrappedBadge = new TwitchGlobalBadge(badge.badge, badge.set);
                 twitchGlobalBadges.put(badge.id, wrappedBadge);
                 return wrappedBadge;
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap global twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap global twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class", e);
                 return null;
             }
         });
@@ -207,9 +205,8 @@ public class StreamEmotes {
                 TwitchChannelBadge wrappedBadge = new TwitchChannelBadge(badge.badge, badge.set, badge.channelId, mod.getTwitchUserById(badge.channelId).getDisplayName());
                 twitchChannelBadges.put(badge.id, wrappedBadge);
                 return wrappedBadge;
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class", e);
                 return null;
             }
         });
@@ -258,9 +255,8 @@ public class StreamEmotes {
                 TwitchChannelBadge wrappedBadge = new TwitchChannelBadge(badge.badge, badge.set, badge.channelId, mod.getTwitchUserById(badge.channelId).getDisplayName());
                 twitchChannelBadges.put(badge.id, wrappedBadge);
                 return wrappedBadge;
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap channel twitch badge " + badge.set.getSetId() + ":" + badge.badge.getId() + " in TwitchGlobalBadge class", e);
                 return null;
             }
         });
@@ -364,9 +360,8 @@ public class StreamEmotes {
                 TwitchEmote wrappedEmote = new TwitchEmote(emote);
                 twitchEmotes.put(emote.getId(), wrappedEmote);
                 return wrappedEmote;
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap global twitch emote " + emote.getName() + " in TwitchEmote class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap global twitch emote " + emote.getName() + " in TwitchEmote class", e);
                 return null;
             }
         });
@@ -376,9 +371,8 @@ public class StreamEmotes {
                 BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(emote, true);
                 bttvEmotes.put(emote.id, wrappedEmote);
                 return wrappedEmote;
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap global BTTV emote " + emote.name + " in BTTVStreamEmote class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap global BTTV emote " + emote.name + " in BTTVStreamEmote class", e);
                 return null;
             }
         });
@@ -389,9 +383,8 @@ public class StreamEmotes {
                 FFZStreamEmote wrappedEmote = new FFZStreamEmote(emote, true);
                 ffzEmotes.put(id, wrappedEmote);
                 return wrappedEmote;
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap global FFZ emote " + emote.name + " in FFZStreamEmote class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap global FFZ emote " + emote.name + " in FFZStreamEmote class", e);
                 return null;
             }
         });
@@ -474,9 +467,8 @@ public class StreamEmotes {
             try {
                 BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(channelEmote, false);
                 bttvEmotes.put(channelEmote.id, wrappedEmote);
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap channel BTTV emote " + channelEmote.name + " in BTTVStreamEmote class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap channel BTTV emote " + channelEmote.name + " in BTTVStreamEmote class", e);
             }
         }
         for (FFZEmote channelEmote : ffzChannelEmotes) {
@@ -484,9 +476,8 @@ public class StreamEmotes {
             try {
                 FFZStreamEmote wrappedEmote = new FFZStreamEmote(channelEmote, false);
                 ffzEmotes.put(String.valueOf(channelEmote.id), wrappedEmote);
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap channel FFZ emote " + channelEmote.name + " in FFZStreamEmote class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap channel FFZ emote " + channelEmote.name + " in FFZStreamEmote class", e);
             }
         }
         channelEmotes.clear();
@@ -548,8 +539,7 @@ public class StreamEmotes {
                         new File("streamchatmod/emotes/ffz_channel/" + emote.id + "_2x.png")
                 );
             } catch (Exception e) {
-                LOGGER.warn("Failed to download FFZ channel emote " + emote.name + " (id " + emote.id + ")");
-                e.printStackTrace();
+                LOGGER.warn("Failed to download FFZ channel emote " + emote.name + " (id " + emote.id + ")", e);
             }
             return null;
         }).collect(Collectors.toList()));
@@ -560,9 +550,8 @@ public class StreamEmotes {
             try {
                 BTTVStreamEmote wrappedEmote = new BTTVStreamEmote(channelEmote, false);
                 bttvEmotes.put(channelEmote.id, wrappedEmote);
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap channel BTTV emote " + channelEmote.name + " in BTTVStreamEmote class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap channel BTTV emote " + channelEmote.name + " in BTTVStreamEmote class", e);
             }
         }
         for (FFZEmote channelEmote : ffzChannelEmotes) {
@@ -570,9 +559,8 @@ public class StreamEmotes {
             try {
                 FFZStreamEmote wrappedEmote = new FFZStreamEmote(channelEmote, false);
                 ffzEmotes.put(String.valueOf(channelEmote.id), wrappedEmote);
-            } catch (IOException e) {
-                LOGGER.warn("Failed to wrap channel FFZ emote " + channelEmote.name + " in FFZStreamEmote class");
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to wrap channel FFZ emote " + channelEmote.name + " in FFZStreamEmote class", e);
             }
         }
         Map<String, StreamEmote> wrappedChannelEmotes = new HashMap<>();

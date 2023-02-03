@@ -40,7 +40,12 @@ public class BTTVEmote {
     }
 
     public enum ImageType {
-        PNG,
-        GIF
+        PNG("png"),
+        GIF("gif");
+        public final String extension;
+
+        ImageType(String extension) {
+            this.extension = extension;
+        }
     }
 }

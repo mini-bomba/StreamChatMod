@@ -4,6 +4,7 @@ import com.github.twitch4j.helix.domain.ChatBadge;
 import com.github.twitch4j.helix.domain.ChatBadgeSet;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,7 +14,7 @@ public abstract class TwitchBadge extends StreamEmote {
     public final ChatBadgeSet set;
     public final ChatBadge badge;
 
-    protected TwitchBadge(ChatBadge badge, ChatBadgeSet set, boolean global) throws IOException {
+    protected TwitchBadge(ChatBadge badge, ChatBadgeSet set, boolean global) throws IOException, ExecutionException {
         super(global ? Type.TWITCH_GLOBAL_BADGE : Type.TWITCH_CHANNEL_BADGE, getBadgeId(badge), "streamchatmod/emotes/twitch_" + (global ? "global" : "channel") + "_badges/" + getBadgeId(badge) + "_3x.png", set.getSetId() + ":" + badge.getId(), false);
         this.badge = badge;
         this.set = set;

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public abstract class StreamEmote {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -39,7 +40,7 @@ public abstract class StreamEmote {
     public final int height;
     public final boolean animated;
 
-    protected StreamEmote(Type type, String id, String path, String name, boolean animated) throws IOException {
+    protected StreamEmote(Type type, String id, String path, String name, boolean animated) throws IOException, ExecutionException {
         if (registeredEmotes.size() >= 65536) throw new RuntimeException("Emote limit reached");
         this.type = type;
         this.id = id;
@@ -57,8 +58,7 @@ public abstract class StreamEmote {
             ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
             reader.setInput(ImageIO.createImageInputStream(new File(path)), false);
             int frameNumber = reader.getNumImages(true);
-            this.frames = new ArrayList<>();
-            this.frameTimes = new ArrayList<>();
+            this.frameTimes = new ArrayList<>(frameNumber);
             // Get width/height
             NodeList streamMetaNodes = reader.getStreamMetadata().getAsTree("javax_imageio_gif_stream_1.0").getChildNodes();
             int imageHeight = 0;
@@ -77,6 +77,7 @@ public abstract class StreamEmote {
             // Decode frames
             long lastFrameTime = 0;
             BufferedImage combinedFrame = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+            List<Frame> queuedFrames = new ArrayList<>(frameNumber);
             for (int frameIndex = 0; frameIndex < frameNumber; frameIndex++) {
                 BufferedImage frame = reader.read(frameIndex);
                 IIOMetadata frameMeda = reader.getImageMetadata(frameIndex);
@@ -99,10 +100,11 @@ public abstract class StreamEmote {
                 combinedFrame.getGraphics().drawImage(frame, frameX, frameY, null);
                 frameTimes.add(lastFrameTime);
                 lastFrameTime += frameTime;
-                frames.add(new Frame("SCM_EMOTE_" + type.name() + "_" + id + "_FRAME_" + frameIndex, combinedFrame).safeRegister());
+                queuedFrames.add(new Frame("SCM_EMOTE_" + type.name() + "_" + id + "_FRAME_" + frameIndex, combinedFrame));
                 if (clearBuffer)
                     combinedFrame = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
             }
+            frames = batchSafeFrameRegister(queuedFrames);
             this.animationDuration = lastFrameTime;
         }
         this.characterId = registeredEmotes.size();
@@ -138,11 +140,35 @@ public abstract class StreamEmote {
         return "" + (char) (0xD800 + (code >> 10)) + (char) (0xDC00 + (code & 1023));
     }
 
+    private static List<ResourceLocation> batchFrameRegister(List<Frame> frames) {
+        return frames.stream().map(Frame::register).collect(Collectors.toCollection(() -> new ArrayList<>(frames.size())));
+    }
+
+    private static List<ResourceLocation> batchSafeFrameRegister(List<Frame> frames) throws ExecutionException {
+        if (Thread.currentThread().getId() == 1)
+            return batchFrameRegister(frames);
+        else {
+            ListenableFuture<List<ResourceLocation>> resultFuture = Minecraft.getMinecraft().addScheduledTask(() -> batchFrameRegister(frames));
+            while (true) {
+                try {
+                    return resultFuture.get();
+                } catch (InterruptedException e) {
+                    LOGGER.warn("Interrupted while waiting for batch frame registration to register");
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    LOGGER.error("Failed to batch-register frames");
+                    e.printStackTrace();
+                    throw e;
+                }
+            }
+        }
+    }
+
     private static class Frame {
         private final String name;
         private final BufferedImage texture;
 
-        public Frame(String name, BufferedImage texture) {
+        private Frame(String name, BufferedImage texture) {
             this.name = name;
             this.texture = texture;
         }
@@ -153,7 +179,7 @@ public abstract class StreamEmote {
          *
          * @return the ResourceLocation of the registered frame
          */
-        public ResourceLocation register() {
+        private ResourceLocation register() {
             return Minecraft.getMinecraft().renderEngine.getDynamicTextureLocation(name, new DynamicTexture(texture));
         }
 
@@ -162,7 +188,7 @@ public abstract class StreamEmote {
          *
          * @return the ResourceLocation of the registered frame
          */
-        public ResourceLocation safeRegister() {
+        private ResourceLocation safeRegister() throws ExecutionException {
             if (Thread.currentThread().getId() == 1)
                 return register();
             else {
@@ -176,7 +202,7 @@ public abstract class StreamEmote {
                     } catch (ExecutionException e) {
                         LOGGER.error("Failed to register frame '" + name + "'");
                         e.printStackTrace();
-                        return null;
+                        throw e;
                     }
                 }
             }
