@@ -3,11 +3,15 @@ package me.mini_bomba.streamchatmod.commands.subcommands;
 import com.sun.net.httpserver.HttpServer;
 import me.mini_bomba.streamchatmod.StreamChatMod;
 import me.mini_bomba.streamchatmod.StreamUtils;
-import me.mini_bomba.streamchatmod.runnables.HTTPServerShutdownScheduler;
 import me.mini_bomba.streamchatmod.commands.ICommandNode;
+import me.mini_bomba.streamchatmod.runnables.HTTPServerShutdownScheduler;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -18,6 +22,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class TwitchTokenSubcommand extends TwitchSubcommand {
+
+    private static final String authLink = "https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate+channel:manage:broadcast+user:edit:broadcast+clips:edit";
 
     public TwitchTokenSubcommand(StreamChatMod mod, ICommandNode<TwitchSubcommand> parentCommand) {
         super(mod, parentCommand);
@@ -66,20 +72,25 @@ public class TwitchTokenSubcommand extends TwitchSubcommand {
                 mod.httpShutdownScheduler.start();
             }
         } catch (Exception e) {
-            StreamUtils.addMessage(sender, EnumChatFormatting.RED+"Something went wrong while attempting to start an HTTP server for automatic token setting. Please manually set the token using "+EnumChatFormatting.GRAY+"/twitch settoken "+EnumChatFormatting.RED+"after generating.");
+            StreamUtils.addMessage(sender, EnumChatFormatting.RED + "Something went wrong while attempting to start an HTTP server for automatic token setting. Please manually set the token using " + EnumChatFormatting.GRAY + "/twitch settoken " + EnumChatFormatting.RED + "after generating.");
         }
         boolean opened = false;
         if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             try {
-                Desktop.getDesktop().browse(new URI("https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate+channel:manage:broadcast+user:edit:broadcast+clips:edit"));
+                Desktop.getDesktop().browse(new URI(authLink));
                 opened = true;
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
-        if (!opened) StreamUtils.addMessages(sender, new String[]{
-            EnumChatFormatting.GREEN+"Please open this link in your browser:",
-            EnumChatFormatting.GRAY+"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=q7s0qfrigoczrj1a1cltcebjx95q8g&redirect_uri=http://localhost:39571&scope=chat:read+chat:edit+channel:moderate+channel:manage:broadcast+user:edit:broadcast+clips:edit"
+        StreamUtils.addMessages(sender, new IChatComponent[]{
+                new ChatComponentText(EnumChatFormatting.GREEN + "Use this link to generate a new token:"),
+                new ChatComponentText(EnumChatFormatting.GRAY + authLink).setChatStyle(
+                        new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, authLink))
+                ),
+                new ChatComponentText(EnumChatFormatting.AQUA + "The token will be automatically saved if generated within 120 seconds.")
         });
-        else StreamUtils.addMessage(sender, EnumChatFormatting.GREEN+"Opening link in your browser...");
-        StreamUtils.addMessage(sender, EnumChatFormatting.AQUA+"The token will be automatically saved if generated within 120 seconds.");
+        if (opened) StreamUtils.addMessage(EnumChatFormatting.GREEN + "The link has been opened in your browser.");
+        else
+            StreamUtils.addMessage(EnumChatFormatting.RED + "Couldn't open the link automatically. Please open it manually.");
     }
 }
