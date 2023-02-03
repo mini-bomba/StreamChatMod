@@ -5,10 +5,12 @@ A simple chat client for Twitch put into Minecraft 1.8.9's chat box!
 ## Installation
 
 The mod can be downloaded from the [release list](https://github.com/mini-bomba/StreamChatMod/releases).
-You can either download a stable full release, or the "Latest Commit (that compiles)" prerelease which is automatically compiled on new commit.
+You can ~~either~~ download ~~a stable full release, or~~ the "Latest Commit (that compiles)" prerelease which is automatically compiled on new commit.
 After downloading, this mod can be installed simply by putting the .jar file in the mods folder of your minecraft installation.
 It is located in `%APPDATA%\.minecraft` on Windows and `~/.minecraft` on Linux.
 Or if you use [MultiMC](https://multimc.org), you can just drag & drop the file into the mods window
+
+**NOTE: The last "stable" release was 2 years ago and probably doesn't work by now. Please use the [rolling "latest" pre-release](https://github.com/mini-bomba/StreamChatMod/releases/tag/latest) instead.**
 
 ## Configuration
 
