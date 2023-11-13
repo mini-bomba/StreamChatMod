@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
@@ -20,7 +19,7 @@ public class BTTVApi {
         try {
             LocalEmote[] emotes = gson.fromJson(new InputStreamReader(new URL("https://api.betterttv.net/3/cached/emotes/global").openStream()), LocalEmote[].class);
             return Arrays.stream(emotes).map(emote -> new BTTVEmote(emote.id, emote.code, getImageType(emote.imageType), emote.userId)).collect(Collectors.toList());
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to fetch BTTV global emotes:");
             e.printStackTrace();
             return Collections.emptyList();
@@ -38,7 +37,7 @@ public class BTTVApi {
                         return new BTTVEmote(emote.id, emote.code, getImageType(emote.imageType), emote.user.id);
                     })
             ).collect(Collectors.toList());
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to fetch BTTV channel emotes:");
             e.printStackTrace();
             return Collections.emptyList();
@@ -63,7 +62,7 @@ public class BTTVApi {
         Gson gson = new Gson();
         try {
             return gson.fromJson(new InputStreamReader(new URL("https://api.betterttv.net/3/users/" + userId).openStream()), BTTVUser.class);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to fetch BTTV user");
             e.printStackTrace();
             return null;

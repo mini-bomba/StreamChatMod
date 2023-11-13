@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collections;
@@ -20,7 +19,7 @@ public class FFZApi {
         try {
             FFZDefaultSets sets = gson.fromJson(new InputStreamReader(new URL("https://api.frankerfacez.com/v1/set/global").openStream()), FFZDefaultSets.class);
             return sets.sets.get("3").emoticons;
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to fetch FFZ global emotes:");
             e.printStackTrace();
             return Collections.emptyList();
@@ -34,7 +33,7 @@ public class FFZApi {
             if (resp.room == null || !resp.sets.containsKey(String.valueOf(resp.room.set)))
                 return Collections.emptyList();
             return resp.sets.get(String.valueOf(resp.room.set)).emoticons;
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to fetch FFZ channel emotes for id " + channelId + ":");
             e.printStackTrace();
             return Collections.emptyList();
@@ -46,7 +45,7 @@ public class FFZApi {
         try {
             FFZMultiRoomResponse resp = gson.fromJson(new InputStreamReader(new URL("https://api.frankerfacez.com/v1/multi_room/id/" + String.join(",", channelIds)).openStream()), FFZMultiRoomResponse.class);
             return resp.rooms.stream().collect(Collectors.toMap(room -> String.valueOf(room.twitch_id), room -> resp.sets.containsKey(String.valueOf(room.set)) ? resp.sets.get(String.valueOf(room.set)).emoticons : Collections.emptyList()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to fetch FFZ channel emotes for ids " + String.join(",", channelIds) + ":");
             e.printStackTrace();
             return channelIds.stream().collect(Collectors.toMap(i -> i, i -> Collections.emptyList()));
