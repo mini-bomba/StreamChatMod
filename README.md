@@ -72,7 +72,7 @@ You can also prevent each type of emotes from being rendered in an image form, u
 
 **NOTE: If you are using the [Patcher](https://github.com/Sk1erLLC/Patcher) mod, you need to turn off the `Optimized Font Renderer` feature for emotes to work.**
 
-![Emote feature showcase](https://cdn.upload.systems/uploads/0DfjY2HF.png)
+![Emote feature showcase](/screenshots/0DfjY2HF.png)
 
 ### Badges
 
@@ -82,7 +82,7 @@ StreamChatMod also allows you to display your chatter's badges, as icons (same a
 This can be disabled using `/twitch emote`, which reverts to text-based display for the 5 main badges (streamer, twitch
 staff, channel mod, VIP, subscriber)
 
-![Badge icon showcase](https://cdn.upload.systems/uploads/6XmL8IYp.png)
+![Badge icon showcase](/screenshots/6XmL8IYp.png)
 
 ### Showing Twitch emotes in all messages
 
@@ -91,7 +91,7 @@ StreamChatMod allows you to render Twitch emotes in all Minecraft messages!<br>
 This is disabled by default and can be enabled in `/twitch emotes`.<br>
 The channel emotes rendered are pulled from your currently selected channel (or your channel, if no channel is selected)
 
-![Using a BTTV emote in guild chat](https://cdn.upload.systems/uploads/mrjQrWSF.png)
+![Using a BTTV emote in guild chat](/screenshots/mrjQrWSF.png)
 
 ### Automatic update checker
 
@@ -114,7 +114,7 @@ The link will be replaced with the clip name and you'll be able to hover over it
 view extra details about the clip or click it to view the clip in your browser.
 
 Example:
-![Clip Embedding demonstration](https://cdn.upload.systems/uploads/ZUz1hj1R.png)
+![Clip Embedding demonstration](/screenshots/ZUz1hj1R.png)
 
 ### New follow events
 When a new user follows, you will get a message about it & a sound will play. This may take longer than your event overlay in OBS, though.
@@ -141,10 +141,10 @@ The outline will be either purple or red, indicating whether you've made an obvi
 chat input bar will tell you what the command will do and what obvious mistake you've made.
 
 Examples:
-![Valid Ban Command](https://cdn.upload.systems/uploads/SkKnCNQl.png)
-![Valid Timeout Command](https://cdn.upload.systems/uploads/oj0qxwGu.png)
-![Invalid Timeout Duration](https://cdn.upload.systems/uploads/BIXbpaLC.png)
-![Missing Parameters](https://cdn.upload.systems/uploads/cSGZ0Ghp.png)
+![Valid Ban Command](/screenshots/SkKnCNQl.png)
+![Valid Timeout Command](/screenshots/oj0qxwGu.png)
+![Invalid Timeout Duration](/screenshots/BIXbpaLC.png)
+![Missing Parameters](/screenshots/cSGZ0Ghp.png)
 
 ### Clip & Marker commands & shortcuts
 
@@ -156,7 +156,7 @@ currently unassigned by default.
 
 You may also use the `/twitch clip` & `/twitch marker [optional description]` to create a clip or a marker.
 
-![Shortcuts](https://cdn.upload.systems/uploads/z39N17dk.png)
+![Shortcuts](/screenshots/z39N17dk.png)
 
 **Notes:**
 
@@ -174,8 +174,8 @@ change the text shown before each Twitch message in the chat!
 
 Currently, this can only be done by editing the config file (config/streamchatmod.cfg), command will be added... someday
 
-![Default prefix](https://cdn.upload.systems/uploads/6XmL8IYp.png)
-![Customized prefix](https://cdn.upload.systems/uploads/lXCJNNg9.png)
+![Default prefix](/screenshots/6XmL8IYp.png)
+![Customized prefix](/screenshots/lXCJNNg9.png)
 
 ### Quick revoking of your token
 
